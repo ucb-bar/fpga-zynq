@@ -1,4 +1,5 @@
 `timescale 1 ps / 1 ps
+`include "clocking.vh"
 
 module zed_refchip_wrapper
    (DDR_addr,
@@ -502,16 +503,16 @@ module zed_refchip_wrapper
 
   MMCME2_BASE #(
     .BANDWIDTH("OPTIMIZED"),
-    .CLKFBOUT_MULT_F(8.0),
+    .CLKFBOUT_MULT_F(`RC_CLK_MULT),
     .CLKFBOUT_PHASE(0.0),
-    .CLKIN1_PERIOD(10.0),
+    .CLKIN1_PERIOD(`ZYNQ_CLK_PERIOD),
     .CLKOUT1_DIVIDE(1),
     .CLKOUT2_DIVIDE(1),
     .CLKOUT3_DIVIDE(1),
     .CLKOUT4_DIVIDE(1),
     .CLKOUT5_DIVIDE(1),
     .CLKOUT6_DIVIDE(1),
-    .CLKOUT0_DIVIDE_F(10.0),
+    .CLKOUT0_DIVIDE_F(`RC_CLK_DIVIDE),
     .CLKOUT0_DUTY_CYCLE(0.5),
     .CLKOUT1_DUTY_CYCLE(0.5),
     .CLKOUT2_DUTY_CYCLE(0.5),
