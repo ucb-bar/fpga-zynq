@@ -122,7 +122,7 @@ module rocketchip_wrapper
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
 
-  system system_i
+  rocketchip rocketchip_i
        (.DDR_addr(DDR_addr),
         .DDR_ba(DDR_ba),
         .DDR_cas_n(DDR_cas_n),
