@@ -2,7 +2,7 @@ base_dir = $(abspath ..)
 
 
 .PHONY: all
-all: verilog
+all: verilog tcl
 
 
 rtl/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
@@ -11,5 +11,11 @@ rtl/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 rtl/fifos.v: $(base_dir)/common/fifos.v
 	cp $(base_dir)/common/fifos.v rtl/
 
+hw/zynq_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl
+	sed 's/PART_NUMBER_HERE/$(PART)/' $(base_dir)/common/zynq_rocketchip.tcl > hw/zynq_rocketchip.tcl
+
 .PHONY: verilog
 verilog: rtl/rocketchip_wrapper.v rtl/fifos.v
+
+.PHONY: tcl
+tcl: hw/zynq_rocketchip.tcl
