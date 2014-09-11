@@ -1,0 +1,7 @@
+*.log
+*.jou
+*.Xil
+
+zedboard/zedboard_rocketchip
+zedboard/src/tcl/zedboard_rocketchip.tcl
+zedboard/src/verilog/rocketchip_wrapper.v
