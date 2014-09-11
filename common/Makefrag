@@ -1,0 +1,15 @@
+base_dir = $(abspath ..)
+
+
+.PHONY: all
+all: verilog
+
+
+rtl/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
+	cp $(base_dir)/common/rocketchip_wrapper.v rtl/
+
+rtl/fifos.v: $(base_dir)/common/fifos.v
+	cp $(base_dir)/common/fifos.v rtl/
+
+.PHONY: verilog
+verilog: rtl/rocketchip_wrapper.v rtl/fifos.v
