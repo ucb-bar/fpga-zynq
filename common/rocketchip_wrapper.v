@@ -1,7 +1,7 @@
 `timescale 1 ps / 1 ps
 `include "clocking.vh"
 
-module zed_refchip_wrapper
+module rocketchip_wrapper
    (DDR_addr,
     DDR_ba,
     DDR_cas_n,
@@ -23,7 +23,7 @@ module zed_refchip_wrapper
     FIXED_IO_ps_clk,
     FIXED_IO_ps_porb,
     FIXED_IO_ps_srstb,
-    GCLK);
+    clk);
 
   inout [14:0]DDR_addr;
   inout [2:0]DDR_ba;
@@ -47,7 +47,7 @@ module zed_refchip_wrapper
   inout FIXED_IO_ps_clk;
   inout FIXED_IO_ps_porb;
   inout FIXED_IO_ps_srstb;
-  input GCLK;
+  input clk;
 
   wire FCLK_RESET0_N;
   
@@ -122,7 +122,7 @@ module zed_refchip_wrapper
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
 
-  zed_refchip zed_refchip_i
+  system system_i
        (.DDR_addr(DDR_addr),
         .DDR_ba(DDR_ba),
         .DDR_cas_n(DDR_cas_n),
@@ -498,7 +498,7 @@ module zed_refchip_wrapper
        .io_mem_resp_bits_tag( mem_resp_tag )
   );
 
-  IBUFG ibufg_gclk (.I(GCLK), .O(gclk_i));
+  IBUFG ibufg_gclk (.I(clk), .O(gclk_i));
   BUFG  bufg_host_clk (.I(host_clk_i), .O(host_clk));
 
   MMCME2_BASE #(
