@@ -36,7 +36,6 @@ if {[string equal [get_filesets sources_1] ""]} {
 # Import local files from the original project
 set files [list \
  "[file normalize "$orig_proj_dir/../src/verilog/Top.v"]"\
- "[file normalize "$orig_proj_dir/../src/verilog/fifos.v"]"\
  "[file normalize "$orig_proj_dir/../src/verilog/rocketchip_wrapper.v"]"\
  "[file normalize "$orig_proj_dir/../src/verilog/clocking.vh"]"\
 ]

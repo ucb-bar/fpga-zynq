@@ -1,24 +1,21 @@
 base_dir = $(abspath ..)
 
 
-.PHONY: project
-project: verilog tcl
+$(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/zynq_rocketchip.tcl
 	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
 
 src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/
 
-src/verilog/fifos.v: $(base_dir)/common/fifos.v
-	cp $(base_dir)/common/fifos.v src/verilog/
-
 src/tcl/zynq_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
-.PHONY: verilog
-verilog: src/verilog/rocketchip_wrapper.v src/verilog/fifos.v
+.PHONY: project
+project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 
-.PHONY: tcl
-tcl: src/tcl/zynq_rocketchip.tcl
+.PHONY: vivado_gui
+vivado_gui: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
+	vivado $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr &
 
 .PHONY: clean
 clean:
