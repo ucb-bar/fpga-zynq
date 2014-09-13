@@ -29,5 +29,6 @@ hw/src/constrs/pin_constraints.xdc
 
 `define RC_CLK_DIVIDE   16.0
 
+`define differential_clock
 
 `endif // _clocking_vh_

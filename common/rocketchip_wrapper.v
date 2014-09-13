@@ -23,7 +23,12 @@ module rocketchip_wrapper
     FIXED_IO_ps_clk,
     FIXED_IO_ps_porb,
     FIXED_IO_ps_srstb,
+`ifndef differential_clock
     clk);
+`else
+    SYSCLK_P,
+    SYSCLK_N);
+`endif
 
   inout [14:0]DDR_addr;
   inout [2:0]DDR_ba;
@@ -47,7 +52,13 @@ module rocketchip_wrapper
   inout FIXED_IO_ps_clk;
   inout FIXED_IO_ps_porb;
   inout FIXED_IO_ps_srstb;
+
+`ifndef differential_clock
   input clk;
+`else
+  input SYSCLK_P;
+  input SYSCLK_N;
+`endif
 
   wire FCLK_RESET0_N;
   
@@ -497,8 +508,11 @@ module rocketchip_wrapper
        .io_mem_resp_bits_data( {S_AXI_rdata, mem_resp_data_buf} ),
        .io_mem_resp_bits_tag( mem_resp_tag )
   );
-
+`ifndef differential_clock
   IBUFG ibufg_gclk (.I(clk), .O(gclk_i));
+`else
+  IBUFDS #(.DIFF_TERM("TRUE"), .IBUF_LOW_PWR("TRUE"), .IOSTANDARD("DEFAULT")) clk_ibufds (.O(gclk_i), .I(SYSCLK_P), .IB(SYSCLK_N));
+`endif
   BUFG  bufg_host_clk (.I(host_clk_i), .O(host_clk));
 
   MMCME2_BASE #(
