@@ -570,6 +570,7 @@ endmodule
 
 // fifo queues originally from fifos.v
 
+/*
 module fifo_8x5 (
     input clk,
     input reset,
@@ -620,6 +621,7 @@ module fifo_8x5 (
     end
   end
 endmodule
+*/
 
 module fifo_32x32 (
     input clk,
