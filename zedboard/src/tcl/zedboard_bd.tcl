@@ -34,7 +34,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 
 # CHANGE DESIGN NAME HERE
-set design_name rocketchip
+set design_name system
 
 # If you do not already have an existing IP Integrator design open,
 # you can create a design using the following command:
