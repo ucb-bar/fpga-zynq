@@ -1,0 +1,7 @@
+set_property PACKAGE_PIN H9 [get_ports SYSCLK_P]
+set_property IOSTANDARD LVDS [get_ports SYSCLK_P]
+set_property PACKAGE_PIN G9 [get_ports SYSCLK_N]
+set_property IOSTANDARD LVDS [get_ports SYSCLK_N]
+#set_property PACKAGE_PIN H9 [get_ports clk]
+#set_property IOSTANDARD LVCMOS33 [get_ports clk]
+#create_clock -add -name SYSCLK_P -period 5.00 -waveform {0 2.5} [get_ports SYSCLK_P]
