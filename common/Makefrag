@@ -1,5 +1,8 @@
 base_dir = $(abspath ..)
 
+ifneq ($(BOARD_MODEL),)
+    insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board" "$(BOARD_MODEL)"/g
+endif
 
 $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
 	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
@@ -8,8 +11,7 @@ src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/
 
 src/tcl/$(BOARD)_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;s/# REPLACE FOR OFFICIAL BOARD NAME/set_property "board" "$(BOARD_MODEL)"/g' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
-
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board)' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
 .PHONY: project
 project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
