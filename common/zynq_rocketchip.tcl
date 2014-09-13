@@ -26,6 +26,7 @@ set proj_dir [get_property directory [current_project]]
 # Set project properties
 set obj [get_projects BOARD_NAME_HERE_rocketchip]
 set_property "part" "PART_NUMBER_HERE" $obj
+# REPLACE FOR OFFICIAL BOARD NAME $obj
 set_property "simulator_language" "Mixed" $obj
 
 # Create 'sources_1' fileset (if not found)
@@ -35,7 +36,7 @@ if {[string equal [get_filesets sources_1] ""]} {
 
 # Import local files from the original project
 set files [list \
- "[file normalize "$orig_proj_dir/../src/verilog/Top.v"]"\
+ "[file normalize "$orig_proj_dir/../src/verilog/Top.DefaultFPGAConfig.v"]"\
  "[file normalize "$orig_proj_dir/../src/verilog/rocketchip_wrapper.v"]"\
  "[file normalize "$orig_proj_dir/../src/verilog/clocking.vh"]"\
 ]
