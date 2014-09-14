@@ -6,6 +6,7 @@ endif
 
 $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
 	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
+	$(post_process) # board specfic post-processing
 
 src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/

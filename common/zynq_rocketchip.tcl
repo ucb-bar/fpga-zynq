@@ -109,4 +109,7 @@ puts "INFO: Project created:BOARD_NAME_HERE_rocketchip"
 puts "INFO: Recreating block diagram from src/tcl/BOARD_NAME_HERE_bd.tcl"
 source src/tcl/BOARD_NAME_HERE_bd.tcl
 
+reset_target all [get_files "$orig_proj_dir/BOARD_NAME_HERE_rocketchip.srcs/sources_1/bd/system/system.bd"]
+generate_target all [get_files "$orig_proj_dir/BOARD_NAME_HERE_rocketchip.srcs/sources_1/bd/system/system.bd"]
+
 exit
