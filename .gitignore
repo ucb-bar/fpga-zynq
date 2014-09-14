@@ -5,3 +5,11 @@
 zedboard/zedboard_rocketchip
 zedboard/src/tcl/zedboard_rocketchip.tcl
 zedboard/src/verilog/rocketchip_wrapper.v
+
+zybo/zybo_rocketchip
+zybo/src/tcl/zybo_rocketchip.tcl
+zybo/src/verilog/rocketchip_wrapper.v
+
+zc706/zc706_rocketchip
+zc706/src/tcl/zc706_rocketchip.tcl
+zc706/src/verilog/rocketchip_wrapper.v
