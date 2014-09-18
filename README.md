@@ -40,4 +40,24 @@ First, enter into the directory for your board (current options are `zybo`,
     $ make vivado_gui
 
 
+
+Connecting to the Board
+-----------------------
+#####Ethernet
+The board has an IP of 192.168.1.5 and can be accessed by username/password of root/root on telnet and ssh. For example:
+
+    $ ssh root@192.168.1.5
+
+_Note:_ Make sure your development system ethernet interface is configured to be on the 192.168.1.x subnet.
+
+#####Serial-USB
+On the zybo and zedboard a single serial-USB cable is needed but on the zc706 you will also need a USB type A to type B cable (and possibly to install drivers)
+
+    $ screen /dev/tty.usbmodem1411 115200,cs8,-parenb,-cstopb
+
+_Note:_ The numbers following `tty.usbmodem` may vary slightly.
+
+
+
+
 TODO: merge remaining instructions from current fpga-zynq repo
