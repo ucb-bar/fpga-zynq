@@ -43,6 +43,10 @@ fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(BOARD)_rocketchip
 .PHONY: project
 project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 
+.PHONY: vivado
+vivado: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
+	vivado $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr &
+
 .PHONY: bitstream
 bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
 
