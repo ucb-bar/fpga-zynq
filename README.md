@@ -33,11 +33,9 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 
 Quick Instructions
 ------------------
-
 _Using prebuilt images get hello world on board_
 
-First, enter into the directory for your board (current options are `zybo`, 
-`zc706`, and `zedboard`). From there:
+First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). From there:
 
     $ make fetch-images
 
@@ -68,6 +66,23 @@ On the zybo and zedboard a single serial-USB cable is needed but on the zc706 yo
 
 _Note:_ The numbers following `tty.usbmodem` may vary slightly.
 
+
+
+Working with Vivado
+-------------------
+_Requires: Vivado 2014.2 and its settings64.sh sourced_
+
+First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). To generate a Vivado project from scratch:
+
+    $ make project
+
+To generate a bitstream from the command-line:
+
+    $ make bitstream
+
+To launch Vivado in GUI mode:
+
+    $ make vivado
 
 
 
