@@ -12,6 +12,10 @@ verilog_srcs = \
 	src/verilog/Top.DefaultFPGAConfig.v \
 
 
+default: project
+
+
+
 # Specialize sources for board
 src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/
@@ -23,12 +27,21 @@ src/tcl/make_bitstream.tcl: $(base_dir)/common/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g' $(base_dir)/common/make_bitstream.tcl > src/tcl/make_bitstream.tcl
 
 
+
 # Project generation
 $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
 	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
 
 $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc
 	vivado -mode tcl -source src/tcl/make_bitstream.tcl
+
+project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
+
+vivado: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
+	vivado $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr &
+
+bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
+
 
 
 # Handle git submodule for prebuilt modules
@@ -38,25 +51,14 @@ fpga-images-$(BOARD)/boot.bif:
 fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
-
-# Virtual targets to provide easier names
-.PHONY: project
-project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-
-.PHONY: vivado
-vivado: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-	vivado $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr &
-
-.PHONY: bitstream
-bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
-
-.PHONY: fetch-images
 fetch-images: fpga-images-$(BOARD)/boot.bif
 
-.PHONY: load-sd
 load-sd: fpga-images-$(BOARD)/boot.bin
 	$(base_dir)/common/load_card.sh $(SD)
 
-.PHONY: clean
+
+
 clean:
 	rm -f *.log *.jou
+
+.PHONY: project vivado bitstream fetch-images load-sd clean
