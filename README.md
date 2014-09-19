@@ -11,7 +11,7 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 **Target Application** (RISC-V binary)
  will run on top of whatever kernel the rocket chip is running. Compiled by [riscv-gcc](https://github.com/ucb-bar/riscv-gcc) or [riscv-llvm](https://github.com/ucb-bar/riscv-llvm).
 
-**RISC-V Kernel** ([Proxy Kernel](https://github.com/ucb-bar/riscv-pk) or [RISC-V Linux](https://github.com/ucb-bar/riscv-linux))
+**RISC-V Kernel** ([proxy kernel](https://github.com/ucb-bar/riscv-pk) or [RISC-V linux](https://github.com/ucb-bar/riscv-linux))
  runs on top of the rocket chip. The proxy kernel is extremely lightweight and designed to be used with a single binary linked against newlib while RISC-V linux is appropriate for everything else.
 
 **Rocket Chip** ([rocket core](https://github.com/ucb-bar/rocket) with L1 instruction and data caches)
@@ -75,7 +75,7 @@ The easiest way to get a file onto the board is to copy it with scp over etherne
 
     $ scp file root@192.168.1.5:~/
 
-_Note:_ Linux is running out of a RAMdisk, so to make a file available after reboot, copy it to the SD card or modify the RAMdisk.
+_Note:_ Linux is running out of a RAMdisk, so to make a file available after a reboot, copy it to the SD card or modify the RAMdisk.
 
 #####Mounting the SD Card on the Board
 You can mount the SD card on the board by:
@@ -88,8 +88,10 @@ When you are done, don't forget to unmount it:
     root@zynq:~# umount /sdcard
 
 #####Changing the RAMDisk
-_Requires: (u-boot)[http://www.denx.de/wiki/U-Boot/] and sudo_
-The RAMDisk that holds linux (uramdisk.image.gz) is a gzipped cpio archive with a u-boot header for the zedboard. To open the RAMdisk:
+_Requires: [u-boot](http://www.denx.de/wiki/U-Boot/) and sudo_
+
+The RAMDisk that holds linux (`uramdisk.image.gz`) is a gzipped cpio archive with a u-boot header for the board. To open the RAMdisk:
+
     $ dd if=uramdisk.image.gz  bs=64 skip=1 of=uramdisk.cpio.gz
     $ mkdir ramdisk
     $ gunzip -c uramdisk.cpio.gz | sudo sh -c 'cd ramdisk/ && cpio -i'
@@ -99,7 +101,7 @@ When changing or adding files, be sure to keep track of owners, groups, and perm
     $ sh -c 'cd ramdisk/ && sudo find . | sudo cpio -H newc -o' | gzip -9 > uramdisk.cpio.gz
     $ mkimage -A arm -O linux -T ramdisk -d uramdisk.cpio.gz uramdisk.image.gz
 
-A useful application of this is to add your SSH public key to .ssh/authorized_keys so you can have passwordless login to the board.
+A useful application of this is to add your SSH public key to `.ssh/authorized_keys` so you can have passwordless login to the board.
 
 
 
