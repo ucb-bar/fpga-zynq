@@ -1,24 +1,57 @@
+# This makefrag is sourced by each board's subdirectory
+
 base_dir = $(abspath ..)
 
 ifneq ($(BOARD_MODEL),)
     insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board" "$(BOARD_MODEL)"/g
 endif
 
-$(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
-	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
+verilog_srcs = \
+	src/verilog/clocking.vh \
+	src/verilog/rocketchip_wrapper.v \
+	src/verilog/Top.DefaultFPGAConfig.v \
 
+
+# Specialize sources for board
 src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/
 
 src/tcl/$(BOARD)_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board)' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
+src/tcl/make_bitfile.tcl: $(base_dir)/common/make_bitfile.tcl
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g' $(base_dir)/common/make_bitfile.tcl > src/tcl/make_bitfile.tcl
+
+
+# Project generation
+$(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
+	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
+
+$(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr src/tcl/make_bitfile.tcl $(verilog_srcs) src/constrs/base.xdc
+	vivado -mode tcl -source src/tcl/make_bitfile.tcl
+
+
+# Handle git submodule for prebuilt modules
+fpga-images-$(BOARD)/boot.bif:
+	git submodule update --init --depth=1 fpga-images-$(BOARD)
+
+fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
+	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
+
+
+# Virtual targets to provide easier names
 .PHONY: project
 project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 
-.PHONY: vivado_gui
-vivado_gui: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-	vivado $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr &
+.PHONY: bitfile
+bitfile: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
+
+.PHONY: fetch-images
+fetch-images: fpga-images-$(BOARD)/boot.bif
+
+.PHONY: load-sd
+load-sd: fpga-images-$(BOARD)/boot.bin
+	$(base_dir)/common/load_card.sh $(SD)
 
 .PHONY: clean
 clean:
