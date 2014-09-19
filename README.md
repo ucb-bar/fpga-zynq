@@ -2,7 +2,7 @@ fpga-zynq
 =========
 
 This repository contains the files needed to run the RISC-V [rocket chip](https://github.com/ucb-bar/rocket-chip) on 
-various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2014.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only cloned if requested.
+various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2014.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
 
 
 ####Overview of System Stack
@@ -26,7 +26,7 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 **FPGA Board** (zybo, zedboard, or zc706)
  contains the Zynq FPGA and several I/O devices. At power on, the contents of the SD card are used to configure the FPGA and boot linux on the ARM core.
 
-**External Communication** (tty over uart on usb or telnet/ssh over ethernet)
+**External Communication** (tty over serial on usb or telnet/ssh over ethernet)
  allows the development system to communicate with the FPGA board.
 
 
@@ -34,10 +34,21 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 Quick Instructions
 ------------------
 
+_Using prebuilt images get hello world on board_
+
 First, enter into the directory for your board (current options are `zybo`, 
 `zc706`, and `zedboard`). From there:
 
-    $ make vivado_gui
+    $ make fetch-images
+
+Insert the SD card on the development system and copy over the images:
+
+    $ make load-sd SD=path_to_mounted_sdcard
+
+Eject the SD card, insert it into the board and power the board on. Connect to the board with an ethernet cable (password is _root_) and run hello world:
+
+    $ ssh root@192.168.1.5
+    root@zynq:~# ./fesvr-zedboard pk hello
 
 
 
