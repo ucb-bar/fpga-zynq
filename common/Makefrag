@@ -19,16 +19,16 @@ src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 src/tcl/$(BOARD)_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board)' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
-src/tcl/make_bitfile.tcl: $(base_dir)/common/make_bitfile.tcl
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g' $(base_dir)/common/make_bitfile.tcl > src/tcl/make_bitfile.tcl
+src/tcl/make_bitstream.tcl: $(base_dir)/common/make_bitstream.tcl
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g' $(base_dir)/common/make_bitstream.tcl > src/tcl/make_bitstream.tcl
 
 
 # Project generation
 $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
 	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
 
-$(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr src/tcl/make_bitfile.tcl $(verilog_srcs) src/constrs/base.xdc
-	vivado -mode tcl -source src/tcl/make_bitfile.tcl
+$(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc
+	vivado -mode tcl -source src/tcl/make_bitstream.tcl
 
 
 # Handle git submodule for prebuilt modules
@@ -43,8 +43,8 @@ fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(BOARD)_rocketchip
 .PHONY: project
 project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 
-.PHONY: bitfile
-bitfile: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
+.PHONY: bitstream
+bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
 
 .PHONY: fetch-images
 fetch-images: fpga-images-$(BOARD)/boot.bif

@@ -4,15 +4,15 @@
 
 zedboard/zedboard_rocketchip
 zedboard/src/tcl/zedboard_rocketchip.tcl
-zedboard/src/tcl/make_bitfile.tcl
+zedboard/src/tcl/make_bitstream.tcl
 zedboard/src/verilog/rocketchip_wrapper.v
 
 zybo/zybo_rocketchip
 zybo/src/tcl/zybo_rocketchip.tcl
-zybo/src/tcl/make_bitfile.tcl
+zybo/src/tcl/make_bitstream.tcl
 zybo/src/verilog/rocketchip_wrapper.v
 
 zc706/zc706_rocketchip
 zc706/src/tcl/zc706_rocketchip.tcl
-zc706/src/tcl/make_bitfile.tcl
+zc706/src/tcl/make_bitstream.tcl
 zc706/src/verilog/rocketchip_wrapper.v
