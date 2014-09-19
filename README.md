@@ -68,6 +68,41 @@ _Note:_ The numbers following `tty.usbmodem` may vary slightly.
 
 
 
+Getting Files On & Off the Board
+--------------------------------
+#####Copying Files over Ethernet
+The easiest way to get a file onto the board is to copy it with scp over ethernet:
+
+    $ scp file root@192.168.1.5:~/
+
+_Note:_ Linux is running out of a RAMdisk, so to make a file available after reboot, copy it to the SD card or modify the RAMdisk.
+
+#####Mounting the SD Card on the Board
+You can mount the SD card on the board by:
+
+    root@zynq:~# mkdir /sdcard
+    root@zynq:~# mount /dev/mmcblk0p1 /sdcard
+
+When you are done, don't forget to unmount it:
+
+    root@zynq:~# umount /sdcard
+
+#####Changing the RAMDisk
+_Requires: (u-boot)[http://www.denx.de/wiki/U-Boot/] and sudo_
+The RAMDisk that holds linux (uramdisk.image.gz) is a gzipped cpio archive with a u-boot header for the zedboard. To open the RAMdisk:
+    $ dd if=uramdisk.image.gz  bs=64 skip=1 of=uramdisk.cpio.gz
+    $ mkdir ramdisk
+    $ gunzip -c uramdisk.cpio.gz | sudo sh -c 'cd ramdisk/ && cpio -i'
+
+When changing or adding files, be sure to keep track of owners, groups, and permissions. When you are done, to package it back up:
+
+    $ sh -c 'cd ramdisk/ && sudo find . | sudo cpio -H newc -o' | gzip -9 > uramdisk.cpio.gz
+    $ mkimage -A arm -O linux -T ramdisk -d uramdisk.cpio.gz uramdisk.image.gz
+
+A useful application of this is to add your SSH public key to .ssh/authorized_keys so you can have passwordless login to the board.
+
+
+
 Working with Vivado
 -------------------
 _Requires: Vivado 2014.2 and its settings64.sh sourced_
@@ -84,6 +119,15 @@ To launch Vivado in GUI mode:
 
     $ make vivado
 
+
+
+Configuring Rocket Chip
+-----------------------
+TODO: interactions with rocket-chip repo
+#####Changing the Processor's Clockrate
+You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `RC_CLK_DIVIDE` within a board's `src/verilog/clocking.vh`.
+
+Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`.
 
 
 TODO: merge remaining instructions from current fpga-zynq repo
