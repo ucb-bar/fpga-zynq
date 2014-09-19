@@ -92,16 +92,15 @@ _Requires: [u-boot](http://www.denx.de/wiki/U-Boot/) and sudo_
 
 The RAMDisk that holds linux (`uramdisk.image.gz`) is a gzipped cpio archive with a u-boot header for the board. To open the RAMdisk:
 
-    $ dd if=uramdisk.image.gz  bs=64 skip=1 of=uramdisk.cpio.gz
-    $ mkdir ramdisk
-    $ gunzip -c uramdisk.cpio.gz | sudo sh -c 'cd ramdisk/ && cpio -i'
+    $ make ramdisk-open
 
 When changing or adding files, be sure to keep track of owners, groups, and permissions. When you are done, to package it back up:
 
-    $ sh -c 'cd ramdisk/ && sudo find . | sudo cpio -H newc -o' | gzip -9 > uramdisk.cpio.gz
-    $ mkimage -A arm -O linux -T ramdisk -d uramdisk.cpio.gz uramdisk.image.gz
+    $ make ramdisk-close
 
 A useful application of this is to add your SSH public key to `.ssh/authorized_keys` so you can have passwordless login to the board.
+
+_Note:_ Since these ramdisk operations use sudo on files, they may not work on a network mounted filesystem. To get around this limitation, it is easiest to just copy it to a local filesystem when modifying the ramdisk.
 
 
 

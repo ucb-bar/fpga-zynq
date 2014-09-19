@@ -44,7 +44,7 @@ bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrappe
 
 
 
-# Handle git submodule for prebuilt modules
+# Handle images and git submodule for prebuilt modules
 fpga-images-$(BOARD)/boot.bif:
 	git submodule update --init --depth=1 fpga-images-$(BOARD)
 
@@ -56,9 +56,23 @@ fetch-images: fpga-images-$(BOARD)/boot.bif
 load-sd: fpga-images-$(BOARD)/boot.bin
 	$(base_dir)/common/load_card.sh $(SD)
 
+ramdisk-open: fpga-images-$(BOARD)/boot.bif
+	mkdir ramdisk
+	dd if=fpga-images-$(BOARD)/uramdisk.image.gz  bs=64 skip=1 | \
+	gunzip -c | sudo sh -c 'cd ramdisk/ && cpio -i'
+
+ramdisk-close:
+	@if [ ! -d "ramdisk" ]; then \
+		echo "No ramdisk to close (use make ramdisk-open first)"; \
+		exit 1; \
+	fi
+	sh -c 'cd ramdisk/ && sudo find . | sudo cpio -H newc -o' | gzip -9 > uramdisk.cpio.gz
+	mkimage -A arm -O linux -T ramdisk -d uramdisk.cpio.gz fpga-images-$(BOARD)/uramdisk.image.gz
+	rm uramdisk.cpio.gz
+	@echo "Don't forget to remove ramdisk before opening it again (sudo rm -rf ramdisk)"
 
 
 clean:
 	rm -f *.log *.jou
 
-.PHONY: project vivado bitstream fetch-images load-sd clean
+.PHONY: project vivado bitstream fetch-images load-sd clean ramdisk-open ramdisk-close
