@@ -9,7 +9,7 @@ endif
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
-	src/verilog/Top.DefaultFPGAConfig.v \
+	src/verilog/Top.$(CHISEL_CONFIG).v \
 
 
 default: project
@@ -20,11 +20,16 @@ default: project
 src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
 	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/
 
-src/tcl/$(BOARD)_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board)' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
+src/tcl/$(BOARD)_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl Makefile
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/CHISEL_CONFIG_HERE/$(CHISEL_CONFIG)/g' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
 src/tcl/make_bitstream.tcl: $(base_dir)/common/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g' $(base_dir)/common/make_bitstream.tcl > src/tcl/make_bitstream.tcl
+
+# no dependencies so it has to be manually called
+# (don't want to clobber local verilog by accident)
+rocket:
+	cd $(base_dir)/rocket-chip/fsim; make verilog CONFIG=$(CHISEL_CONFIG); cp generated-src/Top.$(CHISEL_CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
 
 
@@ -75,4 +80,4 @@ ramdisk-close:
 clean:
 	rm -f *.log *.jou
 
-.PHONY: project vivado bitstream fetch-images load-sd clean ramdisk-open ramdisk-close
+.PHONY: rocket project vivado bitstream fetch-images load-sd clean ramdisk-open ramdisk-close
