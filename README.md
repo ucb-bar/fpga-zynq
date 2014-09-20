@@ -1,5 +1,5 @@
-fpga-zynq
-=========
+Rocket Chip on Zynq FPGAs
+=========================
 
 This repository contains the files needed to run the RISC-V [rocket chip](https://github.com/ucb-bar/rocket-chip) on 
 various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2014.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
@@ -139,16 +139,26 @@ _Note:_ If you like, you can have fpga-zynq and rocket-chip have any relative po
 
 ####Propagating Changes to the Vivado Project
 _Requires a JVM that can run current Scala_
+
 Perform the changes within `rocket-chip` (consult the rocket-chip [documentation](https://github.com/ucb-bar/rocket-chip)). To run the rocket chip generator and copy the newly generated verilog back into the board's source, run:
 
      $ make rocket
 
-Rocket chip will be configured by the configuration named `CHISEL_CONFIG` in the board's `Makefile`. If you wish to use a different configuration, you will need to change your vivado project to be aware of the new verilog source (configuration names are included in the filename e.g. Top.DefaultConfig.v) or regenerate the project.
+Rocket chip will be configured by the configuration named `CHISEL_CONFIG` in the board's `Makefile`. If you wish to use a different configuration, you will need to change your vivado project to be aware of the new verilog source  or regenerate the project (configuration names are included in the filename e.g. Top.DefaultConfig.v).
 
 ####Changing the Processor's Clockrate
 You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `RC_CLK_DIVIDE` within a board's `src/verilog/clocking.vh`.
 
 Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`.
+
+
+Contributors
+------------
+- Rimas Avizienis
+- Jonathan Bachrach 
+- Scott Beamer
+- Sagar Karandikar
+- Andrew Waterman
 
 
 TODO: merge remaining instructions from current fpga-zynq repo
