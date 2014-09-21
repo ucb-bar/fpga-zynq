@@ -7,3 +7,6 @@
 [submodule "common/u-boot-xlnx"]
 	path = common/u-boot-xlnx
 	url = https://github.com/Xilinx/u-boot-xlnx.git
+[submodule "common/linux-xlnx"]
+	path = common/linux-xlnx
+	url = https://github.com/Xilinx/linux-xlnx.git
