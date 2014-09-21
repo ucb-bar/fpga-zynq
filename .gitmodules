@@ -4,3 +4,6 @@
 [submodule "zybo/fpga-images-zybo"]
 	path = zybo/fpga-images-zybo
 	url = git@github.com:ucb-bar/fpga-images-zybo.git
+[submodule "common/u-boot-xlnx"]
+	path = common/u-boot-xlnx
+	url = https://github.com/Xilinx/u-boot-xlnx.git
