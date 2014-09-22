@@ -80,6 +80,9 @@ arm-uboot:
 	mkdir -p $(soft_build_dir)
 	cp $(uboot_dir)/u-boot $(soft_build_dir)/u-boot.elf
 
+arm-dtb:
+	export PATH=$(arm_linux_dir)/scripts/dtc:$$PATH && dtc -I dts -O dtb -o $(output_delivery)/devicetree.dtb soft_config/$(BOARD)_devicetree.dts
+
 # Handle images and git submodule for prebuilt modules
 fpga-images-$(BOARD)/boot.bif:
 	git submodule update --init --depth=1 fpga-images-$(BOARD)
