@@ -54502,21 +54502,11 @@ reg [132:0] ram [31:0];
     end
   `endif
   reg [4:0] reg_R1A;
-  reg [4:0] latch_W0A;
-  reg [132:0] latch_W0I;
-  reg latch_W0E;
 always @(posedge CLK) begin
   if (R1E) reg_R1A <= R1A;
+  if (W0E) ram[W0A] <= W0I;
 end
 assign R1O = ram[reg_R1A];
-  always @(*) begin
-    if (!CLK && W0E) latch_W0A <= W0A;
-    if (!CLK && W0E) latch_W0I <= W0I;
-    if (!CLK) latch_W0E <= W0E;
-  end
-  always @(*)
-    if (CLK && latch_W0E)
-      ram[latch_W0A] <= latch_W0I;
 
 endmodule
 
