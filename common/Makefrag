@@ -1,6 +1,8 @@
 # This makefrag is sourced by each board's subdirectory
 
+JOBS = 16
 base_dir = $(abspath ..)
+output_delivery = deliver_output
 
 ifneq ($(BOARD_MODEL),)
     insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board" "$(BOARD_MODEL)"/g
@@ -47,7 +49,36 @@ vivado: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 
 bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
 
+arm_linux_dir = $(base_dir)/common/linux-xlnx
+uboot_dir = $(base_dir)/common/u-boot-xlnx
+soft_build_dir = soft_build
 
+# software builds
+arm-linux: arm-uboot # must first build uboot because we need tools
+	# compile kernel
+	git submodule update --init --depth=1 $(arm_linux_dir)
+	# no make clean included here since one copy of linux should work on all boards
+	cd $(arm_linux_dir) && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- xilinx_zynq_defconfig 
+	cd $(arm_linux_dir) && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- -j$(JOBS)
+	# convert zImage to uImage
+	cd $(arm_linux_dir) && export PATH=$(uboot_dir)/tools:$$PATH && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- UIMAGE_LOADADDR=0x8000 uImage
+	mkdir -p $(output_delivery)
+	cp $(arm_linux_dir)/arch/arm/boot/uImage $(output_delivery)/
+
+arm-uboot:
+	# compile board-compatible u-boot
+	git submodule update --init --depth=1 $(uboot_dir)
+	# copy relevant configuration files
+	if [ -a soft_config/boards.cfg ] ; \
+	then \
+	    cp soft_config/boards.cfg $(uboot_dir)/ ; \
+	fi;
+	cp soft_config/zynq_$(UBOOT_CONFIG).h $(uboot_dir)/include/configs/
+	# actually build
+	cd $(uboot_dir) && make CROSS_COMPILE=arm-xilinx-linux-gnueabi- zynq_$(UBOOT_CONFIG)_config
+	cd $(uboot_dir) && make CROSS_COMPILE=arm-xilinx-linux-gnueabi- -j$(JOBS)
+	mkdir -p $(soft_build_dir)
+	cp $(uboot_dir)/u-boot $(soft_build_dir)/u-boot.elf
 
 # Handle images and git submodule for prebuilt modules
 fpga-images-$(BOARD)/boot.bif:
@@ -75,7 +106,6 @@ ramdisk-close:
 	mkimage -A arm -O linux -T ramdisk -d uramdisk.cpio.gz fpga-images-$(BOARD)/uramdisk.image.gz
 	rm uramdisk.cpio.gz
 	@echo "Don't forget to remove ramdisk before opening it again (sudo rm -rf ramdisk)"
-
 
 clean:
 	rm -f *.log *.jou

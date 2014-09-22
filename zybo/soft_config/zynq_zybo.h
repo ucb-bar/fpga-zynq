@@ -16,7 +16,7 @@
 #ifndef __CONFIG_ZYNQ_ZYBO_H
 #define __CONFIG_ZYNQ_ZYBO_H
 
-// originally 512 * ..., but Rocket gets upper half of RAM
+/* originally 512 * ..., but Rocket gets upper half of RAM */
 #define CONFIG_SYS_SDRAM_SIZE (256 * 1024 * 1024) 
 
 #define CONFIG_ZYNQ_SERIAL_UART1
