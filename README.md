@@ -152,6 +152,147 @@ You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `
 Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`.
 
 
+
+
+TODO: the following section is a WIP. Does not yet account for what has already been described above.
+
+Building from Scratch
+-----------------------
+This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this readme may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2014.2.
+
+For ease of exposition, we will be describing all of the commands assuming that we are working with the `zybo`. Replacing references to the `zybo` with `zedboard` or `zc706` will allow you to use these instructions for those boards.
+
+From here on, `$REPO` will refer to the location of the `fpga-zynq` repository.
+
+### 1) Project Setup
+
+First, we need to generate a Vivado project from the source files that are present in a particular board's directory. 
+
+	$ cd $REPO/zybo
+	$ make project
+	
+### 2) Generating a Bitstream
+	
+Next, let's open up the project in the Vivado GUI:
+
+	$ make vivado
+	# OR
+	$ cd zybo_rocketchip
+	$ vivado zybo_rocketchip.xpr
+
+If you wish to make any modifications to the project, you may now do so. Once you've finished, let's move on:
+
+Inside Vivado, select "Open Block Design" followed by "system.bd" in the dropdown. This will open a block diagram for the Zynq PS Configuration and is necessary for correct FSBL generation.
+
+Next, select "Generate Bitstream." Vivado will now step through the usual Synthesis/Implementation steps. Upon completion, select "Open Implemented Design". This is again necessary to properly export the description of our Hardware for the Xilinx SDK to use.
+
+At this point, select File -> Export -> Export Hardware. This will create the following directory:
+
+`$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk`
+
+This directory contains a variety of files. If you're interested in only the bitstream, you can stop here; the file you want is in:
+
+`$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/rocketchip_wrapper_hw_platform_0/rocketchip_wrapper.bit`
+
+Otherwise, let's continue on to building the FSBL.
+
+### 3) Building the FSBL
+
+This step assumes that you have just generated the bitstream. Inside the Vivado GUI, select "Launch SDK". This will open up the Xilinx SDK preconfigured with the description of our hardware. In order to generate the FSBL, do the following:
+
+1) Select File -> Project -> Application Project
+
+2) In the new window, type "FSBL" as the Project name, and ensure that the rest of the properties are correctly set (disregarding the greyed out "Location" field):
+
+<img src="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/FSBL.png" width="400"/>
+
+3) Select "Next", at which point you should be given a set of options. Select "Zynq FSBL" and "Finish".
+
+4) The SDK will proceed to automatically compile the FSBL. You can see the progress in the Console.
+
+5) Once the build is finished, we need to build u-boot in order to create our BOOT.bin.
+
+### 4) Building u-boot for the Zynq ARM Core
+
+Returning to the command line, do the following from the directory corresponding to your board:
+
+	$ make arm-uboot
+	
+This target performs a variety of commands. It will first pull the u-boot source from the Xilinx repositories (see the submodule in `$REPO/common/u-boot-xlnx`), patch it with the necessary files found in `$REPO/zybo/soft_config/`, compile u-boot, and place the resulting u-boot.elf file in `$REPO/zybo/soft_build/u-boot.elf`. 
+
+### 5) Creating `boot.bin`
+
+At this point, we have built up all of the necessary components to create our `boot.bin` file. Returning to the Xilinx SDK, select Xilinx Tools -> "Create Zynq Boot Image". 
+
+First, you should fill in the "Output BIF file path" with `$REPO/zybo/deliver_output`. If this directory has not already been created, you may go ahead and create it (this is where we will place all of the items that we will ultimately transfer to the SD card). See the below for a sample path. Performing this step will also fill in the "Output path" field, which specifies the location of the `BOOT.bin` file that we desire. 
+
+Next, we will add the individual files that make up `BOOT.bin`. Order is important, so follow these steps exactly:
+
+1) Select "Add" and in the window that opens, click "Browse" and specify the following location:
+
+`$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/FSBL/Debug/FSBL.elf`
+
+Once you have done so select the dropdown next to "Partition type" and select "bootloader". You must perform this step *after* selecting the path, else the SDK will change it back to "datafile", and your `BOOT.bin` will not work.
+
+At the conclusion of this step, the "Add partition" window will look something like:
+
+<img src="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/selectFSBL.png" width="400" />
+
+Click "OK" to return to the previous window.
+
+2) Once more, click "Add". In the new "Add partition" window, click "Browse" and specify the following location:
+
+`$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/rocketchip_wrapper_hw_platform_0/rocketchip_wrapper.bit`
+
+Ensure that "Partition type" is set to datafile and click "OK".
+
+3) Click "Add" a final time. Click "Browse" and this time select our compiled `u-boot.elf`:
+
+`$REPO/zybo/soft_build/u-boot.elf`
+
+Again, ensure that "Partition type" is set to datafile and click "OK".
+
+4) At this point, the window should match the following (click the image to zoom in):
+
+<a href="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/boot_image.png" target="_new"><img src="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/boot_image.png" width="400" /></a>
+
+Select "Create Image". This will produce a `BOOT.bin` file in the `$REPO/zybo/deliver_output` directory.
+
+### 6) Building linux for the ARM PS
+
+As part of our bootstrapping process, we need to boot linux on the ARM core in the Zynq. We can build this copy of linux like so (again assuming that we are in `$REPO/zybo`):
+
+	$ make arm-linux
+	
+We additionally need to produce the `devicetree.dtb` file that linux will use to setup peripherals of the ARM core. We can produce this like so:
+
+	$ make arm-dtb
+	
+At this point, the `$REPO/zybo/deliver_output` directory contains the following files:
+
+* `BOOT.bin` - (the filename is case insensitive, you may see `boot.bin`). This contains the FSBL, the bitstream with Rocket, and u-boot. 
+* `uImage` - Linux for the ARM PS
+* `devicetree.dtb` - Contains information about the ARM core's peripherals for linux.
+
+The only remaining file that we are missing at this point is `uramdisk.image.gz`, the root filesystem for linux on the ARM Core. You can obtain that like so:
+
+TODO: INFO HERE ABOUT RAMDISK
+
+Take these four files, and place them on the root of the SD card that we will insert into the Zybo. The layout of your SD card should match the following:
+
+	SD_ROOT/
+	|-> boot.bin
+	|-> devicetree.dtb
+	|-> uImage
+	|-> uramdisk.image.gz
+
+At this point, you have performed the necessary steps to run binaries on Rocket. See the [TODO: INFO HERE] section for how to do so. If you are interested in running riscv-linux on Rocket, continue on:
+
+### 7) Building riscv-linux
+
+TODO
+
+
 Contributors
 ------------
 - Rimas Avizienis
@@ -159,6 +300,3 @@ Contributors
 - Scott Beamer
 - Sagar Karandikar
 - Andrew Waterman
-
-
-TODO: merge remaining instructions from current fpga-zynq repo
