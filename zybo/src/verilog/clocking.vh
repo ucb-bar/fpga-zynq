@@ -27,7 +27,7 @@ hw/src/constrs/pin_constraints.xdc
 
 `define RC_CLK_MULT      8.0
 
-`define RC_CLK_DIVIDE   40.0
+`define RC_CLK_DIVIDE   20.0
 
 
 `endif // _clocking_vh_
