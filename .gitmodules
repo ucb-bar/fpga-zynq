@@ -12,3 +12,6 @@
 	path = common/linux-xlnx
 	url = https://github.com/Xilinx/linux-xlnx.git
 	branch = master-next
+[submodule "zc706/fpga-images-zc706"]
+	path = zc706/fpga-images-zc706
+	url = git@github.com:ucb-bar/fpga-images-zc706.git
