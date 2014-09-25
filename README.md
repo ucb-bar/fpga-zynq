@@ -4,7 +4,6 @@ Rocket Chip on Zynq FPGAs
 This repository contains the files needed to run the RISC-V [rocket chip](https://github.com/ucb-bar/rocket-chip) on 
 various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2014.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
 
-
 ###Overview of System Stack
 Our system will allow you to run a RISC-V binary on a rocket core instantiated on a supported Zynq FPGA. This section will outline the stack of all of the parts involved and by proxy, outline the rest of the documentation. Going top-down from the RISC-V binary to the development system:
 
@@ -29,7 +28,7 @@ There are 3 major software components used by the ARM Core:
 2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see section N TODO Link)
 3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom devicetree file to support Rocket. (see section N TODO Link)
 
-**FPGA Board** (zybo, zedboard, or zc706)
+**FPGA Board** (Zybo, Zedboard, or ZC706)
  contains the Zynq FPGA and several I/O devices. At power on, the contents of the SD card are used to configure the FPGA and boot linux on the ARM core.
 
 **External Communication** (tty over serial on usb or telnet/ssh over ethernet)
@@ -40,32 +39,34 @@ There are 3 major software components used by the ARM Core:
 
 This readme contains 3 major sets of instructions:
 
-1) [Quick Instructions](#quickinst): This is the simplest way to get started - you'll download the relevant prebuilt-images from your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
+1) [Quick Instructions](#quickinst): This is the simplest way to get started - you'll download the relevant prebuilt images for your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
 
-2) [Modifying the Bitstream](#bitstream): These instructions walk through what we believe is the common case - a user wanting to impact a custom-generated Rocket Core.
+2) [Modifying the Bitstream](#bitstream): These instructions walk through what we believe is the common case - a user wanting to utilize a custom-generated Rocket Core.
 
-3) [Building from Scratch](#fromscratch): Here, we discuss how to build the full stack from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
+3) [Building from Scratch](#fromscratch): Here, we discuss how to build the full stack described above from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
 
 Finally, the bottom of the README contains a set of [Appendices](#appendices), which document some common operations that we believe are useful. 
 
 
 1) <a name="quickinst"></a> Quick Instructions 
 ------------------
-_Using prebuilt images get hello world on board_
+_Using prebuilt images, run hello world on Rocket_
 
-First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). From there:
+First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). From there, run the following to download all of the necessary images:
 
     $ make fetch-images
 
-Insert the SD card on the development system and copy over the images:
+Next, insert the SD card on the development system and copy over the images:
 
     $ make load-sd SD=path_to_mounted_sdcard
 
-Eject the SD card, insert it into the board and power the board on. Connect to the board with an ethernet cable (password is _root_) and run hello world:
+Finally, eject the SD card, insert it into the board and power the board on. Connect to the board with an ethernet cable (password is _root_) and run hello world:
 
     $ ssh root@192.168.1.5
     root@zynq:~# ./fesvr-zedboard pk hello
+    hello!
 
+Awesome! We can now run RISC-V binaries on Rocket. If you'd like to boot linux on the Rocket core, see section N (TODO).
 
 2) <a name="bitstream"></a> Modifying the Bitstream 
 -------------------------
@@ -76,7 +77,7 @@ TODO
 
 3) <a name="fromscratch"></a> Building from Scratch 
 -----------------------
-This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this readme may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2014.2.
+This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this README may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2014.2.
 
 For ease of exposition, we will be describing all of the commands assuming that we are working with the `zybo`. Replacing references to the `zybo` with `zedboard` or `zc706` will allow you to use these instructions for those boards.
 
@@ -108,7 +109,7 @@ At this point, select File -> Export -> Export Hardware. This will create the fo
 
 `$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk`
 
-This directory contains a variety of files. If you're interested in only the bitstream, you can stop here; the file you want is in:
+This directory contains a variety of files that provide information about the hardware to the SDK. If you're interested in only the bitstream, you can stop here; the file you want is in:
 
 `$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/rocketchip_wrapper_hw_platform_0/rocketchip_wrapper.bit`
 
@@ -128,7 +129,7 @@ This step assumes that you have just generated the bitstream. Inside the Vivado 
 
 4) The SDK will proceed to automatically compile the FSBL. You can see the progress in the Console.
 
-5) Once the build is finished, we need to build u-boot in order to create our BOOT.bin.
+5) Once the build is finished, we need to build u-boot before returning to the SDK in order to create our BOOT.bin.
 
 ### 4) Building u-boot for the Zynq ARM Core
 
@@ -176,6 +177,12 @@ Again, ensure that "Partition type" is set to datafile and click "OK".
 
 Select "Create Image". This will produce a `BOOT.bin` file in the `$REPO/zybo/deliver_output` directory.
 
+If you make modifications to the project in the future, you can avoid having to perform this step manually and
+instead may reuse the output.bif file that the SDK generates the first time you use "Create Zynq Boot Image."
+Use the following make target to do so:
+
+    $ TODO
+
 ### 6) Building linux for the ARM PS
 
 As part of our bootstrapping process, we need to boot linux on the ARM core in the Zynq. We can build this copy of linux like so (again assuming that we are in `$REPO/zybo`):
@@ -217,7 +224,7 @@ To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow
 
 	SD_ROOT/
 	|-> riscv/
-	    |-> root_spike.bin
+	    |-> root.bin
 	    |-> vmlinux[_nofpu]
 	|-> boot.bin
 	|-> devicetree.dtb
@@ -236,7 +243,7 @@ TODO (might want to put this in appendices)
 ###A) Connecting to the Board
 
 ####Serial-USB
-On the zybo and zedboard a single serial-USB cable is needed but on the zc706 you will also need a USB type A to type B cable (and possibly to install drivers)
+On the Zybo and Zedboard a single serial-USB cable is needed but on the ZC706 you will also need a USB type A to type B cable (and possibly to install drivers)
 
     $ screen /dev/tty.usbmodem1411 115200,cs8,-parenb,-cstopb
 
