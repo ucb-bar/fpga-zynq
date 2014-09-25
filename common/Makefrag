@@ -2,11 +2,13 @@
 
 JOBS = 16
 base_dir = $(abspath ..)
+common = $(base_dir)/common
 output_delivery = deliver_output
 
 ifneq ($(BOARD_MODEL),)
-    insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board" "$(BOARD_MODEL)"/g
+	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board" "$(BOARD_MODEL)"/g
 endif
+
 
 verilog_srcs = \
 	src/verilog/clocking.vh \
@@ -19,41 +21,48 @@ default: project
 
 
 # Specialize sources for board
-src/verilog/rocketchip_wrapper.v: $(base_dir)/common/rocketchip_wrapper.v
-	cp $(base_dir)/common/rocketchip_wrapper.v src/verilog/
+# ------------------------------------------------------------------------------
+src/verilog/rocketchip_wrapper.v: $(common)/rocketchip_wrapper.v
+	cp $(common)/rocketchip_wrapper.v src/verilog/
 
-src/tcl/$(BOARD)_rocketchip.tcl: $(base_dir)/common/zynq_rocketchip.tcl Makefile
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/CHISEL_CONFIG_HERE/$(CHISEL_CONFIG)/g' $(base_dir)/common/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
+src/tcl/$(BOARD)_rocketchip.tcl: $(common)/zynq_rocketchip.tcl Makefile
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/CHISEL_CONFIG_HERE/$(CHISEL_CONFIG)/g' \
+		$(common)/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
-src/tcl/make_bitstream.tcl: $(base_dir)/common/make_bitstream.tcl
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g' $(base_dir)/common/make_bitstream.tcl > src/tcl/make_bitstream.tcl
+src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g' \
+		$(common)/make_bitstream.tcl > src/tcl/make_bitstream.tcl
 
-# no dependencies so it has to be manually called
-# (don't want to clobber local verilog by accident)
 rocket:
-	cd $(base_dir)/rocket-chip/fsim; make verilog CONFIG=$(CHISEL_CONFIG); cp generated-src/Top.$(CHISEL_CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+	cd $(base_dir)/rocket-chip/fsim; \
+	make verilog CONFIG=$(CHISEL_CONFIG); \
+	cp generated-src/Top.$(CHISEL_CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
 
 
 # Project generation
-$(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr: src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
-	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl
+# ------------------------------------------------------------------------------
+project = $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
+$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
+	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl; \
+project: $(project)
 
-$(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc
+vivado: $(project)
+	vivado $(project) &
+
+bitstream = $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
+$(bitstream): src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
 	vivado -mode tcl -source src/tcl/make_bitstream.tcl
+bitstream: $(bitstream)
 
-project: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 
-vivado: $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-	vivado $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr &
 
-bitstream: $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
-
+# Platform software generation
+# ------------------------------------------------------------------------------
 arm_linux_dir = $(base_dir)/common/linux-xlnx
 uboot_dir = $(base_dir)/common/u-boot-xlnx
 soft_build_dir = soft_build
 
-# software builds
 arm-linux: arm-uboot # must first build uboot because we need tools
 	# compile kernel
 	git submodule update --init $(arm_linux_dir)
@@ -83,11 +92,15 @@ arm-uboot:
 arm-dtb:
 	export PATH=$(arm_linux_dir)/scripts/dtc:$$PATH && dtc -I dts -O dtb -o $(output_delivery)/devicetree.dtb soft_config/$(BOARD)_devicetree.dts
 
+
+
 # Handle images and git submodule for prebuilt modules
+# ------------------------------------------------------------------------------
+# boot.bif is proxy for has images submodule been pulled
 fpga-images-$(BOARD)/boot.bif:
 	git submodule update --init --depth=1 fpga-images-$(BOARD)
 
-fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
+fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(bitstream)
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
 fetch-images: fpga-images-$(BOARD)/boot.bif
@@ -110,7 +123,8 @@ ramdisk-close:
 	rm uramdisk.cpio.gz
 	@echo "Don't forget to remove ramdisk before opening it again (sudo rm -rf ramdisk)"
 
-clean:
-	rm -f *.log *.jou
 
-.PHONY: rocket project vivado bitstream fetch-images load-sd clean ramdisk-open ramdisk-close
+clean:
+	rm -f *.log *.jou *.str
+
+.PHONY: rocket vivado fetch-images load-sd clean ramdisk-open ramdisk-close
