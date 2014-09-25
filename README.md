@@ -34,16 +34,16 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 
 This readme contains 3 major sets of instructions:
 
-1) <a href="#quickinst">Quick Instructions</a>: This is the simplest way to get started - you'll download the relevant prebuilt-images from your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
+1) [Quick Instructions](#quickinst): This is the simplest way to get started - you'll download the relevant prebuilt-images from your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
 
-2) <a href="#bitstream">Modifying the Bitstream</a>: These instructions walk through what we believe is the common case - a user wanting to impact a custom-generated Rocket Core.
+2) [Modifying the Bitstream](#bitstream): These instructions walk through what we believe is the common case - a user wanting to impact a custom-generated Rocket Core.
 
-3) <a href="#fromscratch">Building from Scratch</a>: Here, we discuss how to build the full stack from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
+3) [Building from Scratch](#fromscratch): Here, we discuss how to build the full stack from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
 
-Finally, the bottom of the README contains a set of <a href="#appendices">Appendices</a>, which document some common operations that we believe are useful. 
+Finally, the bottom of the README contains a set of [Appendices](#appendices), which document some common operations that we believe are useful. 
 
 
-1) Quick Instructions <a id="quickinst"></a>
+1) Quick Instructions <a name="quickinst"></a>
 ------------------
 _Using prebuilt images get hello world on board_
 
@@ -61,14 +61,14 @@ Eject the SD card, insert it into the board and power the board on. Connect to t
     root@zynq:~# ./fesvr-zedboard pk hello
 
 
-2) Modifying the Bitstream <a id="bitstream"></a>
+2) Modifying the Bitstream <a name="bitstream"></a>
 -------------------------
 
 TODO
 
 
 
-3) Building from Scratch <a id="fromscratch"></a>
+3) Building from Scratch <a name="fromscratch"></a>
 -----------------------
 This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this readme may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2014.2.
 
@@ -224,7 +224,7 @@ To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow
 TODO (might want to put this in appendices)
 
 
-Appendices <a href="#appendices"></a>
+Appendices <a name="#appendices"></a>
 ------------
 
 
