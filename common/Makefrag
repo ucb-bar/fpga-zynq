@@ -44,7 +44,7 @@ rocket:
 # ------------------------------------------------------------------------------
 project = $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
 $(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
-	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl; \
+	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl;
 project: $(project)
 
 vivado: $(project)
@@ -96,19 +96,19 @@ arm-dtb:
 
 # Handle images and git submodule for prebuilt modules
 # ------------------------------------------------------------------------------
-# boot.bif is proxy for has images submodule been pulled
-fpga-images-$(BOARD)/boot.bif:
+images = fpga-images-$(BOARD)/boot.bif
+$(images):
 	git submodule update --init --depth=1 fpga-images-$(BOARD)
 
-fpga-images-$(BOARD)/boot.bin: fpga-images-$(BOARD)/boot.bif $(bitstream)
-	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
+fetch-images: $(images)
 
-fetch-images: fpga-images-$(BOARD)/boot.bif
+fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
+	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
 load-sd: fpga-images-$(BOARD)/boot.bin
 	$(base_dir)/common/load_card.sh $(SD)
 
-ramdisk-open: fpga-images-$(BOARD)/boot.bif
+ramdisk-open: $(images)
 	mkdir ramdisk
 	dd if=fpga-images-$(BOARD)/uramdisk.image.gz  bs=64 skip=1 | \
 	gunzip -c | sudo sh -c 'cd ramdisk/ && cpio -i'
@@ -127,4 +127,4 @@ ramdisk-close:
 clean:
 	rm -f *.log *.jou *.str
 
-.PHONY: rocket vivado fetch-images load-sd clean ramdisk-open ramdisk-close
+.PHONY: vivado rocket fetch-images load-sd ramdisk-open ramdisk-close clean
