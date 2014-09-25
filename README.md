@@ -68,10 +68,18 @@ Finally, eject the SD card, insert it into the board and power the board on. Con
 
 Awesome! We can now run RISC-V binaries on Rocket. If you'd like to boot linux on the Rocket core, see section N (TODO).
 
+
+
 2) <a name="bitstream"></a> Modifying the Bitstream 
 -------------------------
 
-TODO
+TODO: get to point of new bitstream
+
+Once you have changed the design, you will need to generate a new bitstream and that will need to be packaged in `boot.bin`. `boot.bin` also contains the binaries needed for startup (`FSBL.elf` and `u-boot.elf`) but these can be reused. From within the board's directory (_zybo_ in this example), to repack `boot.bin`:
+
+    $ make fpga-images-zybo/boot.bin
+
+If you have modified the verilog for your project but not generated a new bitstream, `make` should generate a new bitstream automatically. To use the new `boot.bin`, copy it to the SD card, insert the SD card into the board, and power on the board.
 
 
 
