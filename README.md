@@ -23,6 +23,12 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 **Zynq ARM Core** (acutally dual Cortex A9)
  runs linux and simplifies interfacing with the FPGA.
 
+There are 3 major software components used by the ARM Core:
+
+1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see section N TODO Link)
+2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see section N TODO Link)
+3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom devicetree file to support Rocket. (see section N TODO Link)
+
 **FPGA Board** (zybo, zedboard, or zc706)
  contains the Zynq FPGA and several I/O devices. At power on, the contents of the SD card are used to configure the FPGA and boot linux on the ARM core.
 
