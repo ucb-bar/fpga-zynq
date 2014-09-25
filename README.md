@@ -4,13 +4,54 @@ Rocket Chip on Zynq FPGAs
 This repository contains the files needed to run the RISC-V [rocket chip](https://github.com/ucb-bar/rocket-chip) on 
 various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2014.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
 
+
+###How to use this README
+
+This README contains 3 major sets of instructions:
+
+1) [Quick Instructions](#quickinst): This is the simplest way to get started - you'll download the relevant prebuilt images for your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
+
+2) [How to Push Your Rocket Modifications to the FPGA](#bitstream): These instructions walk through what we believe is the common case - a user wanting to utilize a custom-generated Rocket Core.
+
+3) [Building Everything from Scratch](#fromscratch): Here, we discuss how to build the full stack described above from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
+
+Finally, the bottom of the README contains a set of [Appendices](#appendices), which document some common operations that we believe are useful or provides more depth on commands described elsewhere in the documentation.
+
+
+###Table of Contents
+
++ Overview of System Stack
++ [Quick Instructions](#quickinst)
++ [How to Push Your Rocket Modifications to the FPGA](#bitstream)
+  + Setting Up Your Workspace
+  + Configuring Rocket Chip
+  + Propagating Changes to the Vivado Project
+  + Repacking `boot.bin`
++ [Building Everything from Scratch](#fromscratch)
+  + Project Setup
+  + Generating a Bitstream
+  + Building the FSBL
+  + Building u-boot for the Zynq ARM Core
+  + Creating `boot.bin`
+  + Building linux for the ARM PS
+  + Building riscv-linux
+  + Booting Up and Interacting with the RISC-V Rocket Core
++ [Appendices](#appendices)
+  + Connecting to the Board
+  + Getting Files On & Off the Board
+  + Working with Vivado
+  + Changing the Processor's Clockrate
+  + Contents of the SD Card
+
+
+
 ###Overview of System Stack
 Our system will allow you to run a RISC-V binary on a rocket core instantiated on a supported Zynq FPGA. This section will outline the stack of all of the parts involved and by proxy, outline the rest of the documentation. Going top-down from the RISC-V binary to the development system:
 
 **Target Application** (RISC-V binary)
  will run on top of whatever kernel the rocket chip is running. Compiled by [riscv-gcc](https://github.com/ucb-bar/riscv-gcc) or [riscv-llvm](https://github.com/ucb-bar/riscv-llvm).
 
-**RISC-V Kernel** ([proxy kernel](https://github.com/ucb-bar/riscv-pk) or [RISC-V linux](https://github.com/ucb-bar/riscv-linux))
+**RISC-V Kernel** ([proxy kernel](https://github.com/ucb-bar/riscv-pk) or [RISC-V Linux](https://github.com/ucb-bar/riscv-linux))
  runs on top of the rocket chip. The proxy kernel is extremely lightweight and designed to be used with a single binary linked against newlib while RISC-V linux is appropriate for everything else.
 
 **Rocket Chip** ([rocket core](https://github.com/ucb-bar/rocket) with L1 instruction and data caches)
@@ -19,14 +60,8 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 **Front-end Server** ([riscv-fesvr](https://github.com/ucb-bar/riscv-fesvr))
  runs on the host ARM core and provides an interface to the rocket chip running on the FPGA (connected via AXI).
 
-**Zynq ARM Core** (acutally dual Cortex A9)
- runs linux and simplifies interfacing with the FPGA.
-
-There are 3 major software components used by the ARM Core:
-
-1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see section N TODO Link)
-2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see section N TODO Link)
-3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom devicetree file to support Rocket. (see section N TODO Link)
+**Zynq ARM Core** (actually dual Cortex A9)
+ runs Linux and simplifies interfacing with the FPGA.
 
 **FPGA Board** (Zybo, Zedboard, or ZC706)
  contains the Zynq FPGA and several I/O devices. At power on, the contents of the SD card are used to configure the FPGA and boot linux on the ARM core.
@@ -34,18 +69,9 @@ There are 3 major software components used by the ARM Core:
 **External Communication** (tty over serial on usb or telnet/ssh over ethernet)
  allows the development system to communicate with the FPGA board.
 
+**Development System** (PC with SD card reader)
+ generates the images to configure the FPGA.
 
-###How to use this README
-
-This readme contains 3 major sets of instructions:
-
-1) [Quick Instructions](#quickinst): This is the simplest way to get started - you'll download the relevant prebuilt images for your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
-
-2) [How to Push Your Rocket Modifications to the FPGA](#bitstream): These instructions walk through what we believe is the common case - a user wanting to utilize a custom-generated Rocket Core.
-
-3) [Building Everything from Scratch](#fromscratch): Here, we discuss how to build the full stack described above from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
-
-Finally, the bottom of the README contains a set of [Appendices](#appendices), which document some common operations that we believe are useful. 
 
 
 1) <a name="quickinst"></a> Quick Instructions 
@@ -352,10 +378,20 @@ You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `
 Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`. This will also require regenerating `FSBL.elf`, the bitstream, and of course `boot.bin`.
 
 
-Contributors
-------------
-- Rimas Avizienis
-- Jonathan Bachrach 
-- Scott Beamer
-- Sagar Karandikar
-- Andrew Waterman
+###E) Contents of the SD Card
+There are 3 major software components used by the ARM core found on the SD card:
+
+1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see section N TODO Link)
+2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see section N TODO Link)
+3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see section N TODO Link)
+
+
+
+Acknowledgments 
+---------------
+In addition to those that [contributed](https://github.com/ucb-bar/rocket-chip#contributors) to rocket chip, this repository is based on internal repositories contributed by:
++ Rimas Avizienis
++ Jonathan Bachrach 
++ Scott Beamer
++ Sagar Karandikar
++ Andrew Waterman
