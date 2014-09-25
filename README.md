@@ -43,7 +43,7 @@ This readme contains 3 major sets of instructions:
 Finally, the bottom of the README contains a set of [Appendices](#appendices), which document some common operations that we believe are useful. 
 
 
-1) Quick Instructions <a name="quickinst"></a>
+1) <a name="quickinst"></a> Quick Instructions 
 ------------------
 _Using prebuilt images get hello world on board_
 
@@ -61,14 +61,14 @@ Eject the SD card, insert it into the board and power the board on. Connect to t
     root@zynq:~# ./fesvr-zedboard pk hello
 
 
-2) Modifying the Bitstream <a name="bitstream"></a>
+2) <a name="bitstream"></a> Modifying the Bitstream 
 -------------------------
 
 TODO
 
 
 
-3) Building from Scratch <a name="fromscratch"></a>
+3) <a name="fromscratch"></a> Building from Scratch 
 -----------------------
 This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this readme may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2014.2.
 
@@ -224,9 +224,8 @@ To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow
 TODO (might want to put this in appendices)
 
 
-Appendices <a name="#appendices"></a>
+<a name="appendices"></a> Appendices 
 ------------
-
 
 ###A) Connecting to the Board
 
