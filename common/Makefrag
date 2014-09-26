@@ -126,7 +126,8 @@ ramdisk-close:
 
 # Fetch ramdisk for user building from scratch
 # ------------------------------------------------------------------------------
-ramdisk_url = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/uramdisk.image.gz
+s3_url = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files
+ramdisk_url = $(s3_url)/uramdisk.image.gz
 fetch-ramdisk:
 	mkdir -p $(output_delivery)
 	curl $(ramdisk_url) > $(output_delivery)/uramdisk.image.gz
@@ -141,11 +142,11 @@ $(output_delivery)/boot.bin:
 # Fetch pre-built risc-v linux binary and root fs from S3
 # ------------------------------------------------------------------------------
 
-riscv_root_bin = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/root.bin
+riscv_root_bin = $(s3_url)/root.bin
 ifeq ($(BOARD), zybo)
-	riscv_vmlinux = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/vmlinux_nofpu
+	riscv_vmlinux = $(s3_url)/vmlinux_nofpu
 else
-	riscv_vmlinux = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/vmlinux
+	riscv_vmlinux = $(s3_url)/vmlinux
 endif
 sd_riscv = fpga-images-$(BOARD)/riscv
 sd_riscv_scratch = $(output_delivery)/riscv
