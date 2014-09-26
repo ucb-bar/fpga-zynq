@@ -106,6 +106,8 @@ Awesome! You can now run RISC-V binaries on Rocket. If you'd like to boot linux 
 -------------------------
 
 #### <a name="workspace"></a> Setting Up Your Workspace
+_Requires: Vivado 2014.2 and its settings64.sh sourced_
+
 If you don't already have a copy of the rocket chip, get a new one:
 
     $ git clone git@github.com:ucb-bar/rocket-chip.git
@@ -134,6 +136,7 @@ After making changes within `rocket-chip`, to run the rocket chip generator and 
 The rocket chip will be configured by the configuration named `CHISEL_CONFIG` in the board's `Makefile`. If you wish to use a different configuration, you will need to change your vivado project to be aware of the new verilog source  or regenerate the project because configuration names are included in the filename (e.g. _Top.DefaultConfig.v_).
 
 #### <a name="repack"></a> Repacking `boot.bin`
+
 Once you have changed the design, you will need to generate a new bitstream and that will need to be packaged in `boot.bin`. `boot.bin` also contains the binaries needed for startup (`FSBL.elf` and `u-boot.elf`) but these can be reused. From within the board's directory (_zybo_ in this example), to repack `boot.bin`:
 
     $ make fpga-images-zybo/boot.bin
@@ -168,11 +171,11 @@ Next, let's open up the project in the Vivado GUI:
 
 If you wish to make any modifications to the project, you may now do so. Once you've finished, let's move on:
 
-Inside Vivado, select "Open Block Design" followed by "system.bd" in the dropdown. This will open a block diagram for the Zynq PS Configuration and is necessary for correct FSBL generation.
+Inside Vivado, select _Open Block Design_ followed by _system.bd_ in the dropdown. This will open a block diagram for the Zynq PS Configuration and is necessary for correct FSBL generation.
 
-Next, select "Generate Bitstream." Vivado will now step through the usual Synthesis/Implementation steps. Upon completion, select "Open Implemented Design". This is again necessary to properly export the description of our Hardware for the Xilinx SDK to use.
+Next, select _Generate Bitstream_. Vivado will now step through the usual Synthesis/Implementation steps. Upon completion, select _Open Implemented Design_. This is again necessary to properly export the description of our Hardware for the Xilinx SDK to use.
 
-At this point, select File -> Export -> Export Hardware. This will create the following directory:
+At this point, select _File -> Export -> Export Hardware_. This will create the following directory:
 
 `$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk`
 
@@ -186,13 +189,13 @@ Otherwise, let's continue on to building the FSBL.
 
 This step assumes that you have just generated the bitstream. Inside the Vivado GUI, select "Launch SDK". This will open up the Xilinx SDK preconfigured with the description of our hardware. In order to generate the FSBL, do the following:
 
-1) Select File -> Project -> Application Project
+1) Select _File -> Project -> Application Project_
 
-2) In the new window, type "FSBL" as the Project name, and ensure that the rest of the properties are correctly set (disregarding the greyed out "Location" field):
+2) In the new window, type "FSBL" as the Project name, and ensure that the rest of the properties are correctly set (disregarding the greyed out _Location_ field):
 
 <img src="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/FSBL.png" width="400"/>
 
-3) Select "Next", at which point you should be given a set of options. Select "Zynq FSBL" and "Finish".
+3) Select _Next_, at which point you should be given a set of options. Select _Zynq FSBL_ and _Finish_.
 
 4) The SDK will proceed to automatically compile the FSBL. You can see the progress in the Console.
 
@@ -208,44 +211,44 @@ This target performs a variety of commands. It will first pull the u-boot source
 
 ### 5) <a name="boot.bin"></a> Creating `boot.bin`
 
-At this point, we have built up all of the necessary components to create our `boot.bin` file. Returning to the Xilinx SDK, select Xilinx Tools -> "Create Zynq Boot Image". 
+At this point, we have built up all of the necessary components to create our `boot.bin` file. Returning to the Xilinx SDK, select _Xilinx Tools -> Create Zynq Boot Image_. 
 
-First, you should fill in the "Output BIF file path" with `$REPO/zybo/deliver_output`. If this directory has not already been created, you may go ahead and create it (this is where we will place all of the items that we will ultimately transfer to the SD card). See the below for a sample path. Performing this step will also fill in the "Output path" field, which specifies the location of the `BOOT.bin` file that we desire. 
+First, you should fill in the _Output BIF file path_ with `$REPO/zybo/deliver_output`. If this directory has not already been created, you may go ahead and create it (this is where we will place all of the items that we will ultimately transfer to the SD card). See the below for a sample path. Performing this step will also fill in the _Output path_ field, which specifies the location of the `BOOT.bin` file that we desire. 
 
 Next, we will add the individual files that make up `BOOT.bin`. Order is important, so follow these steps exactly:
 
-1) Select "Add" and in the window that opens, click "Browse" and specify the following location:
+1) Select _Add_ and in the window that opens, click _Browse_ and specify the following location:
 
 `$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/FSBL/Debug/FSBL.elf`
 
-Once you have done so select the dropdown next to "Partition type" and select "bootloader". You must perform this step *after* selecting the path, else the SDK will change it back to "datafile", and your `BOOT.bin` will not work.
+Once you have done so select the dropdown next to _Partition type_ and select _bootloader_. You must perform this step **after** selecting the path, else the SDK will change it back to _datafile_, and your `BOOT.bin` will not work.
 
-At the conclusion of this step, the "Add partition" window will look something like:
+At the conclusion of this step, the _Add partition_ window will look something like:
 
 <img src="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/selectFSBL.png" width="400" />
 
-Click "OK" to return to the previous window.
+Click _OK"_to return to the previous window.
 
-2) Once more, click "Add". In the new "Add partition" window, click "Browse" and specify the following location:
+2) Once more, click _Add_. In the new _Add partition_ window, click _Browse_ and specify the following location:
 
 `$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/rocketchip_wrapper_hw_platform_0/rocketchip_wrapper.bit`
 
-Ensure that "Partition type" is set to datafile and click "OK".
+Ensure that _Partition type_ is set to datafile and click _OK_.
 
-3) Click "Add" a final time. Click "Browse" and this time select our compiled `u-boot.elf`:
+3) Click _Add_ a final time. Click _Browse_ and this time select our compiled `u-boot.elf`:
 
 `$REPO/zybo/soft_build/u-boot.elf`
 
-Again, ensure that "Partition type" is set to datafile and click "OK".
+Again, ensure that _Partition type_ is set to datafile and click _OK_.
 
 4) At this point, the window should match the following (click the image to zoom in):
 
 <a href="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/boot_image.png" target="_new"><img src="https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-guide/boot_image.png" width="400" /></a>
 
-Select "Create Image". This will produce a `BOOT.bin` file in the `$REPO/zybo/deliver_output` directory.
+Select _Create Image_. This will produce a `BOOT.bin` file in the `$REPO/zybo/deliver_output` directory.
 
 If you make modifications to the project in the future, you can avoid having to perform this step manually and
-instead may reuse the output.bif file that the SDK generates the first time you use "Create Zynq Boot Image."
+instead may reuse the output.bif file that the SDK generates the first time you use _Create Zynq Boot Image._
 Use the following make target to do so:
 
     $ make deliver_output/boot.bin
@@ -315,15 +318,15 @@ After performing either of these steps, your SD card layout should match the fol
 ### 8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
 
 First, insert the SD card and follow the instructions in [Appendix A](#connecting) 
-to connect to your board. You can login to the board with username `root` and 
-password `root`. Once you're at the prompt, you can run a basic hello world 
+to connect to your board. You can login to the board with username _root_ and 
+password _root_. Once you're at the prompt, you can run a basic hello world 
 program on rocket like so:
 
     root@zynq:~# ./fesvr-zynq pk hello
     hello!
 
 If you've downloaded the necessary files to boot riscv-linux, you may now do so.
-First however, you should mount the sd card using the instructions in [Appendix B](#mountsd).
+First however, you should mount the SD card using the instructions in [Appendix B](#mountsd).
 Then, to boot riscv-linux, run:
 
     root@zynq:~# ./fesvr-zynq +disk=/sdcard/riscv/root.bin /sdcard/riscv/vmlinux
