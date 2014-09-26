@@ -360,7 +360,7 @@ The easiest way to get a file onto the board is to copy it with scp over etherne
 
 _Note:_ Linux is running out of a RAMdisk, so to make a file available after a reboot, copy it to the SD card or modify the RAMdisk.
 
-#### <a id="mountsd"></a> Mounting the SD Card on the Board
+#### <a name="mountsd"></a> Mounting the SD Card on the Board
 You can mount the SD card on the board by:
 
     root@zynq:~# mkdir /sdcard
