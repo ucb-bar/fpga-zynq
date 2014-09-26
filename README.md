@@ -337,11 +337,13 @@ presented with a busybox prompt from riscv-linux running on rocket!
 ###A) <a name="connecting"></a> Connecting to the Board
 
 ####Serial-USB
-On the Zybo and Zedboard a single serial-USB cable is needed but on the ZC706 you will also need a USB type A to type B cable (and possibly to install drivers)
+On the Zybo and Zedboard a single serial-USB cable is needed but on the ZC706 you will also need a USB type A to type B cable (and possibly some drivers). To connect:
 
     $ screen /dev/tty.usbmodem1411 115200,cs8,-parenb,-cstopb
 
-_Note:_ The numbers following `tty.usbmodem` may vary slightly.
+_Note:_ The numbers following `tty.usbmodem` may vary slightly. On the Zybo, 
+replace `usbmodem` with `usbserial-` and on the ZC706, replace it with 
+`SLAB_USBtoUART`.
 
 ####Ethernet
 The board has an IP of 192.168.1.5 and can be accessed by username/password of root/root on telnet and ssh. For example:
