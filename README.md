@@ -43,6 +43,7 @@ To guide you through the rest of the documentation, we have provide both a [Tabl
   + [Working with Vivado](#vivado)
   + [Changing the Processor's Clockrate](#clockrate)
   + [Contents of the SD Card](#sdcard)
+  + [Building fesvr-zynq](#fesvr)
 + [Acknowledgements](#ack)
 
 
@@ -420,6 +421,19 @@ There are 3 major software components used by the ARM core found on the SD card:
 1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see [section 3](#fsbl))
 2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see [section 4](#u-boot))
 3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [section 6](#arm-linux))
+
+
+###F) <a name="fesvr"></a> Building fesvr-zynq
+
+The source code for the fesvr-zynq binary is in the [riscv-fesvr repo](http://github.com/ucb-bar/riscv-fesvr). To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
+
+    $ mkdir build
+    $ cd build
+    $ ../configure --host=arm-xilinx-linux-gnueabi
+    $ make
+
+from the riscv-fesvr/build directory and make sure you have the Xilinx SDK in your PATH. When installing fesvr-zynq, don't forget to copy the library as well (`build/libfesvr.so` to `/usr/local/lib` on the board).
+
 
 
 
