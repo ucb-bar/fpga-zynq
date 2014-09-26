@@ -91,7 +91,7 @@ Next, insert the SD card on the development system and copy over the images:
 Finally, eject the SD card, insert it into the board and power the board on. Connect to the board with an ethernet cable (password is _root_) and run hello world:
 
     $ ssh root@192.168.1.5
-    root@zynq:~# ./fesvr-zedboard pk hello
+    root@zynq:~# ./fesvr-zynq pk hello
     hello!
 
 Awesome! You can now run RISC-V binaries on Rocket. If you'd like to boot linux on the Rocket core, see _[Booting Up and Interacting with the RISC-V Rocket Core](#booting)_.
