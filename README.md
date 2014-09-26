@@ -78,11 +78,15 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 
 1) <a name="quickinst"></a> Quick Instructions 
 ------------------
-_Using prebuilt images, run hello world on rocket_
+_Using prebuilt images, run hello world and/or linux on rocket_
 
 First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). From there, run the following to download all of the necessary images:
 
     $ make fetch-images
+
+If you'd also like to try riscv-linux on rocket, run the following:
+
+    $ make fetch-riscv-linux
 
 Next, insert the SD card on the development system and copy over the images:
 
