@@ -105,7 +105,7 @@ fetch-images: $(images)
 fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
-load-sd: fpga-images-$(BOARD)/boot.bin
+load-sd: $(images)
 	$(base_dir)/common/load_card.sh $(SD)
 
 ramdisk-open: $(images)
