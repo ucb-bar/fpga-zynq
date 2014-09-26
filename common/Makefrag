@@ -124,6 +124,29 @@ ramdisk-close:
 	@echo "Don't forget to remove ramdisk before opening it again (sudo rm -rf ramdisk)"
 
 
+
+# Fetch pre-built risc-v linux binary and root fs from S3
+# ------------------------------------------------------------------------------
+
+riscv_root_bin = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/root.bin
+ifeq ($(BOARD), zybo)
+	riscv_vmlinux = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/vmlinux_nofpu
+else
+	riscv_vmlinux = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/vmlinux
+endif
+sd_riscv = fpga-images-$(BOARD)/riscv
+sd_riscv_scratch = $(output_delivery)/riscv
+
+fetch-riscv-linux:
+	mkdir -p $(sd_riscv)
+	curl $(riscv_root_bin) > $(sd_riscv)/root.bin
+	curl $(riscv_vmlinux) > $(sd_riscv)/vmlinux
+
+fetch-riscv-linux-deliver:
+	mkdir -p $(sd_riscv_scratch)
+	curl $(riscv_root_bin) > $(sd_riscv_scratch)/root.bin
+	curl $(riscv_vmlinux) > $(sd_riscv_scratch)/vmlinux
+
 clean:
 	rm -f *.log *.jou *.str
 
