@@ -278,21 +278,34 @@ Take these four files, and place them on the root of the SD card that we will in
 	|-> uImage
 	|-> uramdisk.image.gz
 
-At this point, you have performed the necessary steps to run binaries on Rocket. See the [TODO: INFO HERE] section for how to do so. If you are interested in running riscv-linux on Rocket, continue on:
+At this point, you have performed the necessary steps to run binaries on Rocket. See [Section 8](#booting) for how to do so. If you are interested in running riscv-linux on Rocket, continue on:
 
-### 7) <a name="riscv-linux"></a> Building riscv-linux
+### 7) <a name="riscv-linux"></a> Building/Obtaining riscv-linux
 
-TODO (might want to put this in appendices)
+There are two options to obtain riscv-linux:
 
-Note: If you are working with the Zybo, you should not build `riscv-linux` from source. The Zybo cannot fit an FPU and thus uses a modified version of the kernel that ignores FPU instructions. Software floating point emulation support is planned but not yet available. The binary for this build can be obtained here. TODO FILL IN LINK
+#### Method 1) Build from Source
 
-To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow the instructions [here](https://github.com/ucb-bar/riscv-tools#linuxman). Upon completing the linked tutorial, you should have two files: `vmlinux` and `root.bin`. You should place them on your SD card in a directory called `riscv`. After doing so, your SD card layout should match the following:
+Note: If you are working with the Zybo, you should not build `riscv-linux` from source. The Zybo cannot fit an FPU and thus uses a modified version of the kernel that ignores FPU instructions. Software floating point emulation support is planned but not yet available. The binary for this build can be obtained using Method 2 below.
 
+To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow the instructions [here](https://github.com/ucb-bar/riscv-tools#linuxman). Upon completing the linked tutorial, you should have two files: `vmlinux` and `root.bin`. You should place them on your SD card in a directory called `riscv`. 
+
+#### Method 2) Download the Pre-Built Binary and Root FS
+
+Run the following from within `$REPO/zybo`.
+
+    $ make fetch-riscv-linux-deliver
+
+Then, copy the `$REPO/zybo/deliver_output/riscv` directory to the root of your SD Card.
+
+#### Continuing:
+
+After performing either of these steps, your SD card layout should match the following:
 
 	SD_ROOT/
 	|-> riscv/
 	    |-> root.bin
-	    |-> vmlinux[_nofpu]
+	    |-> vmlinux
 	|-> boot.bin
 	|-> devicetree.dtb
 	|-> uImage
@@ -301,7 +314,7 @@ To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow
  
 ### 8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
 
-TODO (might want to put this in appendices)
+TODO 
 
 
 <a name="appendices"></a> Appendices 
@@ -385,9 +398,9 @@ Although rarely needed, it is possible to change the input clockrate to the FPGA
 ###E) <a name="sdcard"></a> Contents of the SD Card
 There are 3 major software components used by the ARM core found on the SD card:
 
-1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see section N TODO Link)
-2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see section N TODO Link)
-3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see section N TODO Link)
+1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see [section 3](#fsbl))
+2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see [section 4](#u-boot))
+3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [section 6](#arm-linux))
 
 
 
