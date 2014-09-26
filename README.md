@@ -248,7 +248,7 @@ If you make modifications to the project in the future, you can avoid having to 
 instead may reuse the output.bif file that the SDK generates the first time you use "Create Zynq Boot Image."
 Use the following make target to do so:
 
-    $ TODO
+    $ make deliver_output/boot.bin
 
 ### 6) <a name="arm-linux"></a> Building linux for the ARM PS
 
@@ -266,11 +266,11 @@ At this point, the `$REPO/zybo/deliver_output` directory contains the following 
 * `uImage` - Linux for the ARM PS
 * `devicetree.dtb` - Contains information about the ARM core's peripherals for linux.
 
-The only remaining file that we are missing at this point is `uramdisk.image.gz`, the root filesystem for linux on the ARM Core. You can obtain that like so:
+The only remaining file that we are missing at this point is `uramdisk.image.gz`, the root filesystem for linux on the ARM Core. You can obtain it like so (it will be placed in `$REPO/zybo/deliver_output`:
 
-TODO: INFO HERE ABOUT RAMDISK
+    $ make fetch-ramdisk
 
-Take these four files, and place them on the root of the SD card that we will insert into the Zybo. The layout of your SD card should match the following:
+Now, take the four files in `deliver_output/`, and place them on the root of the SD card that we will insert into the Zybo. The layout of your SD card should match the following:
 
 	SD_ROOT/
 	|-> boot.bin
@@ -278,7 +278,7 @@ Take these four files, and place them on the root of the SD card that we will in
 	|-> uImage
 	|-> uramdisk.image.gz
 
-At this point, you have performed the necessary steps to run binaries on Rocket. See [Section 8](#booting) for how to do so. If you are interested in running riscv-linux on Rocket, continue on:
+At this point, you have performed the necessary steps to run binaries on Rocket. See [Section 8](#booting) for how to do so. If you are interested in running riscv-linux on Rocket, continue on to Section 7:
 
 ### 7) <a name="riscv-linux"></a> Building/Obtaining riscv-linux
 
@@ -314,8 +314,22 @@ After performing either of these steps, your SD card layout should match the fol
  
 ### 8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
 
-TODO 
+First, insert the SD card and follow the instructions in [Appendix A](#connecting) 
+to connect to your board. You can login to the board with username `root` and 
+password `root`. Once you're at the prompt, you can run a basic hello world 
+program on rocket like so:
 
+    root@zynq:~# ./fesvr-zynq pk hello
+    hello!
+
+If you've downloaded the necessary files to boot riscv-linux, you may now do so.
+First however, you should mount the sd card using the instructions in [Appendix B](#mountsd).
+Then, to boot riscv-linux, run:
+
+    root@zynq:~# ./fesvr-zynq +disk=/sdcard/riscv/root.bin /sdcard/riscv/vmlinux
+
+Once you hit enter, you'll see the linux boot messages scroll by, and you'll be
+presented with a busybox prompt from riscv-linux running on rocket!
 
 <a name="appendices"></a> Appendices 
 ------------
@@ -346,7 +360,7 @@ The easiest way to get a file onto the board is to copy it with scp over etherne
 
 _Note:_ Linux is running out of a RAMdisk, so to make a file available after a reboot, copy it to the SD card or modify the RAMdisk.
 
-####Mounting the SD Card on the Board
+#### <a id="mountsd"></a> Mounting the SD Card on the Board
 You can mount the SD card on the board by:
 
     root@zynq:~# mkdir /sdcard

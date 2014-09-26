@@ -124,6 +124,19 @@ ramdisk-close:
 	@echo "Don't forget to remove ramdisk before opening it again (sudo rm -rf ramdisk)"
 
 
+# Fetch ramdisk for user building from scratch
+# ------------------------------------------------------------------------------
+ramdisk_url = https://s3-us-west-1.amazonaws.com/riscv.org/fpga-zynq-files/uramdisk.image.gz
+fetch-ramdisk:
+	mkdir -p $(output_delivery)
+	curl $(ramdisk_url) > $(output_delivery)/uramdisk.image.gz
+
+
+# Rebuild from bif for user building from scratch
+# ------------------------------------------------------------------------------
+$(output_delivery)/boot.bin:
+	cd $(output_delivery); bootgen -image output.bif -w -o boot.bin
+
 
 # Fetch pre-built risc-v linux binary and root fs from S3
 # ------------------------------------------------------------------------------
