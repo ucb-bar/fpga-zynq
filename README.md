@@ -23,7 +23,7 @@ To guide you through the rest of the documentation, we have provide both a [Tabl
 ### <a name="toc"></a> Table of Contents
 + [Overview of System Stack](#overview)
 + [Quick Instructions](#quickinst)
-+ [How to Push Your Rocket Modifications to the FPGA](#bitstream)
++ [Pushing Your Rocket Modifications to the FPGA](#bitstream)
   + [Setting Up Your Workspace](#workspace)
   + [Configuring Rocket Chip](#configRC)
   + [Propagating Changes to the Vivado Project](#propRC)
@@ -103,7 +103,7 @@ Awesome! You can now run RISC-V binaries on Rocket. If you'd like to boot linux 
 
 
 
-2) <a name="bitstream"></a> How to Push Your Rocket Modifications to the FPGA
+2) <a name="bitstream"></a> Pushing Your Rocket Modifications to the FPGA
 -------------------------
 
 #### <a name="workspace"></a> Setting Up Your Workspace
