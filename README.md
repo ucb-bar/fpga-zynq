@@ -174,17 +174,18 @@ If you wish to make any modifications to the project, you may now do so. Once yo
 
 Inside Vivado, select _Open Block Design_ followed by _system.bd_ in the dropdown. This will open a block diagram for the Zynq PS Configuration and is necessary for correct FSBL generation.
 
-Next, select _Generate Bitstream_. Vivado will now step through the usual Synthesis/Implementation steps. Upon completion, select _Open Implemented Design_. This is again necessary to properly export the description of our Hardware for the Xilinx SDK to use.
+Next, select _Generate Bitstream_. Vivado will now step through the usual Synthesis/Implementation steps. Upon completion, if you're interested in only the bitstream, you can stop here; the file you want is in:
+
+`$REPO/zybo/zybo_rocketchip/zybo_rocketchip.runs/impl_1/rocketchip_wrapper.bit`
+
+Otherwise, let's continue on to select _Open Implemented Design_. This is again necessary to properly export the description of our Hardware for the Xilinx SDK to use.
 
 At this point, select _File -> Export -> Export Hardware_. This will create the following directory:
 
 `$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk`
 
-This directory contains a variety of files that provide information about the hardware to the SDK. If you're interested in only the bitstream, you can stop here; the file you want is in:
+This directory contains a variety of files that provide information about the hardware to the SDK. Let's continue on to building the FSBL.
 
-`$REPO/zybo/zybo_rocketchip/zybo_rocketchip.sdk/rocketchip_wrapper_hw_platform_0/rocketchip_wrapper.bit`
-
-Otherwise, let's continue on to building the FSBL.
 
 ### 3.3) <a name="fsbl"></a> Building the FSBL
 
@@ -425,8 +426,8 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 * ARM Linux (`uImage`) - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [Section 3.6](#arm-linux))
 * ARM RAMDisk (`uramdisk.image.gz`) - The RAMDisk is mounted by ARM Linux and contains the root filesystem. For obtaining it, see [Section 3.6](#arm-linux), and for modifying it, see [Appendix B](#transferring).
 * `devicetree.dtb` - Contains information about the ARM core's peripherals for Linux. (See [Section 3.6](#arm-linux))
-* `riscv` (optional) - This directory is only needed if you intend to run Linux on rocket chip itself.
-  * RISC-V Linux (`riscv/vmlinux`) - For the zybo, you should use `vmlinux_nofpu` since there is no FPU. (See [Section 3.7](#riscv-linux))
+* `riscv/` (optional) - This directory is only needed if you intend to run Linux on the rocket chip itself.
+  * RISC-V Linux (`riscv/vmlinux`) - For zybo, you should use `vmlinux_nofpu` since there is no FPU. (See [Section 3.7](#riscv-linux))
   * RISC-V RAMDisk (`riscv/root.bin`) - The RAMDisk is mounted by RISC-V Linux and contains the root filesystem. (See [Section 3.7](#riscv-linux))
 
 
