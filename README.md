@@ -11,7 +11,7 @@ This README contains 3 major sets of instructions:
 
 1) [Quick Instructions](#quickinst): This is the simplest way to get started - you'll download the relevant prebuilt images for your board and learn how to run binaries on the RISC-V Rocket Core. These instructions require only that you have a compatible board - neither Vivado nor the RISC-V Toolchain are necessary.
 
-2) [How to Push Your Rocket Modifications to the FPGA](#bitstream): These instructions walk through what we believe is the common case - a user wanting to utilize a custom-generated Rocket Core.
+2) [Pushing Your Rocket Modifications to the FPGA](#bitstream): These instructions walk through what we believe is the common case - a user wanting to utilize a custom-generated Rocket Core.
 
 3) [Building Everything from Scratch](#fromscratch): Here, we discuss how to build the full stack from scratch. It is unlikely that you'll need to use these instructions, unless you are intending to make changes to the configuration of the Zynq ARM Core or `u-boot`.
 
@@ -22,13 +22,13 @@ To guide you through the rest of the documentation, we have provide both a [Tabl
 
 ### <a name="toc"></a> Table of Contents
 + [Overview of System Stack](#overview)
-+ [Quick Instructions](#quickinst)
-+ [Pushing Your Rocket Modifications to the FPGA](#bitstream)
++ [1 - Quick Instructions](#quickinst)
++ [2 - Pushing Your Rocket Modifications to the FPGA](#bitstream)
   + [Setting Up Your Workspace](#workspace)
   + [Configuring Rocket Chip](#configRC)
   + [Propagating Changes to the Vivado Project](#propRC)
   + [Repacking `boot.bin`](#repack)
-+ [Building Everything from Scratch](#fromscratch)
++ [3 - Building Everything from Scratch](#fromscratch)
   + [Project Setup](#setup)
   + [Generating a Bitstream](#bitstream)
   + [Building the FSBL](#fsbl)
@@ -154,14 +154,14 @@ For ease of exposition, we will be describing all of the commands assuming that 
 
 From here on, `$REPO` will refer to the location of the `fpga-zynq` repository.
 
-### 1) <a name="setup"></a> Project Setup
+### 3.1) <a name="setup"></a> Project Setup
 
 First, we need to generate a Vivado project from the source files that are present in a particular board's directory. 
 
 	$ cd $REPO/zybo
 	$ make project
 	
-### 2) <a name="bitstream"></a> Generating a Bitstream
+### 3.2) <a name="bitstream"></a> Generating a Bitstream
 	
 Next, let's open up the project in the Vivado GUI:
 
@@ -186,7 +186,7 @@ This directory contains a variety of files that provide information about the ha
 
 Otherwise, let's continue on to building the FSBL.
 
-### 3) <a name="fsbl"></a> Building the FSBL
+### 3.3) <a name="fsbl"></a> Building the FSBL
 
 This step assumes that you have just generated the bitstream. Inside the Vivado GUI, select "Launch SDK". This will open up the Xilinx SDK preconfigured with the description of our hardware. In order to generate the FSBL, do the following:
 
@@ -202,7 +202,7 @@ This step assumes that you have just generated the bitstream. Inside the Vivado 
 
 5) Once the build is finished, we need to build u-boot before returning to the SDK in order to create our BOOT.bin.
 
-### 4) <a name="u-boot"></a> Building u-boot for the Zynq ARM Core
+### 3.4) <a name="u-boot"></a> Building u-boot for the Zynq ARM Core
 
 Returning to the command line, do the following from the directory corresponding to your board:
 
@@ -210,7 +210,7 @@ Returning to the command line, do the following from the directory corresponding
 	
 This target performs a variety of commands. It will first pull the u-boot source from the Xilinx repositories (see the submodule in `$REPO/common/u-boot-xlnx`), patch it with the necessary files found in `$REPO/zybo/soft_config/`, compile u-boot, and place the resulting u-boot.elf file in `$REPO/zybo/soft_build/u-boot.elf`. 
 
-### 5) <a name="boot.bin"></a> Creating `boot.bin`
+### 3.5) <a name="boot.bin"></a> Creating `boot.bin`
 
 At this point, we have built up all of the necessary components to create our `boot.bin` file. Returning to the Xilinx SDK, select _Xilinx Tools -> Create Zynq Boot Image_. 
 
@@ -254,7 +254,7 @@ Use the following make target to do so:
 
     $ make deliver_output/boot.bin
 
-### 6) <a name="arm-linux"></a> Building linux for the ARM PS
+### 3.6) <a name="arm-linux"></a> Building linux for the ARM PS
 
 As part of our bootstrapping process, we need to boot linux on the ARM core in the Zynq. We can build this copy of linux like so (again assuming that we are in `$REPO/zybo`):
 
@@ -282,9 +282,9 @@ Now, take the four files in `deliver_output/`, and place them on the root of the
 	|-> uImage
 	|-> uramdisk.image.gz
 
-At this point, you have performed the necessary steps to run binaries on Rocket. See [Section 8](#booting) for how to do so. If you are interested in running riscv-linux on Rocket, continue on to Section 7:
+At this point, you have performed the necessary steps to run binaries on Rocket. See [Section 3.8](#booting) for how to do so. If you are interested in running riscv-linux on Rocket, continue on to Section 3.7:
 
-### 7) <a name="riscv-linux"></a> Building/Obtaining riscv-linux
+### 3.7) <a name="riscv-linux"></a> Building/Obtaining riscv-linux
 
 There are two options to obtain riscv-linux:
 
@@ -316,7 +316,7 @@ After performing either of these steps, your SD card layout should match the fol
 	|-> uramdisk.image.gz
 
  
-### 8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
+### 3.8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
 
 First, insert the SD card and follow the instructions in [Appendix A](#connecting) 
 to connect to your board. You can login to the board with username _root_ and 
@@ -396,7 +396,7 @@ _Note:_ Since these ramdisk operations use sudo on files, they may not work on a
 
 _Requires: Vivado 2014.2 and its settings64.sh sourced_
 
-First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). To generate a Vivado project from scratch:
+First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). To generate a bitstream, you will need a Vivado project. You should only need to generate it once, but the automation this repo provides makes it easy to generate again if you delete the project. To generate a Vivado project from scratch:
 
     $ make project
 
@@ -410,17 +410,17 @@ To launch Vivado in GUI mode:
 
 
 ###D) <a name="clockrate"></a> Changing the Processor's Clockrate
-You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `RC_CLK_DIVIDE` within a board's `src/verilog/clocking.vh`.
+You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `RC_CLK_DIVIDE` within a board's `src/verilog/clocking.vh`. After that change, you will need to generate a new bitstream (and `boot.bin`).
 
-Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`. This will also require regenerating `FSBL.elf`, the bitstream, and of course `boot.bin`.
+_Note:_ Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`. This will also require regenerating `FSBL.elf`, the bitstream, and of course `boot.bin`.
 
 
 ###E) <a name="sdcard"></a> Contents of the SD Card
 There are 3 major software components used by the ARM core found on the SD card:
 
-1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see [section 3](#fsbl))
-2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see [section 4](#u-boot))
-3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [section 6](#arm-linux))
+1. First Stage Bootloader (FSBL) - This bootloader configures the Zynq processing system based on the block design in the Vivado project. The FSBL will hand-off to `u-boot` once the processing system is setup. We build the FSBL using the Xilinx SDK and hardware information exported from Vivado. (see [Section 3.3](#fsbl))
+2. u-boot - This bootloader takes configuration information and prepares the ARM processing system for booting linux. Once configuration is complete, `u-boot` will hand-off execution to the ARM linux kernel. We build `u-boot` directly from the [Xilinx u-boot repository](https://github.com/Xilinx/u-boot-xlnx), with some configuration modifications to support Rocket. (see [Section 3.4](#u-boot))
+3. ARM Linux - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [Section 3.6](#arm-linux))
 
 
 ###F) <a name="fesvr"></a> Building fesvr-zynq
