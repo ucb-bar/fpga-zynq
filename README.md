@@ -427,7 +427,7 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 * ARM RAMDisk (`uramdisk.image.gz`) - The RAMDisk is mounted by ARM Linux and contains the root filesystem. For obtaining it, see [Section 3.6](#arm-linux), and for modifying it, see [Appendix B](#transferring).
 * `devicetree.dtb` - Contains information about the ARM core's peripherals for Linux. (See [Section 3.6](#arm-linux))
 * `riscv/` (optional) - This directory is only needed if you intend to run Linux on the rocket chip itself.
-  * RISC-V Linux (`riscv/vmlinux`) - For zybo, you should use `vmlinux_nofpu` since there is no FPU. (See [Section 3.7](#riscv-linux))
+  * RISC-V Linux (`riscv/vmlinux`) - This is the kernel binary for Linux on Rocket. If you are using the zybo, you will need to use a special kernel that ignores floating point instructions, since the zybo cannot fit an FPU. Fetching this version is handled automatically by our scripts. (See [Section 3.7](#riscv-linux))
   * RISC-V RAMDisk (`riscv/root.bin`) - The RAMDisk is mounted by RISC-V Linux and contains the root filesystem. (See [Section 3.7](#riscv-linux))
 
 
