@@ -134,7 +134,7 @@ After making changes within `rocket-chip`, to run the rocket chip generator and 
 
      $ make rocket
 
-The rocket chip will be configured by the configuration named `CHISEL_CONFIG` in the board's `Makefile`. If you wish to use a different configuration, you will need to change your vivado project to be aware of the new verilog source  or regenerate the project because configuration names are included in the filename (e.g. _Top.DefaultConfig.v_).
+The rocket chip will be configured by the configuration named `CONFIG` in the board's `Makefile`. If you wish to use a different configuration, you will need to change your vivado project to be aware of the new verilog source  or regenerate the project because configuration names are included in the filename (e.g. _Top.DefaultConfig.v_).
 
 #### <a name="repack"></a> Repacking `boot.bin`
 

@@ -35,8 +35,8 @@ src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
 
 rocket:
 	cd $(base_dir)/rocket-chip/fsim; \
-	make verilog CONFIG=$(CHISEL_CONFIG); \
-	cp generated-src/Top.$(CHISEL_CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+	make verilog CONFIG=$(CONFIG); \
+	cp generated-src/Top.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
 
 
