@@ -13,7 +13,7 @@ endif
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
-	src/verilog/Top.$(CHISEL_CONFIG).v \
+	src/verilog/Top.$(CONFIG).v \
 
 
 default: project
@@ -26,7 +26,7 @@ src/verilog/rocketchip_wrapper.v: $(common)/rocketchip_wrapper.v
 	cp $(common)/rocketchip_wrapper.v src/verilog/
 
 src/tcl/$(BOARD)_rocketchip.tcl: $(common)/zynq_rocketchip.tcl Makefile
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/CHISEL_CONFIG_HERE/$(CHISEL_CONFIG)/g' \
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
 src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
