@@ -24,26 +24,26 @@ To guide you through the rest of the documentation, we have provide both a [Tabl
 + [Overview of System Stack](#overview)
 + [1 - Quick Instructions](#quickinst)
 + [2 - Pushing Your Rocket Modifications to the FPGA](#bitstream)
-  + [Setting Up Your Workspace](#workspace)
-  + [Configuring Rocket Chip](#configRC)
-  + [Propagating Changes to the Vivado Project](#propRC)
-  + [Repacking `boot.bin`](#repack)
+    + [Setting Up Your Workspace](#workspace)
+    + [Configuring Rocket Chip](#configRC)
+    + [Propagating Changes to the Vivado Project](#propRC)
+    + [Repacking `boot.bin`](#repack)
 + [3 - Building Everything from Scratch](#fromscratch)
-  + [Project Setup](#setup)
-  + [Generating a Bitstream](#bitstream)
-  + [Building the FSBL](#fsbl)
-  + [Building u-boot for the Zynq ARM Core](#u-boot)
-  + [Creating `boot.bin`](#boot.bin)
-  + [Building linux for the ARM PS](#arm-linux)
-  + [Building riscv-linux](#riscv-linux)
-  + [Booting Up and Interacting with the RISC-V Rocket Core](#booting)
+    + [Project Setup](#setup)
+    + [Generating a Bitstream](#bitstream)
+    + [Building the FSBL](#fsbl)
+    + [Building u-boot for the Zynq ARM Core](#u-boot)
+    + [Creating `boot.bin`](#boot.bin)
+    + [Building linux for the ARM PS](#arm-linux)
+    + [Building riscv-linux](#riscv-linux)
+    + [Booting Up and Interacting with the RISC-V Rocket Core](#booting)
 + [Appendices](#appendices)
-  + [Connecting to the Board](#connecting)
-  + [Getting Files On & Off the Board](#transferring)
-  + [Working with Vivado](#vivado)
-  + [Changing the Processor's Clockrate](#clockrate)
-  + [Contents of the SD Card](#sdcard)
-  + [Building fesvr-zynq](#fesvr)
+    + [Connecting to the Board](#connecting)
+    + [Getting Files On & Off the Board](#transferring)
+    + [Working with Vivado](#vivado)
+    + [Changing the Processor's Clockrate](#clockrate)
+    + [Contents of the SD Card](#sdcard)
+    + [Building fesvr-zynq](#fesvr)
 + [Acknowledgements](#ack)
 
 
@@ -448,8 +448,9 @@ from the riscv-fesvr/build directory and make sure you have the Xilinx SDK in yo
 <a name="ack"></a> Acknowledgments 
 ---------------
 In addition to those that [contributed](https://github.com/ucb-bar/rocket-chip#contributors) to rocket chip, this repository is based on internal repositories contributed by:
-+ Rimas Avizienis
-+ Jonathan Bachrach 
-+ Scott Beamer
-+ Sagar Karandikar
-+ Andrew Waterman
+
+- Rimas Avizienis
+- Jonathan Bachrach
+- Scott Beamer
+- Sagar Karandikar
+- Andrew Waterman
