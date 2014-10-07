@@ -1,9 +1,9 @@
 [submodule "zedboard/fpga-images-zedboard"]
 	path = zedboard/fpga-images-zedboard
-	url = git@github.com:ucb-bar/fpga-images-zedboard.git
+	url = https://github.com/ucb-bar/fpga-images-zedboard.git
 [submodule "zybo/fpga-images-zybo"]
 	path = zybo/fpga-images-zybo
-	url = git@github.com:ucb-bar/fpga-images-zybo.git
+	url = https://github.com/ucb-bar/fpga-images-zybo.git
 [submodule "common/u-boot-xlnx"]
 	path = common/u-boot-xlnx
 	url = https://github.com/Xilinx/u-boot-xlnx.git
@@ -14,4 +14,4 @@
 	branch = master-next
 [submodule "zc706/fpga-images-zc706"]
 	path = zc706/fpga-images-zc706
-	url = git@github.com:ucb-bar/fpga-images-zc706.git
+	url = https://github.com/ucb-bar/fpga-images-zc706.git
