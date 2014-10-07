@@ -111,7 +111,7 @@ _Requires: Vivado 2014.2 and its settings64.sh sourced_
 
 If you don't already have a copy of the rocket chip, get a new one:
 
-    $ git clone git@github.com:ucb-bar/rocket-chip.git
+    $ git clone https://github.com/ucb-bar/rocket-chip.git
 
 Move `fpga-zynq` (this repo) to be within rocket-chip:
 
