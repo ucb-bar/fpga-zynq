@@ -632,11 +632,12 @@ module fifo_32x32 (
     output reg empty,
     output reg full,
     output [31:0] dout,
-    output [4:0] count
+    output [5:0] count
     );
 
   reg [31:0] data [0:31];
-  reg [4:0] raddr, waddr, cnt;
+  reg [4:0] raddr, waddr;
+  reg [5:0] cnt;
   wire [4:0] waddr_next, raddr_next;
   wire write = wren && (rden || !full);
   wire read = rden && !empty;
@@ -654,7 +655,7 @@ module fifo_32x32 (
       full <= 1'b0;
       raddr <= 5'd0;
       waddr <= 5'd0;
-      cnt <= 5'd0;
+      cnt <= 6'd0;
     end
     else
     begin
