@@ -13,7 +13,7 @@ endif
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
-	src/verilog/Top.$(CONFIG).v \
+	src/verilog/TopShim.$(CONFIG).v \
 
 
 default: project
@@ -36,7 +36,7 @@ src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
 rocket:
 	cd $(base_dir)/rocket-chip/fsim; \
 	make verilog CONFIG=$(CONFIG); \
-	cp generated-src/Top.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+	cp generated-src/TopShim.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
 
 
@@ -163,5 +163,10 @@ fetch-riscv-linux-deliver:
 
 clean:
 	rm -f *.log *.jou *.str
+	rm -rf $(BOARD)_rocketchip
+	rm -f src/verilog/Top.$(CONFIG).v
+	rm -f src/verilog/rocketchip_wrapper.v
+	rm -f src/tcl/$(BOARD)_rocketchip.tcl
+	rm -f src/tcl/make_bitstream.tcl
 
 .PHONY: vivado rocket fetch-images load-sd ramdisk-open ramdisk-close clean
