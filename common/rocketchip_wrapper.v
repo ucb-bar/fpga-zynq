@@ -91,13 +91,19 @@ module rocketchip_wrapper
   wire [4:0] raddr, waddr;
   reg  [4:0] raddr_r, waddr_r;
   reg [11:0] arid_r, awid_r;
-  reg [15:0] host_out_bits_r;
+  // reg [15:0] htif_out_bits_r;
 
   wire host_in_fifo_full, host_in_fifo_empty, host_in_fifo_rden, host_in_fifo_wren;
   wire host_out_fifo_full, host_out_fifo_empty, host_out_fifo_wren, host_out_fifo_rden;
   wire [31:0] host_in_fifo_dout, host_out_fifo_dout;
   wire [5:0] host_out_fifo_count;
-  reg host_out_count, host_in_count;
+  // reg host_out_count, host_in_count;
+
+  wire htif_in_fifo_full, htif_in_fifo_empty, htif_in_fifo_rden, htif_in_fifo_wren;
+  wire htif_out_fifo_full, htif_out_fifo_empty, htif_out_fifo_wren, htif_out_fifo_rden;
+  wire [31:0] htif_in_fifo_dout, htif_out_fifo_dout;
+  wire [5:0] htif_out_fifo_count;
+  // reg htif_out_count, htif_in_count;
 
   wire [31:0]S_AXI_addr;
   wire S_AXI_arready;
@@ -129,9 +135,12 @@ module rocketchip_wrapper
   wire reset, reset_cpu;
 
   wire host_in_valid, host_in_ready, host_out_ready, host_out_valid;
-  wire [15:0] host_in_bits, host_out_bits;
+  wire [32:0] host_in_bits, host_out_bits;
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
+
+  wire htif_in_valid, htif_in_ready, htif_out_ready, htif_out_valid;
+  wire [15:0] htif_in_bits, htif_out_bits;
 
   system system_i
        (.DDR_addr(DDR_addr),
@@ -250,8 +259,14 @@ module rocketchip_wrapper
 
 `define DCOUNT_ADDR 5'h00
 `define RFIFO_ADDR  5'h01
+`define HCOUNT_ADDR 5'h02
+`define RHTIF_ADDR  5'h03
+
+`define HOST_IN_CNT 5'h04
+`define HTIF_IN_CNT 5'h05
 
 `define WFIFO_ADDR 5'h00
+`define WHTIF_ADDR 5'h01
 `define RESET_ADDR 5'h1f
 
   // HTIF interface between ARM and reference chip on FPGA via memory mapped registers
@@ -263,6 +278,7 @@ module rocketchip_wrapper
   assign waddr = M_AXI_awaddr[6:2];
   assign raddr = M_AXI_araddr[6:2];
 
+  wire[5:0]  host_in_fifo_count;
   fifo_32x32 host_in_fifo (
     .clk(host_clk),
     .reset(reset),
@@ -272,29 +288,73 @@ module rocketchip_wrapper
     .dout(host_in_fifo_dout),
     .full(host_in_fifo_full),
     .empty(host_in_fifo_empty),
-    .count()
+    .count(host_in_fifo_count)
   );
 
   assign host_in_valid = !host_in_fifo_empty;
-  assign host_in_fifo_rden = host_in_count && host_in_valid && host_in_ready;
-  assign host_in_bits = !host_in_count ? host_in_fifo_dout[15:0] : host_in_fifo_dout[31:16];
+  assign host_in_fifo_rden = host_in_valid && host_in_ready; // host_in_count && host_in_valid && host_in_ready;
+  assign host_in_bits = host_in_fifo_dout; // !host_in_count ? host_in_fifo_dout[15:0] : host_in_fifo_dout[31:16];
 
+  wire[5:0]  htif_in_fifo_count;
+  fifo_32x32 htif_in_fifo (
+    .clk(htif_clk),
+    .reset(reset),
+    .din(M_AXI_wdata[15:0]),
+    .wren(htif_in_fifo_wren),
+    .rden(htif_in_fifo_rden),
+    .dout(htif_in_fifo_dout),
+    .full(htif_in_fifo_full),
+    .empty(htif_in_fifo_empty),
+    .count(htif_in_fifo_count)
+  );
+
+  assign htif_in_valid = !htif_in_fifo_empty;
+  assign htif_in_fifo_rden = htif_in_valid && htif_in_ready;
+  assign htif_in_bits = htif_in_fifo_dout[15:0];
+ 
+/*
+  assign htif_in_valid = !htif_in_fifo_empty;
+  assign htif_in_fifo_rden = htif_in_count && htif_in_valid && htif_in_ready;
+  assign htif_in_bits = !htif_in_count ? htif_in_fifo_dout[15:0] : htif_in_fifo_dout[31:16];
+*/
   // host_out (from FPGA to ARM)
   
   assign host_out_ready = !host_out_fifo_full;
-  assign host_out_fifo_wren = (host_out_count == 1'b1);
+  assign host_out_fifo_wren = host_out_valid; // (host_out_count == 1'b1);
   assign host_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RFIFO_ADDR);
 
   fifo_32x32 host_out_fifo (
     .clk(host_clk),
     .reset(reset),
-    .din({host_out_bits, host_out_bits_r}),
+    .din(host_out_bits),
     .wren(host_out_fifo_wren),
     .rden(host_out_fifo_rden),
     .dout(host_out_fifo_dout),
     .full(host_out_fifo_full),
     .empty(host_out_fifo_empty),
     .count(host_out_fifo_count)
+  );
+
+  /*
+  assign htif_out_ready = !htif_out_fifo_full;
+  assign htif_out_fifo_wren = (htif_out_count == 1'b1);
+  assign htif_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RHTIF_ADDR);
+  */
+
+  assign htif_out_ready = !htif_out_fifo_full;
+  assign htif_out_fifo_wren = htif_out_valid; // (htif_out_count == 1'b1);
+  assign htif_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RHTIF_ADDR);
+
+  fifo_32x32 htif_out_fifo (
+    .clk(htif_clk),
+    .reset(reset),
+    .din({16'd0, htif_out_bits}),
+    .wren(htif_out_fifo_wren),
+    .rden(htif_out_fifo_rden),
+    .dout(htif_out_fifo_dout),
+    .full(htif_out_fifo_full),
+    .empty(htif_out_fifo_empty),
+    .count(htif_out_fifo_count)
   );
 
   assign reset = !FCLK_RESET0_N || !mmcm_locked;
@@ -315,9 +375,9 @@ module rocketchip_wrapper
 
     if (reset)
     begin
-      host_out_bits_r <= 16'd0;
-      host_out_count <= 1'd0;
-      host_in_count <= 1'd0;
+      // htif_out_bits_r <= 16'd0;
+      // htif_out_count <= 1'd0;
+      // htif_in_count <= 1'd0;
       raddr_r <= 5'd0;
       waddr_r <= 5'd0;
       arid_r <= 12'd0;
@@ -327,13 +387,15 @@ module rocketchip_wrapper
     end
     else
     begin
-      if (host_out_valid)
+      /*
+      if (htif_out_valid)
       begin
-        host_out_bits_r <= host_out_bits;
-        host_out_count <= host_out_count + 1;
+        htif_out_bits_r <= htif_out_bits;
+        htif_out_count <= htif_out_count + 1;
       end
-      if (host_in_valid && host_in_ready)
-        host_in_count <= host_in_count + 1;
+      if (htif_in_valid && htif_in_ready)
+        htif_in_count <= htif_in_count + 1;
+      */
 
 // state machine to handle reads from AXI master (ARM)
       case (st_rd)
@@ -362,7 +424,8 @@ module rocketchip_wrapper
           end
         end
         st_wr_write : begin
-          if (!host_in_fifo_full || (waddr_r == `RESET_ADDR))
+          if ((!host_in_fifo_full && waddr_r == `WFIFO_ADDR) ||
+              (!htif_in_fifo_full && waddr_r == `WHTIF_ADDR) || waddr_r == `RESET_ADDR)
             st_wr <= st_wr_ack;
         end
         st_wr_ack : begin
@@ -377,13 +440,22 @@ module rocketchip_wrapper
   assign M_AXI_arready = (st_rd == st_rd_idle);
   assign M_AXI_rvalid  = (st_rd == st_rd_read);
   assign M_AXI_rlast   = (st_rd == st_rd_read);
-  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : host_out_fifo_dout;
+  assign M_AXI_rdata   = (raddr_r == `HOST_IN_CNT) ? {25'd0, host_in_fifo_count} :
+                         (raddr_r == `HTIF_IN_CNT) ? {25'd0, htif_in_fifo_count} :
+                         (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : 
+                         (raddr_r == `HCOUNT_ADDR) ? {26'd0, htif_out_fifo_count} :
+                         (raddr_r == `RFIFO_ADDR) ? host_out_fifo_dout : 
+                         {16'd0, htif_out_fifo_dout[15:0]};
+/*  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : 
+                         (raddr_r == `HCOUNT_ADDR) ? {26'd0, htif_out_fifo_count} :
+                         (raddr_r == `RFIFO_ADDR) ? host_out_fifo_dout : {16'd0, htif_out_fifo_dout[15:0]}; */
   assign M_AXI_rid = arid_r;
 
   wire do_write = (st_wr == st_wr_write);
   assign M_AXI_awready = do_write;
   assign M_AXI_wready  = do_write;
   assign host_in_fifo_wren = do_write && (waddr_r == `WFIFO_ADDR);
+  assign htif_in_fifo_wren = do_write && (waddr_r == `WHTIF_ADDR);
   assign reset_cpu = do_write && (waddr_r == `RESET_ADDR);
 
   assign M_AXI_bvalid = (st_wr == st_wr_ack);
@@ -483,7 +555,7 @@ module rocketchip_wrapper
   assign S_AXI_awid = 6'd0;
   assign mem_resp_tag = S_AXI_rid[4:0];
 
-  Top top(
+  TopShim dut(
        .clk(host_clk),
        .reset(reset_cpu),
        //.io_host_clk(  )
@@ -494,6 +566,14 @@ module rocketchip_wrapper
        .io_host_out_ready( host_out_ready ),
        .io_host_out_valid( host_out_valid ),
        .io_host_out_bits( host_out_bits ),
+
+       .io_htif_in_ready( htif_in_ready ),
+       .io_htif_in_valid( htif_in_valid ),
+       .io_htif_in_bits( htif_in_bits ),
+       .io_htif_out_ready( htif_out_ready ),
+       .io_htif_out_valid( htif_out_valid ),
+       .io_htif_out_bits( htif_out_bits ),
+
        //.io_host_debug_stats_pcr(  )
        .io_mem_req_cmd_ready( mem_req_cmd_rdy ),
        .io_mem_req_cmd_valid( mem_req_cmd_val ),

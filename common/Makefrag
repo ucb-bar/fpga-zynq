@@ -34,16 +34,16 @@ src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream.tcl
 
 rocket:
-	cd $(base_dir)/rocket-chip/fsim; \
+	cd $(base_dir)/rocket-chip/sim-fpga; \
 	make verilog CONFIG=$(CONFIG); \
 	cp generated-src/TopShim.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
-
+src/verilog/TopShim.$(CONFIG).v: rocket
 
 # Project generation
 # ------------------------------------------------------------------------------
 project = $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
+$(project): | src/verilog/rocketchip_wrapper.v src/verilog/TopShim.$(CONFIG).v src/tcl/$(BOARD)_rocketchip.tcl
 	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl;
 project: $(project)
 
@@ -164,7 +164,7 @@ fetch-riscv-linux-deliver:
 clean:
 	rm -f *.log *.jou *.str
 	rm -rf $(BOARD)_rocketchip
-	rm -f src/verilog/Top.$(CONFIG).v
+	rm -f src/verilog/TopShim.$(CONFIG).v
 	rm -f src/verilog/rocketchip_wrapper.v
 	rm -f src/tcl/$(BOARD)_rocketchip.tcl
 	rm -f src/tcl/make_bitstream.tcl

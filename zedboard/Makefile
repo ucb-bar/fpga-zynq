@@ -5,4 +5,6 @@ PART = xc7z020clg484-1
 # CONFIG is the target configuration for the rocket-chip generator
 CONFIG ?= DaisyFPGAConfig
 
+default: fpga-images-$(BOARD)/boot.bin
+
 include ../common/Makefrag
