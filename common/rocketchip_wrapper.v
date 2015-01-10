@@ -297,9 +297,9 @@ module rocketchip_wrapper
 
   wire[5:0]  htif_in_fifo_count;
   fifo_32x32 htif_in_fifo (
-    .clk(htif_clk),
+    .clk(host_clk),
     .reset(reset),
-    .din(M_AXI_wdata[15:0]),
+    .din({16'b0, M_AXI_wdata[15:0]}),
     .wren(htif_in_fifo_wren),
     .rden(htif_in_fifo_rden),
     .dout(htif_in_fifo_dout),
@@ -346,7 +346,7 @@ module rocketchip_wrapper
   assign htif_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RHTIF_ADDR);
 
   fifo_32x32 htif_out_fifo (
-    .clk(htif_clk),
+    .clk(host_clk),
     .reset(reset),
     .din({16'd0, htif_out_bits}),
     .wren(htif_out_fifo_wren),
