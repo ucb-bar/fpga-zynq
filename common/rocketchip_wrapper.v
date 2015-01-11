@@ -91,7 +91,7 @@ module rocketchip_wrapper
   wire [4:0] raddr, waddr;
   reg  [4:0] raddr_r, waddr_r;
   reg [11:0] arid_r, awid_r;
-  // reg [15:0] htif_out_bits_r;
+  reg [15:0] htif_out_bits_r;
 
   wire host_in_fifo_full, host_in_fifo_empty, host_in_fifo_rden, host_in_fifo_wren;
   wire host_out_fifo_full, host_out_fifo_empty, host_out_fifo_wren, host_out_fifo_rden;
@@ -103,7 +103,7 @@ module rocketchip_wrapper
   wire htif_out_fifo_full, htif_out_fifo_empty, htif_out_fifo_wren, htif_out_fifo_rden;
   wire [31:0] htif_in_fifo_dout, htif_out_fifo_dout;
   wire [5:0] htif_out_fifo_count;
-  // reg htif_out_count, htif_in_count;
+  reg htif_out_count, htif_in_count;
 
   wire [31:0]S_AXI_addr;
   wire S_AXI_arready;
@@ -261,9 +261,7 @@ module rocketchip_wrapper
 `define RFIFO_ADDR  5'h01
 `define HCOUNT_ADDR 5'h02
 `define RHTIF_ADDR  5'h03
-
-`define HOST_IN_CNT 5'h04
-`define HTIF_IN_CNT 5'h05
+`define WHTIF_CNT   5'h04
 
 `define WFIFO_ADDR 5'h00
 `define WHTIF_ADDR 5'h01
@@ -278,7 +276,6 @@ module rocketchip_wrapper
   assign waddr = M_AXI_awaddr[6:2];
   assign raddr = M_AXI_araddr[6:2];
 
-  wire[5:0]  host_in_fifo_count;
   fifo_32x32 host_in_fifo (
     .clk(host_clk),
     .reset(reset),
@@ -288,7 +285,7 @@ module rocketchip_wrapper
     .dout(host_in_fifo_dout),
     .full(host_in_fifo_full),
     .empty(host_in_fifo_empty),
-    .count(host_in_fifo_count)
+    .count()
   );
 
   assign host_in_valid = !host_in_fifo_empty;
@@ -299,7 +296,7 @@ module rocketchip_wrapper
   fifo_32x32 htif_in_fifo (
     .clk(host_clk),
     .reset(reset),
-    .din({16'b0, M_AXI_wdata[15:0]}),
+    .din(M_AXI_wdata),
     .wren(htif_in_fifo_wren),
     .rden(htif_in_fifo_rden),
     .dout(htif_in_fifo_dout),
@@ -309,14 +306,9 @@ module rocketchip_wrapper
   );
 
   assign htif_in_valid = !htif_in_fifo_empty;
-  assign htif_in_fifo_rden = htif_in_valid && htif_in_ready;
-  assign htif_in_bits = htif_in_fifo_dout[15:0];
- 
-/*
-  assign htif_in_valid = !htif_in_fifo_empty;
   assign htif_in_fifo_rden = htif_in_count && htif_in_valid && htif_in_ready;
   assign htif_in_bits = !htif_in_count ? htif_in_fifo_dout[15:0] : htif_in_fifo_dout[31:16];
-*/
+
   // host_out (from FPGA to ARM)
   
   assign host_out_ready = !host_out_fifo_full;
@@ -335,20 +327,14 @@ module rocketchip_wrapper
     .count(host_out_fifo_count)
   );
 
-  /*
   assign htif_out_ready = !htif_out_fifo_full;
   assign htif_out_fifo_wren = (htif_out_count == 1'b1);
-  assign htif_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RHTIF_ADDR);
-  */
-
-  assign htif_out_ready = !htif_out_fifo_full;
-  assign htif_out_fifo_wren = htif_out_valid; // (htif_out_count == 1'b1);
   assign htif_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RHTIF_ADDR);
 
   fifo_32x32 htif_out_fifo (
     .clk(host_clk),
     .reset(reset),
-    .din({16'd0, htif_out_bits}),
+    .din({htif_out_bits, htif_out_bits_r}),
     .wren(htif_out_fifo_wren),
     .rden(htif_out_fifo_rden),
     .dout(htif_out_fifo_dout),
@@ -375,9 +361,9 @@ module rocketchip_wrapper
 
     if (reset)
     begin
-      // htif_out_bits_r <= 16'd0;
-      // htif_out_count <= 1'd0;
-      // htif_in_count <= 1'd0;
+      htif_out_bits_r <= 16'd0;
+      htif_out_count <= 1'd0;
+      htif_in_count <= 1'd0;
       raddr_r <= 5'd0;
       waddr_r <= 5'd0;
       arid_r <= 12'd0;
@@ -387,7 +373,6 @@ module rocketchip_wrapper
     end
     else
     begin
-      /*
       if (htif_out_valid)
       begin
         htif_out_bits_r <= htif_out_bits;
@@ -395,7 +380,6 @@ module rocketchip_wrapper
       end
       if (htif_in_valid && htif_in_ready)
         htif_in_count <= htif_in_count + 1;
-      */
 
 // state machine to handle reads from AXI master (ARM)
       case (st_rd)
@@ -440,15 +424,10 @@ module rocketchip_wrapper
   assign M_AXI_arready = (st_rd == st_rd_idle);
   assign M_AXI_rvalid  = (st_rd == st_rd_read);
   assign M_AXI_rlast   = (st_rd == st_rd_read);
-  assign M_AXI_rdata   = (raddr_r == `HOST_IN_CNT) ? {25'd0, host_in_fifo_count} :
-                         (raddr_r == `HTIF_IN_CNT) ? {25'd0, htif_in_fifo_count} :
-                         (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : 
+  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : 
                          (raddr_r == `HCOUNT_ADDR) ? {26'd0, htif_out_fifo_count} :
-                         (raddr_r == `RFIFO_ADDR) ? host_out_fifo_dout : 
-                         {16'd0, htif_out_fifo_dout[15:0]};
-/*  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : 
-                         (raddr_r == `HCOUNT_ADDR) ? {26'd0, htif_out_fifo_count} :
-                         (raddr_r == `RFIFO_ADDR) ? host_out_fifo_dout : {16'd0, htif_out_fifo_dout[15:0]}; */
+                         (raddr_r == `RFIFO_ADDR) ? host_out_fifo_dout :
+                         (raddr_r == `RHTIF_ADDR) ? htif_out_fifo_dout : {26'd0, htif_in_fifo_count};
   assign M_AXI_rid = arid_r;
 
   wire do_write = (st_wr == st_wr_write);
