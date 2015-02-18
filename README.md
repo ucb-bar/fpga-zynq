@@ -52,15 +52,15 @@ To guide you through the rest of the documentation, we have provide both a [Tabl
 Our system will allow you to run a RISC-V binary on a rocket core instantiated on a supported Zynq FPGA. This section will outline the stack of all of the parts involved and by proxy, outline the rest of the documentation. Going top-down from the RISC-V binary to the development system:
 
 **Target Application** (RISC-V binary)
- will run on top of whatever kernel the rocket chip is running. Compiled by [riscv-gcc](https://github.com/ucb-bar/riscv-gcc) or [riscv-llvm](https://github.com/ucb-bar/riscv-llvm).
+ will run on top of whatever kernel the rocket chip is running. Compiled by [riscv-gcc](https://github.com/riscv/riscv-gcc) or [riscv-llvm](https://github.com/riscv/riscv-llvm).
 
-**RISC-V Kernel** ([proxy kernel](https://github.com/ucb-bar/riscv-pk) or [RISC-V Linux](https://github.com/ucb-bar/riscv-linux))
+**RISC-V Kernel** ([proxy kernel](https://github.com/riscv/riscv-pk) or [RISC-V Linux](https://github.com/riscv/riscv-linux))
  runs on top of the rocket chip. The proxy kernel is extremely lightweight and designed to be used with a single binary linked against Newlib while RISC-V Linux is appropriate for everything else.
 
 **Rocket Chip** ([rocket core](https://github.com/ucb-bar/rocket) with L1 instruction and data caches)
  is instantiated on the FPGA. Many of its structures will typically map to various hard blocks including BRAMs and DSP slices. It communicates to the host ARM core on the Zynq via AXI.
 
-**Front-end Server** ([riscv-fesvr](https://github.com/ucb-bar/riscv-fesvr))
+**Front-end Server** ([riscv-fesvr](https://github.com/riscv/riscv-fesvr))
  runs on the host ARM core and provides an interface to the rocket chip running on the FPGA (connected via AXI).
 
 **Zynq ARM Core** (actually dual Cortex A9)
@@ -293,7 +293,7 @@ There are two options to obtain riscv-linux:
 
 Note: If you are working with the Zybo, you should not build `riscv-linux` from source. The Zybo cannot fit an FPU and thus uses a modified version of the kernel that ignores FPU instructions. Software floating point emulation support is planned but not yet available. The binary for this build can be obtained using Method 2 below.
 
-To build [riscv-linux](http://github.com/ucb-bar/riscv-linux) for Rocket, follow the instructions [here](https://github.com/ucb-bar/riscv-tools#linuxman). Upon completing the linked tutorial, you should have two files: `vmlinux` and `root.bin`. You should place them on your SD card in a directory called `riscv`. 
+To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman). Upon completing the linked tutorial, you should have two files: `vmlinux` and `root.bin`. You should place them on your SD card in a directory called `riscv`.
 
 #### Method 2) Download the Pre-Built Binary and Root FS
 
@@ -433,7 +433,7 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 
 ###F) <a name="fesvr"></a> Building fesvr-zynq
 
-The source code for the fesvr-zynq binary is in the [riscv-fesvr repo](http://github.com/ucb-bar/riscv-fesvr). To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
+The source code for the fesvr-zynq binary is in the [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr). To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
 
     $ mkdir build
     $ cd build
