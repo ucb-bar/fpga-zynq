@@ -18,16 +18,16 @@
 set origin_dir "."
 
 # Set the directory path for the original project from where this script was exported
-set orig_proj_dir "[file normalize "$origin_dir/BOARD_NAME_HERE_rocketchip"]"
+set orig_proj_dir "[file normalize "$origin_dir/BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE"]"
 
 # Create project
-create_project BOARD_NAME_HERE_rocketchip $orig_proj_dir
+create_project BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE $orig_proj_dir
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
-set obj [get_projects BOARD_NAME_HERE_rocketchip]
+set obj [get_projects BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE]
 set_property "default_lib" "xil_defaultlib" $obj
 set_property "part" "PART_NUMBER_HERE" $obj
 # REPLACE FOR OFFICIAL BOARD NAME $obj
@@ -112,7 +112,7 @@ set obj [get_runs impl_1]
 set_property "needs_refresh" "1" $obj
 set_property "part" "PART_NUMBER_HERE" $obj
 
-puts "INFO: Project created:BOARD_NAME_HERE_rocketchip"
+puts "INFO: Project created:BOARD_NAME_HERE_rocketchip_CHISEL_CONFIG_HERE"
 
 puts "INFO: Recreating block diagram from src/tcl/BOARD_NAME_HERE_bd.tcl"
 source src/tcl/BOARD_NAME_HERE_bd.tcl

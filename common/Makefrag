@@ -9,6 +9,7 @@ ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
 endif
 
+proj_name = $(BOARD)_rocketchip_$(CONFIG)
 
 verilog_srcs = \
 	src/verilog/clocking.vh \
@@ -25,13 +26,13 @@ default: project
 src/verilog/rocketchip_wrapper.v: $(common)/rocketchip_wrapper.v
 	cp $(common)/rocketchip_wrapper.v src/verilog/
 
-src/tcl/$(BOARD)_rocketchip.tcl: $(common)/zynq_rocketchip.tcl Makefile
+src/tcl/$(proj_name).tcl: $(common)/zynq_rocketchip.tcl Makefile
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
-		$(common)/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
+		$(common)/zynq_rocketchip.tcl > src/tcl/$(proj_name).tcl
 
-src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g' \
-		$(common)/make_bitstream.tcl > src/tcl/make_bitstream.tcl
+src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
+		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
 rocket:
 	cd $(base_dir)/rocket-chip/fsim; \
@@ -42,17 +43,17 @@ rocket:
 
 # Project generation
 # ------------------------------------------------------------------------------
-project = $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_rocketchip.tcl
-	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl;
+project = $(proj_name)/$(proj_name).xpr
+$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(proj_name).tcl
+	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
 project: $(project)
 
 vivado: $(project)
 	vivado $(project) &
 
-bitstream = $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
-$(bitstream): src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
-	vivado -mode tcl -source src/tcl/make_bitstream.tcl
+bitstream = $(proj_name)/$(proj_name).runs/impl_1/rocketchip_wrapper.bit
+$(bitstream): src/tcl/make_bitstream_$(CONFIG).tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
+	vivado -mode tcl -source src/tcl/make_bitstream_$(CONFIG).tcl
 bitstream: $(bitstream)
 
 
@@ -103,6 +104,7 @@ $(images):
 fetch-images: $(images)
 
 fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
+	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/system.bit
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
 load-sd: $(images)
