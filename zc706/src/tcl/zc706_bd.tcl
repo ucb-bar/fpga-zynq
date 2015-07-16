@@ -10,7 +10,7 @@
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2014.4
+set scripts_vivado_version 2015.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -32,6 +32,13 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 #    create_project project_1 myproj -part xc7z045ffg900-2
 #    set_property BOARD_PART xilinx.com:zc706:part0:1.0 [current_project]
 
+# CHECKING IF PROJECT EXISTS
+if { [get_projects -quiet] eq "" } {
+   puts "ERROR: Please open or create a project!"
+   return 1
+}
+
+
 
 # CHANGE DESIGN NAME HERE
 set design_name system
@@ -39,13 +46,6 @@ set design_name system
 # If you do not already have an existing IP Integrator design open,
 # you can create a design using the following command:
 #    create_bd_design $design_name
-
-# CHECKING IF PROJECT EXISTS
-if { [get_projects -quiet] eq "" } {
-   puts "ERROR: Please open or create a project!"
-   return 1
-}
-
 
 # Creating design if needed
 set errMsg ""
@@ -275,7 +275,7 @@ CONFIG.PCW_UIPARAM_DDR_ROW_ADDR_COUNT {15} CONFIG.PCW_UIPARAM_DDR_TRAIN_WRITE_LE
 CONFIG.PCW_UIPARAM_DDR_T_FAW {25} CONFIG.PCW_UIPARAM_DDR_T_RAS_MIN {36.0} \
 CONFIG.PCW_UIPARAM_DDR_T_RC {49.5} CONFIG.PCW_UIPARAM_DDR_USE_INTERNAL_VREF {1} \
 CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_USB0_IO {MIO 28 .. 39} \
-CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.preset {ZC706*} \
+CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.preset {ZC706} \
  ] $processing_system7_0
 
   # Create interface connections
