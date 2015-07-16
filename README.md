@@ -2,7 +2,7 @@ Rocket Chip on Zynq FPGAs
 =========================
 
 This repository contains the files needed to run the RISC-V [rocket chip](https://github.com/ucb-bar/rocket-chip) on 
-various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2014.4. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
+various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2015.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
 
 
 ###How to use this README
@@ -108,7 +108,7 @@ Awesome! You can now run RISC-V binaries on Rocket. If you'd like to boot linux 
 -------------------------
 
 #### <a name="workspace"></a> Setting Up Your Workspace
-_Requires: Vivado 2014.4 and its settings64.sh sourced_
+_Requires: Vivado 2015.2 and its settings64.sh sourced_
 
 If you don't already have a copy of the rocket chip, get a new one:
 
@@ -159,7 +159,7 @@ If you have modified the verilog for your project but not generated a new bitstr
 
 3) <a name="fromscratch"></a> Building Everything from Scratch
 -----------------------
-This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this README may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2014.4.
+This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this README may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2015.2.
 
 For ease of exposition, we will be describing all of the commands assuming that we are working with the `zybo` and its default configuration `DefaultFPGASmallConfig`. Replacing references to the `zybo` with `zedboard` or `zc706` will allow you to use these instructions for those boards.
 
@@ -406,7 +406,7 @@ _Note:_ Since these ramdisk operations use sudo on files, they may not work on a
 
 ###C) <a name="vivado"></a> Working with Vivado
 
-_Requires: Vivado 2014.4 and its settings64.sh sourced_
+_Requires: Vivado 2015.2 and its settings64.sh sourced_
 
 First, enter into the directory for your board (current options are `zybo`, `zedboard`, and `zc706`). To generate a bitstream, you will need a Vivado project. You should only need to generate it once, but the automation this repo provides makes it easy to generate again if you delete the project. To generate a Vivado project from scratch:
 
