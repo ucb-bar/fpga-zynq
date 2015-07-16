@@ -10,7 +10,7 @@
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2014.4
+set scripts_vivado_version 2015.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -31,6 +31,13 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 # you can create a project using the following command:
 #    create_project project_1 myproj -part xc7z010clg400-1
 
+# CHECKING IF PROJECT EXISTS
+if { [get_projects -quiet] eq "" } {
+   puts "ERROR: Please open or create a project!"
+   return 1
+}
+
+
 
 # CHANGE DESIGN NAME HERE
 set design_name system
@@ -38,13 +45,6 @@ set design_name system
 # If you do not already have an existing IP Integrator design open,
 # you can create a design using the following command:
 #    create_bd_design $design_name
-
-# CHECKING IF PROJECT EXISTS
-if { [get_projects -quiet] eq "" } {
-   puts "ERROR: Please open or create a project!"
-   return 1
-}
-
 
 # Creating design if needed
 set errMsg ""
