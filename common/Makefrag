@@ -104,7 +104,7 @@ $(images):
 fetch-images: $(images)
 
 fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
-	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/system.bit
+	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/rocketchip_wrapper.bit
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
 load-sd: $(images)
