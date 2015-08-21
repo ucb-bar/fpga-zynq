@@ -342,7 +342,7 @@ If you've downloaded the necessary files to boot riscv-linux, you may now do so.
 First however, you should mount the SD card using the instructions in [Appendix B](#mountsd).
 Then, to boot riscv-linux, run:
 
-    root@zynq:~# ./fesvr-zynq +disk=/sdcard/riscv/root.bin /sdcard/riscv/vmlinux
+    root@zynq:~# ./fesvr-zynq +disk=/sdcard/riscv/root.bin bbl /sdcard/riscv/vmlinux
 
 Once you hit enter, you'll see the linux boot messages scroll by, and you'll be
 presented with a busybox prompt from riscv-linux running on rocket!
