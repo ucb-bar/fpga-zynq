@@ -96,35 +96,52 @@ module rocketchip_wrapper
   wire host_in_fifo_full, host_in_fifo_empty, host_in_fifo_rden, host_in_fifo_wren;
   wire host_out_fifo_full, host_out_fifo_empty, host_out_fifo_wren, host_out_fifo_rden;
   wire [31:0] host_in_fifo_dout, host_out_fifo_dout;
-  wire [5:0] host_out_fifo_count;
+  wire [4:0] host_out_fifo_count;
   reg host_out_count, host_in_count;
 
-  wire [31:0]S_AXI_addr;
   wire S_AXI_arready;
   wire S_AXI_arvalid;
+  wire [31:0] S_AXI_araddr;
+  wire [5:0]  S_AXI_arid;
+  wire [2:0]  S_AXI_arsize;
+  wire [7:0]  S_AXI_arlen;
+  wire [1:0]  S_AXI_arburst;
+  wire S_AXI_arlock;
+  wire [3:0]  S_AXI_arcache;
+  wire [2:0]  S_AXI_arprot;
+  wire [3:0]  S_AXI_arqos;
+  wire [3:0]  S_AXI_arregion;
+
   wire S_AXI_awready;
   wire S_AXI_awvalid;
-  wire S_AXI_bready;
-  wire S_AXI_bvalid;
-  wire [1:0]S_AXI_bresp;
-  wire [63:0]S_AXI_rdata;
-  wire S_AXI_rlast;
-  reg  S_AXI_rlast_r;
-  wire S_AXI_rready;
-  wire S_AXI_rvalid;
-  wire [63:0]S_AXI_wdata;
-  wire S_AXI_wlast;
+  wire [31:0] S_AXI_awaddr;
+  wire [5:0]  S_AXI_awid;
+  wire [2:0]  S_AXI_awsize;
+  wire [7:0]  S_AXI_awlen;
+  wire [1:0]  S_AXI_awburst;
+  wire S_AXI_awlock;
+  wire [3:0]  S_AXI_awcache;
+  wire [2:0]  S_AXI_awprot;
+  wire [3:0]  S_AXI_awqos;
+  wire [3:0]  S_AXI_awregion;
+
   wire S_AXI_wready;
   wire S_AXI_wvalid;
-  wire [5:0] S_AXI_arid, S_AXI_awid; // inputs to ARM core
-  wire [5:0] S_AXI_bid, S_AXI_rid;   // outputs from ARM core
+  wire [7:0]  S_AXI_wstrb;
+  wire [63:0] S_AXI_wdata;
+  wire S_AXI_wlast;
 
-  wire mem_req_cmd_val, mem_req_cmd_rdy, mem_req_cmd_rw, mem_req_data_val, mem_req_data_rdy;
-  wire mem_resp_val,mem_resp_rdy;
-  wire [4:0] mem_req_tag, mem_resp_tag;
-  wire [25:0] mem_req_addr;
-  wire [127:0] mem_req_data_bits;
-  reg [63:0] mem_resp_data_buf;
+  wire S_AXI_bready;
+  wire S_AXI_bvalid;
+  wire [1:0] S_AXI_bresp;
+  wire [5:0] S_AXI_bid;
+
+  wire S_AXI_rready;
+  wire S_AXI_rvalid;
+  wire [1:0]  S_AXI_rresp;
+  wire [5:0]  S_AXI_rid;
+  wire [63:0] S_AXI_rdata;
+  wire S_AXI_rlast;
 
   wire reset, reset_cpu;
 
@@ -200,50 +217,51 @@ module rocketchip_wrapper
         .M_AXI_wready(M_AXI_wready),
         .M_AXI_wstrb(M_AXI_wstrb),
         .M_AXI_wvalid(M_AXI_wvalid),
+
         // slave AXI interface (fpga = master, zynq = slave) 
         // connected directly to DDR controller to handle test chip mem
-        .S_AXI_araddr(S_AXI_addr),
-        .S_AXI_arburst(2'b01),  // type INCR
-        .S_AXI_arcache(4'b0011),
+        .S_AXI_araddr(S_AXI_araddr),
+        .S_AXI_arburst(S_AXI_arburst),
+        .S_AXI_arcache(S_AXI_arcache),
         .S_AXI_arid(S_AXI_arid),
-        .S_AXI_arlen(8'd7), // burst length = 8 transfers
-        .S_AXI_arlock(1'b0),
-        .S_AXI_arprot(3'b000),
-        .S_AXI_arqos(4'b0000),
+        .S_AXI_arlen(S_AXI_arlen),
+        .S_AXI_arlock(S_AXI_arlock),
+        .S_AXI_arprot(S_AXI_arprot),
+        .S_AXI_arqos(S_AXI_arqos),
         .S_AXI_arready(S_AXI_arready),
-        .S_AXI_arregion(4'b0000),
-        .S_AXI_arsize(3'b011), // burst size = 64 bits/beat
+        .S_AXI_arregion(S_AXI_arregion),
+        .S_AXI_arsize(S_AXI_arsize),
         .S_AXI_arvalid(S_AXI_arvalid),
         //
-        .S_AXI_awaddr(S_AXI_addr),
-        .S_AXI_awburst(2'b01),
-        .S_AXI_awcache(4'b0011),
+        .S_AXI_awaddr(S_AXI_awaddr),
+        .S_AXI_awburst(S_AXI_awburst),
+        .S_AXI_awcache(S_AXI_awcache),
         .S_AXI_awid(S_AXI_awid),
-        .S_AXI_awlen(8'd7), // burst length = 8 transfers
-        .S_AXI_awlock(1'b0),
-        .S_AXI_awprot(3'b000),
-        .S_AXI_awqos(4'b0000),
+        .S_AXI_awlen(S_AXI_awlen),
+        .S_AXI_awlock(S_AXI_awlock),
+        .S_AXI_awprot(S_AXI_awprot),
+        .S_AXI_awqos(S_AXI_awqos),
         .S_AXI_awready(S_AXI_awready),
-        .S_AXI_awregion(4'b0000),
-        .S_AXI_awsize(3'b011),
+        .S_AXI_awregion(S_AXI_awregion),
+        .S_AXI_awsize(S_AXI_awsize),
         .S_AXI_awvalid(S_AXI_awvalid),
         //
         .S_AXI_bid(S_AXI_bid),
         .S_AXI_bready(S_AXI_bready),
-        .S_AXI_bresp(),
+        .S_AXI_bresp(S_AXI_bresp),
         .S_AXI_bvalid(S_AXI_bvalid),
         //
         .S_AXI_rid(S_AXI_rid),
         .S_AXI_rdata(S_AXI_rdata),
         .S_AXI_rlast(S_AXI_rlast),
         .S_AXI_rready(S_AXI_rready),
-        .S_AXI_rresp(),
+        .S_AXI_rresp(S_AXI_rresp),
         .S_AXI_rvalid(S_AXI_rvalid),
         //
         .S_AXI_wdata(S_AXI_wdata),
         .S_AXI_wlast(S_AXI_wlast),
         .S_AXI_wready(S_AXI_wready),
-        .S_AXI_wstrb(8'hff),
+        .S_AXI_wstrb(S_AXI_wstrb),
         .S_AXI_wvalid(S_AXI_wvalid),
         .ext_clk_in(host_clk)
         );
@@ -377,7 +395,7 @@ module rocketchip_wrapper
   assign M_AXI_arready = (st_rd == st_rd_idle);
   assign M_AXI_rvalid  = (st_rd == st_rd_read);
   assign M_AXI_rlast   = (st_rd == st_rd_read);
-  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : host_out_fifo_dout;
+  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {27'd0, host_out_fifo_count} : host_out_fifo_dout;
   assign M_AXI_rid = arid_r;
 
   wire do_write = (st_wr == st_wr_write);
@@ -389,83 +407,6 @@ module rocketchip_wrapper
   assign M_AXI_bvalid = (st_wr == st_wr_ack);
   assign M_AXI_bid = awid_r;
 
-  // interface between test chip mem interface and zynq DDR via HP0 AXI port
-  parameter st_IDLE = 2'b00;
-  parameter st_READ = 2'b01;
-  parameter st_START_WRITE = 2'b10;
-  parameter st_WRITE = 2'b11;
-//  parameter st_WRITE_ACK = 3'b100;
-
-  reg [1:0] state_r = st_IDLE; // for poweron global set/reset
-  reg [2:0] write_count = 3'd0;
-  reg read_count = 1'b0;
-
-  always @(posedge host_clk)
-  begin
-     if (reset)
-     begin
-        state_r <= st_IDLE;
-        write_count <= 3'd0;
-        read_count <= 1'b0;
-        mem_resp_data_buf <= 64'd0;
-        S_AXI_rlast_r <= 1'b0;
-     end
-     else
-        S_AXI_rlast_r <= S_AXI_rlast && S_AXI_rvalid;
-        if (S_AXI_rvalid)
-        begin
-           read_count <= read_count + 1;
-           mem_resp_data_buf <= S_AXI_rdata;
-        end
-
-        case (state_r)
-           st_IDLE : begin
-              if (mem_req_cmd_val && !mem_req_cmd_rw)
-                state_r <= st_READ;
-              else if (mem_req_cmd_val && mem_req_cmd_rw && mem_req_data_val)
-                state_r <= st_START_WRITE;
-           end
-           st_READ : begin
-              if (S_AXI_arready)
-                 state_r <= st_IDLE;
-           end
-           st_START_WRITE : begin
-              if (S_AXI_awready)
-                 state_r <= st_WRITE;
-           end
-           st_WRITE : begin
-              if (S_AXI_wready && mem_req_data_val)
-              begin
-                 write_count <= write_count + 1;
-                 if (write_count == 3'd7)
-//                    state_r <= st_WRITE_ACK;
-                    state_r <= st_IDLE;
-              end
-           end
-//           st_WRITE_ACK : begin
-//              if (S_AXI_bvalid)
-//                 state_r <= st_IDLE;
-//           end
-//           default : begin  // Fault Recovery
-//              <state> <= <state1>;
-//           end   
-        endcase
-  end
-  
-  assign S_AXI_awvalid = (state_r == st_START_WRITE);
-  assign S_AXI_arvalid = (state_r == st_READ);
-  assign mem_req_cmd_rdy = ((state_r == st_START_WRITE) && S_AXI_awready) || ((state_r == st_READ) && S_AXI_arready);
-  assign S_AXI_wvalid = (state_r == st_WRITE) && mem_req_data_val;
-  assign S_AXI_wlast = (state_r == st_WRITE) && (write_count == 3'd7);
-
-  assign S_AXI_rready = 1'b1;
-  assign mem_resp_val = read_count; // FIXME: assuming mem_resp_rdy is always 1 (i think its OK)
-
-  assign mem_req_data_rdy = (state_r == st_WRITE) && write_count[0] && S_AXI_wready;
-  assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
-  assign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
-  assign S_AXI_bready = 1'b1; //(state_r == st_WRITE_ACK);
-  
 /*
   fifo_8x5 tag_queue (
     .clk(host_clk),
@@ -479,34 +420,61 @@ module rocketchip_wrapper
   );
 */
 
-  assign S_AXI_arid = {1'b0, mem_req_tag};
-  assign S_AXI_awid = 6'd0;
-  assign mem_resp_tag = S_AXI_rid[4:0];
+  wire [31:0] mem_araddr;
+  wire [31:0] mem_awaddr;
+
+  // Memory given to Rocket is the upper 256 MB of the 512 MB DRAM
+  assign S_AXI_araddr = {4'd1, mem_araddr[27:0]};
+  assign S_AXI_awaddr = {4'd1, mem_awaddr[27:0]};
 
   Top top(
        .clk(host_clk),
        .reset(reset_cpu),
-       //.io_host_clk(  )
-       //.io_host_clk_edge(  )
        .io_host_in_ready( host_in_ready ),
        .io_host_in_valid( host_in_valid ),
        .io_host_in_bits( host_in_bits ),
        .io_host_out_ready( host_out_ready ),
        .io_host_out_valid( host_out_valid ),
        .io_host_out_bits( host_out_bits ),
-       //.io_host_debug_stats_pcr(  )
-       .io_mem_req_cmd_ready( mem_req_cmd_rdy ),
-       .io_mem_req_cmd_valid( mem_req_cmd_val ),
-       .io_mem_req_cmd_bits_addr( mem_req_addr ),
-       .io_mem_req_cmd_bits_tag( mem_req_tag ),
-       .io_mem_req_cmd_bits_rw( mem_req_cmd_rw ),
-       .io_mem_req_data_ready( mem_req_data_rdy ),
-       .io_mem_req_data_valid( mem_req_data_val ),
-       .io_mem_req_data_bits_data( mem_req_data_bits ),
-       .io_mem_resp_ready( mem_resp_rdy ),
-       .io_mem_resp_valid( mem_resp_val ),
-       .io_mem_resp_bits_data( {S_AXI_rdata, mem_resp_data_buf} ),
-       .io_mem_resp_bits_tag( mem_resp_tag )
+       .io_mem_0_ar_valid (S_AXI_arvalid),
+       .io_mem_0_ar_ready (S_AXI_arready),
+       .io_mem_0_ar_bits_addr (mem_araddr),
+       .io_mem_0_ar_bits_id (S_AXI_arid),
+       .io_mem_0_ar_bits_size (S_AXI_arsize),
+       .io_mem_0_ar_bits_len (S_AXI_arlen),
+       .io_mem_0_ar_bits_burst (S_AXI_arburst),
+       .io_mem_0_ar_bits_cache (S_AXI_arcache),
+       .io_mem_0_ar_bits_lock (S_AXI_arlock),
+       .io_mem_0_ar_bits_prot (S_AXI_arprot),
+       .io_mem_0_ar_bits_qos (S_AXI_arqos),
+       .io_mem_0_ar_bits_region(S_AXI_arregion),
+       .io_mem_0_aw_valid (S_AXI_awvalid),
+       .io_mem_0_aw_ready (S_AXI_awready),
+       .io_mem_0_aw_bits_addr (mem_awaddr),
+       .io_mem_0_aw_bits_id (S_AXI_awid),
+       .io_mem_0_aw_bits_size (S_AXI_awsize),
+       .io_mem_0_aw_bits_len (S_AXI_awlen),
+       .io_mem_0_aw_bits_burst (S_AXI_awburst),
+       .io_mem_0_aw_bits_cache (S_AXI_awcache),
+       .io_mem_0_aw_bits_lock (S_AXI_awlock),
+       .io_mem_0_aw_bits_prot (S_AXI_awprot),
+       .io_mem_0_aw_bits_qos (S_AXI_awqos),
+       .io_mem_0_aw_bits_region(S_AXI_awregion),
+       .io_mem_0_w_valid (S_AXI_wvalid),
+       .io_mem_0_w_ready (S_AXI_wready),
+       .io_mem_0_w_bits_strb (S_AXI_wstrb),
+       .io_mem_0_w_bits_data (S_AXI_wdata),
+       .io_mem_0_w_bits_last (S_AXI_wlast),
+       .io_mem_0_b_valid (S_AXI_bvalid),
+       .io_mem_0_b_ready (S_AXI_bready),
+       .io_mem_0_b_bits_resp (S_AXI_bresp),
+       .io_mem_0_b_bits_id (S_AXI_bid),
+       .io_mem_0_r_valid (S_AXI_rvalid),
+       .io_mem_0_r_ready (S_AXI_rready),
+       .io_mem_0_r_bits_resp (S_AXI_rresp),
+       .io_mem_0_r_bits_id (S_AXI_rid),
+       .io_mem_0_r_bits_data (S_AXI_rdata),
+       .io_mem_0_r_bits_last (S_AXI_rlast)
   );
 `ifndef differential_clock
   IBUFG ibufg_gclk (.I(clk), .O(gclk_i));
