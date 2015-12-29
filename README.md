@@ -94,7 +94,7 @@ Next, insert the SD card on the development system and copy over the images:
 
     $ make load-sd SD=path_to_mounted_sdcard
 
-Finally, eject the SD card, insert it into the board and power the board on. Connect to the board with an ethernet cable (password is _root_) and run hello world:
+Finally, eject the SD card, insert it into the board, set the board's boot jumper to "SD", and power the board on. Connect to the board with an ethernet cable (password is _root_) and run hello world:
 
     $ ssh root@192.168.1.5
     root@zynq:~# ./fesvr-zynq pk hello
