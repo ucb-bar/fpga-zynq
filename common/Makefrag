@@ -15,7 +15,7 @@ verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
 	src/verilog/Top.$(CONFIG).v \
-
+	src/verilog/ZynqAdapter.$(CONFIG).v \
 
 default: project
 
@@ -37,7 +37,8 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 rocket:
 	cd $(base_dir)/rocket-chip/fsim; \
 	make verilog CONFIG=$(CONFIG); \
-	cp generated-src/Top.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+	make verilog MODEL=ZynqAdapter CONFIG=$(CONFIG); \
+	cp generated-src/{Top,ZynqAdapter}.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
 
 
