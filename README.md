@@ -457,6 +457,8 @@ from the riscv-fesvr/build directory and make sure you have the Xilinx SDK in yo
 
 ###G) <a name="zybotools"></a> Building riscv-tools for Zybo
 
+The Zybo build was last tested with [this version of the toolchain](https://github.com/ucb-bar/rocket-chip/commit/2f71a3da5a7d41b4aa2c7a617902f2aee8f2cbe1).
+
 Because the Zybo board uses `DefaultFPGASmallConfig`, [riscv-tools](https://github.com/riscv/riscv-tools) must be recompiled to omit floating point instructions. Add the `--with-arch=RV64IMA` tag to the line in `build.sh` that builds [riscv-gnu-toolchain](https://github.com/riscv/riscv-gnu-toolchain). It should read as follows:
 
     build_project riscv-gnu-toolchain --prefix=$RISCV --with-arch=RV64IMA
