@@ -1,8 +1,11 @@
 # This makefrag is sourced by each board's subdirectory
 
 JOBS = 16
+ROCKET_DIR ?= $(base_dir)/rocket-chip
+
 base_dir = $(abspath ..)
 common = $(base_dir)/common
+common_build = $(common)/build
 output_delivery = deliver_output
 
 ifneq ($(BOARD_MODEL),)
@@ -34,18 +37,20 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
+src/verilog/ZynqAdapter.$(CONFIG).v:
+	cp $(common)/ZynqAdapter.DefaultFPGAConfig.v $@
+
 rocket:
-	cd $(base_dir)/rocket-chip/fsim; \
+	cd $(ROCKET_DIR)/fsim; \
 	make verilog CONFIG=$(CONFIG); \
-	make verilog MODEL=ZynqAdapter CONFIG=$(CONFIG); \
-	cp generated-src/{Top,ZynqAdapter}.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+	cp $(common_build)/Top.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
 
 
 
 # Project generation
 # ------------------------------------------------------------------------------
 project = $(proj_name)/$(proj_name).xpr
-$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(proj_name).tcl
+$(project): | $(verilog_srcs) src/tcl/$(proj_name).tcl
 	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
 project: $(project)
 
@@ -141,6 +146,29 @@ fetch-ramdisk:
 $(output_delivery)/boot.bin:
 	cd $(output_delivery); bootgen -image output.bif -w -o boot.bin
 
+# Build riscv-fesvr for zynq
+# ------------------------------------------------------------------------------
+
+fesvr-main = fesvr-zynq
+fesvr-srcs = fesvr_zynq.cc zynq_dtm_driver.cc
+fesvr-hdrs = zynq_dtm_driver.h
+fesvr-lib  = $(common_build)/libfesvr.so
+
+CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
+CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr \
+                -Wl,-rpath,/usr/local/lib -I $(common)/csrc -I \
+                $(ROCKET_DIR)/riscv-tools/riscv-fesvr/
+
+$(fesvr-lib):
+	mkdir -p $(common_build)
+	cd $(common_build); $(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
+    --host=arm-xilinx-linux-gnueabi; make
+
+$(common_build)/$(fesvr_main): $(fesvr-lib)
+	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) \
+    $(addprefix $(common)/csrc/, $(fesvr-srcs))
+
+fesvr-zynq: $(common_build)/$(fesvr_main)
 
 # Fetch pre-built risc-v linux binary and root fs from S3
 # ------------------------------------------------------------------------------
@@ -167,4 +195,4 @@ fetch-riscv-linux-deliver:
 clean:
 	rm -f *.log *.jou *.str
 
-.PHONY: vivado rocket fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean

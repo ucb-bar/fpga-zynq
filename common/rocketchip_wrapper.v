@@ -134,8 +134,16 @@ module rocketchip_wrapper
 
   wire reset, reset_cpu;
 
-  wire host_in_valid, host_in_ready, host_out_ready, host_out_valid;
-  wire [15:0] host_in_bits, host_out_bits;
+  wire debug_req_ready;
+  wire debug_req_valid;
+  wire [4:0]    debug_req_bits_addr;
+  wire [1:0]    debug_req_bits_op;
+  wire [33:0]   debug_req_bits_data;
+  wire  debug_resp_ready;
+  wire  debug_resp_valid;
+  wire  [1:0]   debug_resp_bits_resp;
+  wire  [33:0]  debug_resp_bits_data;
+
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
 
@@ -263,13 +271,15 @@ module rocketchip_wrapper
 
       .io_reset(reset_cpu),
 
-      .io_host_in_ready (host_in_ready),
-      .io_host_in_valid (host_in_valid),
-      .io_host_in_bits  (host_in_bits),
-
-      .io_host_out_ready (host_out_ready),
-      .io_host_out_valid (host_out_valid),
-      .io_host_out_bits  (host_out_bits),
+      .io_debug_req_ready(debug_req_ready),
+      .io_debug_req_valid(debug_req_valid),
+      .io_debug_req_bits_addr(debug_req_bits_addr),
+      .io_debug_req_bits_op(debug_req_bits_op),
+      .io_debug_req_bits_data(debug_req_bits_data),
+      .io_debug_resp_ready(debug_resp_ready),
+      .io_debug_resp_valid(debug_resp_valid),
+      .io_debug_resp_bits_resp(debug_resp_bits_resp),
+      .io_debug_resp_bits_data(debug_resp_bits_data),
 
       .io_nasti_aw_ready (M_AXI_awready),
       .io_nasti_aw_valid (M_AXI_awvalid),
@@ -324,51 +334,56 @@ module rocketchip_wrapper
   Top top(
        .clk(host_clk),
        .reset(reset_cpu),
-       .io_host_in_ready( host_in_ready ),
-       .io_host_in_valid( host_in_valid ),
-       .io_host_in_bits( host_in_bits ),
-       .io_host_out_ready( host_out_ready ),
-       .io_host_out_valid( host_out_valid ),
-       .io_host_out_bits( host_out_bits ),
-       .io_mem_0_ar_valid (S_AXI_arvalid),
-       .io_mem_0_ar_ready (S_AXI_arready),
-       .io_mem_0_ar_bits_addr (mem_araddr),
-       .io_mem_0_ar_bits_id (S_AXI_arid),
-       .io_mem_0_ar_bits_size (S_AXI_arsize),
-       .io_mem_0_ar_bits_len (S_AXI_arlen),
-       .io_mem_0_ar_bits_burst (S_AXI_arburst),
-       .io_mem_0_ar_bits_cache (S_AXI_arcache),
-       .io_mem_0_ar_bits_lock (S_AXI_arlock),
-       .io_mem_0_ar_bits_prot (S_AXI_arprot),
-       .io_mem_0_ar_bits_qos (S_AXI_arqos),
-       .io_mem_0_ar_bits_region(S_AXI_arregion),
-       .io_mem_0_aw_valid (S_AXI_awvalid),
-       .io_mem_0_aw_ready (S_AXI_awready),
-       .io_mem_0_aw_bits_addr (mem_awaddr),
-       .io_mem_0_aw_bits_id (S_AXI_awid),
-       .io_mem_0_aw_bits_size (S_AXI_awsize),
-       .io_mem_0_aw_bits_len (S_AXI_awlen),
-       .io_mem_0_aw_bits_burst (S_AXI_awburst),
-       .io_mem_0_aw_bits_cache (S_AXI_awcache),
-       .io_mem_0_aw_bits_lock (S_AXI_awlock),
-       .io_mem_0_aw_bits_prot (S_AXI_awprot),
-       .io_mem_0_aw_bits_qos (S_AXI_awqos),
-       .io_mem_0_aw_bits_region(S_AXI_awregion),
-       .io_mem_0_w_valid (S_AXI_wvalid),
-       .io_mem_0_w_ready (S_AXI_wready),
-       .io_mem_0_w_bits_strb (S_AXI_wstrb),
-       .io_mem_0_w_bits_data (S_AXI_wdata),
-       .io_mem_0_w_bits_last (S_AXI_wlast),
-       .io_mem_0_b_valid (S_AXI_bvalid),
-       .io_mem_0_b_ready (S_AXI_bready),
-       .io_mem_0_b_bits_resp (S_AXI_bresp),
-       .io_mem_0_b_bits_id (S_AXI_bid),
-       .io_mem_0_r_valid (S_AXI_rvalid),
-       .io_mem_0_r_ready (S_AXI_rready),
-       .io_mem_0_r_bits_resp (S_AXI_rresp),
-       .io_mem_0_r_bits_id (S_AXI_rid),
-       .io_mem_0_r_bits_data (S_AXI_rdata),
-       .io_mem_0_r_bits_last (S_AXI_rlast)
+       .io_interrupts_0(1'b0),
+       .io_interrupts_1(1'b0),
+       .io_mem_axi_0_ar_valid (S_AXI_arvalid),
+       .io_mem_axi_0_ar_ready (S_AXI_arready),
+       .io_mem_axi_0_ar_bits_addr (mem_araddr),
+       .io_mem_axi_0_ar_bits_id (S_AXI_arid),
+       .io_mem_axi_0_ar_bits_size (S_AXI_arsize),
+       .io_mem_axi_0_ar_bits_len (S_AXI_arlen),
+       .io_mem_axi_0_ar_bits_burst (S_AXI_arburst),
+       .io_mem_axi_0_ar_bits_cache (S_AXI_arcache),
+       .io_mem_axi_0_ar_bits_lock (S_AXI_arlock),
+       .io_mem_axi_0_ar_bits_prot (S_AXI_arprot),
+       .io_mem_axi_0_ar_bits_qos (S_AXI_arqos),
+       .io_mem_axi_0_ar_bits_region(S_AXI_arregion),
+       .io_mem_axi_0_aw_valid (S_AXI_awvalid),
+       .io_mem_axi_0_aw_ready (S_AXI_awready),
+       .io_mem_axi_0_aw_bits_addr (mem_awaddr),
+       .io_mem_axi_0_aw_bits_id (S_AXI_awid),
+       .io_mem_axi_0_aw_bits_size (S_AXI_awsize),
+       .io_mem_axi_0_aw_bits_len (S_AXI_awlen),
+       .io_mem_axi_0_aw_bits_burst (S_AXI_awburst),
+       .io_mem_axi_0_aw_bits_cache (S_AXI_awcache),
+       .io_mem_axi_0_aw_bits_lock (S_AXI_awlock),
+       .io_mem_axi_0_aw_bits_prot (S_AXI_awprot),
+       .io_mem_axi_0_aw_bits_qos (S_AXI_awqos),
+       .io_mem_axi_0_aw_bits_region(S_AXI_awregion),
+       .io_mem_axi_0_w_valid (S_AXI_wvalid),
+       .io_mem_axi_0_w_ready (S_AXI_wready),
+       .io_mem_axi_0_w_bits_strb (S_AXI_wstrb),
+       .io_mem_axi_0_w_bits_data (S_AXI_wdata),
+       .io_mem_axi_0_w_bits_last (S_AXI_wlast),
+       .io_mem_axi_0_b_valid (S_AXI_bvalid),
+       .io_mem_axi_0_b_ready (S_AXI_bready),
+       .io_mem_axi_0_b_bits_resp (S_AXI_bresp),
+       .io_mem_axi_0_b_bits_id (S_AXI_bid),
+       .io_mem_axi_0_r_valid (S_AXI_rvalid),
+       .io_mem_axi_0_r_ready (S_AXI_rready),
+       .io_mem_axi_0_r_bits_resp (S_AXI_rresp),
+       .io_mem_axi_0_r_bits_id (S_AXI_rid),
+       .io_mem_axi_0_r_bits_data (S_AXI_rdata),
+       .io_mem_axi_0_r_bits_last (S_AXI_rlast),
+       .io_debug_req_ready(debug_req_ready),
+       .io_debug_req_valid(debug_req_valid),
+       .io_debug_req_bits_addr(debug_req_bits_addr),
+       .io_debug_req_bits_op(debug_req_bits_op),
+       .io_debug_req_bits_data(debug_req_bits_data),
+       .io_debug_resp_ready(debug_resp_ready),
+       .io_debug_resp_valid(debug_resp_valid),
+       .io_debug_resp_bits_resp(debug_resp_bits_resp),
+       .io_debug_resp_bits_data(debug_resp_bits_data)
   );
 `ifndef differential_clock
   IBUFG ibufg_gclk (.I(clk), .O(gclk_i));

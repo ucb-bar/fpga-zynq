@@ -10,7 +10,7 @@
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2015.2
+set scripts_vivado_version 2015.4
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -146,30 +146,71 @@ proc create_root_design { parentCell } {
   set DDR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR ]
   set FIXED_IO [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO ]
   set M_AXI [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI ]
-  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.DATA_WIDTH {32} CONFIG.FREQ_HZ {25000000} CONFIG.PROTOCOL {AXI4}  ] $M_AXI
+  set_property -dict [ list \
+CONFIG.ADDR_WIDTH {32} \
+CONFIG.DATA_WIDTH {32} \
+CONFIG.FREQ_HZ {25000000} \
+CONFIG.PROTOCOL {AXI4} \
+ ] $M_AXI
   set S_AXI [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI ]
-  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.ARUSER_WIDTH {0} CONFIG.AWUSER_WIDTH {0} CONFIG.BUSER_WIDTH {0} CONFIG.CLK_DOMAIN {} CONFIG.DATA_WIDTH {64} CONFIG.FREQ_HZ {25000000} CONFIG.ID_WIDTH {6} CONFIG.MAX_BURST_LENGTH {16} CONFIG.NUM_READ_OUTSTANDING {1} CONFIG.NUM_WRITE_OUTSTANDING {1} CONFIG.PHASE {0.000} CONFIG.PROTOCOL {AXI4} CONFIG.READ_WRITE_MODE {READ_WRITE} CONFIG.RUSER_WIDTH {0} CONFIG.SUPPORTS_NARROW_BURST {1} CONFIG.WUSER_WIDTH {0}  ] $S_AXI
+  set_property -dict [ list \
+CONFIG.ADDR_WIDTH {32} \
+CONFIG.ARUSER_WIDTH {0} \
+CONFIG.AWUSER_WIDTH {0} \
+CONFIG.BUSER_WIDTH {0} \
+CONFIG.DATA_WIDTH {64} \
+CONFIG.HAS_BRESP {1} \
+CONFIG.HAS_BURST {1} \
+CONFIG.HAS_CACHE {1} \
+CONFIG.HAS_LOCK {1} \
+CONFIG.HAS_PROT {1} \
+CONFIG.HAS_QOS {1} \
+CONFIG.HAS_REGION {1} \
+CONFIG.HAS_RRESP {1} \
+CONFIG.HAS_WSTRB {1} \
+CONFIG.ID_WIDTH {6} \
+CONFIG.MAX_BURST_LENGTH {16} \
+CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.PROTOCOL {AXI4} \
+CONFIG.READ_WRITE_MODE {READ_WRITE} \
+CONFIG.RUSER_WIDTH {0} \
+CONFIG.SUPPORTS_NARROW_BURST {1} \
+CONFIG.WUSER_WIDTH {0} \
+ ] $S_AXI
 
   # Create ports
   set FCLK_RESET0_N [ create_bd_port -dir O -type rst FCLK_RESET0_N ]
   set ext_clk_in [ create_bd_port -dir I -type clk ext_clk_in ]
-  set_property -dict [ list CONFIG.ASSOCIATED_BUSIF {S_AXI:M_AXI} CONFIG.FREQ_HZ {25000000}  ] $ext_clk_in
+  set_property -dict [ list \
+CONFIG.ASSOCIATED_BUSIF {S_AXI:M_AXI} \
+CONFIG.FREQ_HZ {25000000} \
+ ] $ext_clk_in
 
   # Create instance: axi_interconnect_0, and set properties
   set axi_interconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_0 ]
-  set_property -dict [ list CONFIG.NUM_MI {1}  ] $axi_interconnect_0
+  set_property -dict [ list \
+CONFIG.NUM_MI {1} \
+ ] $axi_interconnect_0
 
   # Create instance: axi_interconnect_1, and set properties
   set axi_interconnect_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_1 ]
-  set_property -dict [ list CONFIG.NUM_MI {1}  ] $axi_interconnect_1
+  set_property -dict [ list \
+CONFIG.NUM_MI {1} \
+ ] $axi_interconnect_1
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
-  set_property -dict [ list CONFIG.C_AUX_RESET_HIGH {0}  ] $proc_sys_reset_0
+  set_property -dict [ list \
+CONFIG.C_AUX_RESET_HIGH {0} \
+ ] $proc_sys_reset_0
 
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
-  set_property -dict [ list CONFIG.PCW_IMPORT_BOARD_PRESET {src/xml/ZYBO_zynq_def.xml} CONFIG.PCW_USE_S_AXI_HP0 {1}  ] $processing_system7_0
+  set_property -dict [ list \
+CONFIG.PCW_IMPORT_BOARD_PRESET {src/xml/ZYBO_zynq_def.xml} \
+CONFIG.PCW_USE_S_AXI_HP0 {1} \
+ ] $processing_system7_0
 
   # Create interface connections
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_ports S_AXI] [get_bd_intf_pins axi_interconnect_1/S00_AXI]
@@ -188,7 +229,34 @@ proc create_root_design { parentCell } {
   # Create address segments
   create_bd_addr_seg -range 0x1000 -offset 0x43C00000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs M_AXI/Reg] SEG_system_Reg
   create_bd_addr_seg -range 0x20000000 -offset 0x0 [get_bd_addr_spaces S_AXI] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  
+
+  # Perform GUI Layout
+  regenerate_bd_layout -layout_string {
+   guistr: "# # String gsaved with Nlview 6.5.5  2015-06-26 bk=1.3371 VDI=38 GEI=35 GUI=JA:1.8
+#  -string -flagsOSRD
+preplace port DDR -pg 1 -y 80 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 360 -defaultsOSRD
+preplace port S_AXI -pg 1 -y 70 -defaultsOSRD
+preplace port M_AXI -pg 1 -y 240 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 100 -defaultsOSRD
+preplace port ext_clk_in -pg 1 -y 250 -defaultsOSRD
+preplace inst proc_sys_reset_0 -pg 1 -lvl 1 -y 350 -defaultsOSRD
+preplace inst axi_interconnect_0 -pg 1 -lvl 4 -y 240 -defaultsOSRD
+preplace inst axi_interconnect_1 -pg 1 -lvl 2 -y 130 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 3 -y 140 -defaultsOSRD
+preplace netloc S_AXI_1 1 0 2 NJ 70 NJ
+preplace netloc processing_system7_0_DDR 1 3 2 NJ 80 NJ
+preplace netloc processing_system7_0_M_AXI_GP0 1 3 1 N
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 5 30 260 NJ 260 NJ 280 1120 360 NJ
+preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 3 370 270 NJ 270 1130
+preplace netloc processing_system7_0_FIXED_IO 1 3 2 NJ 100 NJ
+preplace netloc axi_interconnect_0_M00_AXI 1 4 1 NJ
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 3 390 290 NJ 290 1150
+preplace netloc axi_interconnect_1_M00_AXI 1 2 1 N
+preplace netloc ext_clk_in_1 1 0 4 20 170 380 10 670 10 1140
+levelinfo -pg 1 0 200 530 900 1290 1450 -top 0 -bot 440
+",
+}
 
   # Restore current instance
   current_bd_instance $oldCurInst

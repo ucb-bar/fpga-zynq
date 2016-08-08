@@ -2,10 +2,14 @@
 *.jou
 *.Xil
 
+common/build
+
 zedboard/zedboard_rocketchip_*
 zedboard/src/tcl/zedboard_rocketchip_*.tcl
 zedboard/src/tcl/make_bitstream_*.tcl
 zedboard/src/verilog/rocketchip_wrapper.v
+zedboard/src/verilog/Top.*.v
+zedboard/src/verilog/ZynqAdapter.*.v
 zedboard/deliver_output
 zedboard/soft_build
 
@@ -13,6 +17,8 @@ zybo/zybo_rocketchip_*
 zybo/src/tcl/zybo_rocketchip_*.tcl
 zybo/src/tcl/make_bitstream_*.tcl
 zybo/src/verilog/rocketchip_wrapper.v
+zybo/src/verilog/Top.*.v
+zybo/src/verilog/ZynqAdapter.*.v
 zybo/deliver_output
 zybo/soft_build
 
@@ -20,5 +26,7 @@ zc706/zc706_rocketchip_*
 zc706/src/tcl/zc706_rocketchip_*.tcl
 zc706/src/tcl/make_bitstream_*.tcl
 zc706/src/verilog/rocketchip_wrapper.v
+zc706/src/verilog/Top.*.v
+zc706/src/verilog/ZynqAdapter.*.v
 zc706/deliver_output
 zc706/soft_build
