@@ -18,11 +18,19 @@ verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
 	src/verilog/Top.$(CONFIG).v \
-	src/verilog/ZynqAdapter.$(CONFIG).v \
 
 default: project
 
+# Taken from rocket chip 2a5aeea. TODO: Maybe source this directly from makefrag?
+SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar
 
+FIRRTL_JAR ?= $(ROCKET_DIR)/firrtl/utils/bin/firrtl.jar
+FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
+
+$(FIRRTL_JAR): $(@shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala")
+	$(MAKE) -C $(ROCKET_DIR)/firrtl SBT="$(SBT)" root_dir=$(ROCKET_DIR)/firrtl build-scala
+
+CHISEL_ARGS := --W0W --minimumCompatibility 3.0.0 --backend $(BACKEND) --configName $(CONFIG) --compileInitializationUnoptimized --targetDir $(common_build)
 
 # Specialize sources for board
 # ------------------------------------------------------------------------------
@@ -37,14 +45,29 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-src/verilog/ZynqAdapter.$(CONFIG).v:
-	cp $(common)/ZynqAdapter.DefaultFPGAConfig.v $@
+# TODO: Can we pass this as an argument to the generator, instead of having
+# to put the bootrom in a specific place?
+$(common)/bootrom:
+	ln -s $(ROCKET_DIR)/bootrom $(common)/bootrom
 
-rocket:
-	cd $(ROCKET_DIR)/fsim; \
-	make verilog CONFIG=$(CONFIG); \
-	cp $(common_build)/Top.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+# TODO: Need a clever way of knowing when to repack rocketchip
+$(common)/lib:
+	cd $(ROCKET_DIR) && sbt pack
+	mkdir -p $(common)/lib
+	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
 
+$(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom
+	mkdir -p $(@D)
+	cd $(common) && $(SBT) "run zynq Top $(CONFIG) $(CHISEL_ARGS)"
+	mv $(common_build)/Top.fir $@
+
+$(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
+	$(FIRRTL) -i $< -o $@ -X verilog
+
+src/verilog/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).v
+	cp $< $@
+
+rocket: src/verilog/Top.$(CONFIG).v
 
 
 # Project generation

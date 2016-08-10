@@ -1,3 +1,4 @@
+
 package zynq
 
 import scala.math.min
@@ -6,7 +7,7 @@ import uncore.tilelink._
 import junctions._
 import cde.Parameters
 import uncore.devices.{DebugBusIO, DebugBusReq, DebugBusResp, DMKey}
-import uncore.devices.DbBusConsts
+import uncore.devices.DbBusConsts._
 
 /* TODO: This module should be instantiated by a top-level project that also
  * instantiates rocket-chip. 
@@ -44,7 +45,6 @@ class ZynqAdapter(implicit val p: Parameters)
   val RESP_ADDR = 0x10
   val RESET_ADDR = 0x20
 
-  import DbBusConsts._
   val debugAddrSize = p(DMKey).nDebugBusAddrSize
   val reqOffset = dbDataSize
   val opOffset = dbDataSize
