@@ -45,6 +45,7 @@ To guide you through the rest of the documentation, we have provide both a [Tabl
     + [Changing the Processor's Clockrate](#clockrate)
     + [Contents of the SD Card](#sdcard)
     + [Building fesvr-zynq](#fesvr)
+    + [Building riscv-tools for Zybo](#zybotools)
 + [Acknowledgements](#ack)
 
 
@@ -444,7 +445,7 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 
 ###F) <a name="fesvr"></a> Building fesvr-zynq
 
-The source code for the fesvr-zynq binary is in the [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr). To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
+The source code for the fesvr-zynq binary is in the [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr). Before building, make sure the 2015.4 version of settings64.sh is sourced. To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
 
     $ mkdir build
     $ cd build
@@ -452,6 +453,21 @@ The source code for the fesvr-zynq binary is in the [riscv-fesvr repo](http://gi
     $ make
 
 from the riscv-fesvr/build directory and make sure you have the Xilinx SDK in your PATH. When installing fesvr-zynq, don't forget to copy the library as well (`build/libfesvr.so` to `/usr/local/lib` on the board).
+
+
+###G) <a name="zybotools"></a> Building riscv-tools for Zybo
+
+The Zybo build was last tested with [this version of the toolchain](https://github.com/ucb-bar/rocket-chip/commit/2f71a3da5a7d41b4aa2c7a617902f2aee8f2cbe1).
+
+Because the Zybo board uses `DefaultFPGASmallConfig`, [riscv-tools](https://github.com/riscv/riscv-tools) must be recompiled to omit floating point instructions. Add the `--with-arch=RV64IMA` tag to the line in `build.sh` that builds [riscv-gnu-toolchain](https://github.com/riscv/riscv-gnu-toolchain). It should read as follows:
+
+    build_project riscv-gnu-toolchain --prefix=$RISCV --with-arch=RV64IMA
+
+Then run `./build.sh` as normal.
+
+When testing on spike, run spike with the `--isa=RV64IMA` flag.
+
+If [pk](https://github.com/riscv/riscv-pk) does not work, make sure it is being built using this version of the toolchain, since it is specifically generated to not have floating point instructions. Also make sure any binaries you want to run on the Zybo are compiled using this toolchain.
 
 
 
@@ -464,4 +480,6 @@ In addition to those that [contributed](https://github.com/ucb-bar/rocket-chip#c
 - Jonathan Bachrach
 - Scott Beamer
 - Sagar Karandikar
+- Deborah Soung
 - Andrew Waterman
+

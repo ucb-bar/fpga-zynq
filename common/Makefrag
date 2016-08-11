@@ -7,6 +7,7 @@ base_dir = $(abspath ..)
 common = $(base_dir)/common
 common_build = $(common)/build
 output_delivery = deliver_output
+SHELL := /bin/bash
 
 ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
