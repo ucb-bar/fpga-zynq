@@ -5,6 +5,7 @@ import Chisel._
 import junctions._
 import cde.{Parameters, Config, CDEMatchError}
 import rocketchip._
+import rocketchip.GeneratorUtils._
 import uncore.devices.{DebugBusIO}
 
 class Top(implicit val p: Parameters) extends Module
@@ -42,35 +43,14 @@ class ZynqConfig extends Config(
 class DefaultFPGAConfig extends Config(new rocketchip.DefaultFPGAConfig)
 class DefaultFPGASmallConfig extends Config(new rocketchip.DefaultFPGASmallConfig)
 
-// This copied directly from rocketchip 2a5aeea
-// Could invoke RC main directly, but don't want all the test generation
 object Generator extends App {
   val projectName = args(0)
   val topModuleName = args(1)
   val configClassName = args(2)
 
-  val aggregateConfigs = configClassName.split('_')
+  val config = getConfig(projectName, configClassName)
+  val world = config.toInstance
+  val paramsFromConfig = Parameters.root(world)
 
-  val finalConfig = aggregateConfigs.foldRight(new Config()) { case (currentConfigName, finalConfig) =>
-    val currentConfig = try {
-      Class.forName(s"$projectName.$currentConfigName").newInstance.asInstanceOf[Config]
-    } catch {
-      case e: java.lang.ClassNotFoundException =>
-        throwException("Unable to find part \"" + currentConfigName +
-          "\" of configClassName \"" + configClassName +
-          "\", did you misspell it?", e)
-    }
-    currentConfig ++ finalConfig
-  }
-  val world = finalConfig.toInstance
-
-  val paramsFromConfig: Parameters = Parameters.root(world)
-
-  val gen = () =>
-    Class.forName(s"$projectName.$topModuleName")
-      .getConstructor(classOf[cde.Parameters])
-      .newInstance(paramsFromConfig)
-      .asInstanceOf[Module]
-
-  chiselMain.run(args.drop(3), gen)
+  elaborate(s"$projectName.$topModuleName", args.drop(3), paramsFromConfig)
 }
