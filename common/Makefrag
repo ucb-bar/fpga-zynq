@@ -28,7 +28,7 @@ SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar
 FIRRTL_JAR ?= $(ROCKET_DIR)/firrtl/utils/bin/firrtl.jar
 FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
 
-$(FIRRTL_JAR): $(@shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala")
+$(FIRRTL_JAR): $(shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala" 2> /dev/null)
 	$(MAKE) -C $(ROCKET_DIR)/firrtl SBT="$(SBT)" root_dir=$(ROCKET_DIR)/firrtl build-scala
 
 CHISEL_ARGS := --W0W --minimumCompatibility 3.0.0 --backend $(BACKEND) --configName $(CONFIG) --compileInitializationUnoptimized --targetDir $(common_build)
@@ -52,21 +52,21 @@ $(common)/bootrom:
 	ln -s $(ROCKET_DIR)/bootrom $(common)/bootrom
 
 # TODO: Need a clever way of knowing when to repack rocketchip
-$(common)/lib:
+$(common)/lib: $(shell find $(ROCKET_DIR)/. -iname "*.scala" 2> /dev/null)
 	cd $(ROCKET_DIR) && sbt pack
 	mkdir -p $(common)/lib
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
+	touch $(common)/lib
 
 $(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom
 	mkdir -p $(@D)
-	cd $(common) && $(SBT) "run zynq Top $(CONFIG) $(CHISEL_ARGS)"
+	cd $(common) && $(SBT) "run zynq Top $(CONFIG_PROJECT) $(CONFIG) $(CHISEL_ARGS)"
 	mv $(common_build)/Top.fir $@
 
 $(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
 
 src/verilog/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).v
-	cp $< $@
 
 rocket: src/verilog/Top.$(CONFIG).v
 
@@ -219,4 +219,4 @@ fetch-riscv-linux-deliver:
 clean:
 	rm -f *.log *.jou *.str
 
-.PHONY: vivado rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean

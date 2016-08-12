@@ -31,26 +31,14 @@ class Top(implicit val p: Parameters) extends Module
   rocket.io.interrupts map(_ := Bool(false))
 }
 
-/* Would like to disable interrupts in zynq configurations
-class ZynqConfig extends Config(
-  (pname, site, here) => pname match {
-    case NExtInterrupts => 0
-    case _ => throw new CDEMatchError
-  })
-*/
-
-// Do this to avoid looking up the config in a second (in this case, RC) project
-class DefaultFPGAConfig extends Config(new rocketchip.DefaultFPGAConfig)
-class DefaultFPGASmallConfig extends Config(new rocketchip.DefaultFPGASmallConfig)
-
 object Generator extends App {
   val projectName = args(0)
   val topModuleName = args(1)
-  val configClassName = args(2)
+  // arg(2) = rocketchip -> reuse existing rocketchip configurations
+  // arg(2) = zynq -> use new configurations defined here
+  val configProjectName = args(2)
+  val configClassName = args(3)
+  val paramsFromConfig = getParameters(configProjectName, configClassName)
 
-  val config = getConfig(projectName, configClassName)
-  val world = config.toInstance
-  val paramsFromConfig = Parameters.root(world)
-
-  elaborate(s"$projectName.$topModuleName", args.drop(3), paramsFromConfig)
+  elaborate(s"$projectName.$topModuleName", args.drop(4), paramsFromConfig)
 }
