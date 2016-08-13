@@ -15,3 +15,6 @@
 [submodule "zc706/fpga-images-zc706"]
 	path = zc706/fpga-images-zc706
 	url = https://github.com/ucb-bar/fpga-images-zc706.git
+[submodule "rocket-chip"]
+	path = rocket-chip
+	url = https://github.com/ucb-bar/rocket-chip.git
