@@ -76,7 +76,7 @@ $(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
 
 src/verilog/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).v
-	cp $@ $<
+	cp $< $@
 
 rocket: src/verilog/Top.$(CONFIG).v
 
