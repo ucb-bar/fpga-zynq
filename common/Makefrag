@@ -33,6 +33,15 @@ $(FIRRTL_JAR): $(shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala"
 
 CHISEL_ARGS := --W0W --minimumCompatibility 3.0.0 --backend $(BACKEND) --configName $(CONFIG) --compileInitializationUnoptimized --targetDir $(common_build)
 
+lookup_scala_srcs = $(shell find $(1)/. -iname "*.scala" 2> /dev/null)
+
+# Initialize rocket-chip submodule
+# ------------------------------------------------------------------------------
+
+init-rocket-submodule:
+	cd $(base_dir) && git submodule update --init rocket-chip
+	cd $(ROCKET_DIR) && git submodule update --init
+
 # Specialize sources for board
 # ------------------------------------------------------------------------------
 src/verilog/rocketchip_wrapper.v: $(common)/rocketchip_wrapper.v
@@ -52,21 +61,22 @@ $(common)/bootrom:
 	ln -s $(ROCKET_DIR)/bootrom $(common)/bootrom
 
 # TODO: Need a clever way of knowing when to repack rocketchip
-$(common)/lib: $(shell find $(ROCKET_DIR)/. -iname "*.scala" 2> /dev/null)
+$(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cd $(ROCKET_DIR) && sbt pack
 	mkdir -p $(common)/lib
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
 	touch $(common)/lib
 
-$(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom
+$(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
-	cd $(common) && $(SBT) "run zynq Top $(CONFIG_PROJECT) $(CONFIG) $(CHISEL_ARGS)"
+	cd $(common) && $(SBT) "run zynq Top $(CONFIG) $(CHISEL_ARGS)"
 	mv $(common_build)/Top.fir $@
 
 $(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
 
 src/verilog/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).v
+	cp $@ $<
 
 rocket: src/verilog/Top.$(CONFIG).v
 
@@ -219,4 +229,4 @@ fetch-riscv-linux-deliver:
 clean:
 	rm -f *.log *.jou *.str
 
-.PHONY: vivado pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean

@@ -32,13 +32,33 @@ class Top(implicit val p: Parameters) extends Module
 }
 
 object Generator extends App {
+  // Check the current project, before looking up the configuration in RC
+  def getConfig(projectName: String, configClassName: String): Config = {
+    val aggregateConfigs = configClassName.split('_')
+
+    aggregateConfigs.foldRight(new Config()) { case (currentConfigName, finalConfig) =>
+      val currentConfig = try {
+        try {
+          // Look locally first, before looking in rocketchip
+          Class.forName(s"$currentConfigName").newInstance.asInstanceOf[Config]
+        } catch {
+          case e: java.lang.ClassNotFoundException =>
+            Class.forName(s"rocketchip.$currentConfigName").newInstance.asInstanceOf[Config]
+        }
+      } catch {
+        case e: java.lang.ClassNotFoundException =>
+          throwException("Unable to find part \"" + currentConfigName +
+            "\" of configClassName \"" + configClassName +
+            "\", did you misspell it?", e)
+      }
+      currentConfig ++ finalConfig
+    }
+  }
   val projectName = args(0)
   val topModuleName = args(1)
-  // arg(2) = rocketchip -> reuse existing rocketchip configurations
-  // arg(2) = zynq -> use new configurations defined here
-  val configProjectName = args(2)
-  val configClassName = args(3)
-  val paramsFromConfig = getParameters(configProjectName, configClassName)
+  val configClassName = args(2)
+  val config = getConfig(projectName, configClassName)
+  val paramsFromConfig = getParameters(config)
 
-  elaborate(s"$projectName.$topModuleName", args.drop(4), paramsFromConfig)
+  elaborate(s"$projectName.$topModuleName", args.drop(3), paramsFromConfig)
 }
