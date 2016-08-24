@@ -40,7 +40,7 @@ object Generator extends App {
       val currentConfig = try {
         try {
           // Look locally first, before looking in rocketchip
-          Class.forName(s"$currentConfigName").newInstance.asInstanceOf[Config]
+          Class.forName(s"$projectName.currentConfigName").newInstance.asInstanceOf[Config]
         } catch {
           case e: java.lang.ClassNotFoundException =>
             Class.forName(s"rocketchip.$currentConfigName").newInstance.asInstanceOf[Config]
