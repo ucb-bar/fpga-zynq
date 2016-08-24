@@ -31,6 +31,8 @@ class Top(implicit val p: Parameters) extends Module
   rocket.io.interrupts map(_ := Bool(false))
 }
 
+class ZC706MIGConfig extends Config(new WithExtMemSize(0x40000000L) ++ new DefaultFPGAConfig)
+
 object Generator extends App {
   // Check the current project, before looking up the configuration in RC
   def getConfig(projectName: String, configClassName: String): Config = {
