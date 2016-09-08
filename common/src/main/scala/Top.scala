@@ -5,8 +5,9 @@ import Chisel._
 import junctions._
 import cde.{Parameters, Config, CDEMatchError}
 import rocketchip._
-import rocketchip.GeneratorUtils._
 import uncore.devices.{DebugBusIO}
+
+import java.io.File
 
 class Top(implicit val p: Parameters) extends Module
   with HasTopLevelParameters {
@@ -26,39 +27,15 @@ class Top(implicit val p: Parameters) extends Module
 
   adapter.io.nasti <> io.ps_axi_slave
   rocket.reset := adapter.io.reset
-  rocket.io.debug <> adapter.io.debug
+  val debug = rocket.io.debug.getOrElse(
+    throw new RuntimeException("Zynq top requires bare DTM interface"))
+  debug <> adapter.io.debug
   io.mem_axi <> rocket.io.mem_axi
   rocket.io.interrupts map(_ := Bool(false))
 }
 
-object Generator extends App {
-  // Check the current project, before looking up the configuration in RC
-  def getConfig(projectName: String, configClassName: String): Config = {
-    val aggregateConfigs = configClassName.split('_')
-
-    aggregateConfigs.foldRight(new Config()) { case (currentConfigName, finalConfig) =>
-      val currentConfig = try {
-        try {
-          // Look locally first, before looking in rocketchip
-          Class.forName(s"$projectName.$currentConfigName").newInstance.asInstanceOf[Config]
-        } catch {
-          case e: java.lang.ClassNotFoundException =>
-            Class.forName(s"rocketchip.$currentConfigName").newInstance.asInstanceOf[Config]
-        }
-      } catch {
-        case e: java.lang.ClassNotFoundException =>
-          throwException("Unable to find part \"" + currentConfigName +
-            "\" of configClassName \"" + configClassName +
-            "\", did you misspell it?", e)
-      }
-      currentConfig ++ finalConfig
-    }
-  }
-  val projectName = args(0)
-  val topModuleName = args(1)
-  val configClassName = args(2)
-  val config = getConfig(projectName, configClassName)
-  val paramsFromConfig = getParameters(config)
-
-  elaborate(s"$projectName.$topModuleName", args.drop(3), paramsFromConfig)
+object FPGAZynqGenerator extends Generator {
+  val longName = names.topModuleClass + "." + names.configs
+  val td = names.targetDir
+  Driver.dumpFirrtl(circuit, Some(new File(td, s"$longName.fir"))) // FIRRTL
 }

@@ -9,17 +9,6 @@ import cde.Parameters
 import uncore.devices.{DebugBusIO, DebugBusReq, DebugBusResp, DMKey}
 import uncore.devices.DbBusConsts._
 
-/* TODO: This module should be instantiated by a top-level project that also
- * instantiates rocket-chip. 
- *  val adapterParams = p.alterPartial({
- *    case NastiKey => NastiParameters(
- *      dataBits = 32,
- *      addrBits = 32,
- *      idBits = 12)
- *  })
- *
- */
-
 class ZynqAdapter(implicit val p: Parameters)
     extends Module with HasNastiParameters {
   val io = new Bundle {
@@ -46,9 +35,8 @@ class ZynqAdapter(implicit val p: Parameters)
   val RESET_ADDR = 0x20
 
   val debugAddrSize = p(DMKey).nDebugBusAddrSize
-  val reqOffset = dbDataSize
-  val opOffset = dbDataSize
-  val addrOffset = dbDataSize + dbOpSize
+  val opOffset = io.debug.req.bits.data.getWidth % w.bits.data.getWidth
+  val addrOffset = opOffset + io.debug.req.bits.op.getWidth
 
 
   val reqReg = RegInit({
@@ -75,17 +63,8 @@ class ZynqAdapter(implicit val p: Parameters)
   val rAddr = RegEnable(ar.bits.addr(5,0), ar.fire())
   val resetReg = RegInit(Bool(false))
 
-  val rData = Mux(rAddr(2), respReg.bits.toBits()(respReg.bits.getWidth-1,32),
-                  respReg.bits.toBits()(31,0))
-
-  val reqL = Mux(~wAddr(2),
-                 wData,
-                 Cat(reqReg.bits.op, reqReg.bits.addr, reqReg.bits.data)(31,0))
-  val reqH = Mux(wAddr(2),
-                 wData,
-                 Cat(reqReg.bits.op,
-                     reqReg.bits.addr,
-                     reqReg.bits.data)(reqReg.bits.getWidth-1,32))
+  val rData = Mux(rAddr(2), Cat(respReg.bits.resp, respReg.bits.data(33,32)),
+                  respReg.bits.data(31,0))
 
   io.reset := Bool(false)
 
@@ -100,7 +79,13 @@ class ZynqAdapter(implicit val p: Parameters)
     }.elsewhen((wAddr) === UInt(RESET_ADDR)){
       resetReg := Bool(true)
     }.otherwise{
-      reqReg.bits := reqReg.bits.fromBits(Cat(reqH, reqL))
+      when(wAddr(2)){
+        reqReg.bits.addr := wData(addrOffset+debugAddrSize-1, addrOffset)
+        reqReg.bits.op := wData(addrOffset-1, opOffset)
+        reqReg.bits.data := Cat(wData(opOffset-1,0), reqReg.bits.data(31,0))
+      }.otherwise{
+        reqReg.bits.data := Cat(reqReg.bits.data(33,32),wData)
+      }
     }
     awReady := Bool(true)
     wReady := Bool(true)
@@ -123,7 +108,6 @@ class ZynqAdapter(implicit val p: Parameters)
     respReg.valid := Bool(true)
     respReg.bits := io.debug.resp.bits
   }
-
   when(resetReg) {
     resetReg := Bool(false)
   }
