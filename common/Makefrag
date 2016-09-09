@@ -2,6 +2,8 @@
 
 JOBS = 16
 ROCKET_DIR ?= $(base_dir)/rocket-chip
+TOP_MODULE_PROJECT ?= zynq
+TOP_MODULE ?= Top
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
@@ -31,7 +33,7 @@ FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Drive
 $(FIRRTL_JAR): $(shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala" 2> /dev/null)
 	$(MAKE) -C $(ROCKET_DIR)/firrtl SBT="$(SBT)" root_dir=$(ROCKET_DIR)/firrtl build-scala
 
-CHISEL_ARGS := --W0W --minimumCompatibility 3.0.0 --backend $(BACKEND) --configName $(CONFIG) --compileInitializationUnoptimized --targetDir $(common_build)
+CHISEL_ARGS := $(common_build)
 
 lookup_scala_srcs = $(shell find $(1)/. -iname "*.scala" 2> /dev/null)
 
@@ -69,8 +71,7 @@ $(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
 
 $(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
-	cd $(common) && $(SBT) "run zynq Top $(CONFIG) $(CHISEL_ARGS)"
-	mv $(common_build)/Top.fir $@
+	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 
 $(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
@@ -184,8 +185,8 @@ $(output_delivery)/boot.bin:
 # ------------------------------------------------------------------------------
 
 fesvr-main = fesvr-zynq
-fesvr-srcs = fesvr_zynq.cc zynq_dtm_driver.cc
-fesvr-hdrs = zynq_dtm_driver.h
+fesvr-srcs = $(wildcard $(common)/csrc/*.cc)
+fesvr-hdrs = $(wildcard $(common)/csrc/*.h)
 fesvr-lib  = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
@@ -198,9 +199,8 @@ $(fesvr-lib):
 	cd $(common_build); $(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
     --host=arm-xilinx-linux-gnueabi; make
 
-$(common_build)/$(fesvr_main): $(fesvr-lib)
-	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) \
-    $(addprefix $(common)/csrc/, $(fesvr-srcs))
+$(common_build)/$(fesvr_main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
+	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) $(fesvr-srcs)
 
 fesvr-zynq: $(common_build)/$(fesvr_main)
 
