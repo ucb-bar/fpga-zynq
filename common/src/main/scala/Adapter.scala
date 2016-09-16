@@ -4,6 +4,8 @@ package zynq
 import scala.math.min
 import Chisel._
 import uncore.tilelink._
+import uncore.tilelink2.LazyModule
+import coreplex.BaseCoreplexBundle
 import junctions._
 import cde.Parameters
 import uncore.devices.{DebugBusIO, DebugBusReq, DebugBusResp, DMKey}
@@ -138,3 +140,32 @@ class ZynqAdapter(implicit val p: Parameters)
     "Nasti to DebugBusIO converter can only take fixed bursts")
 }
 
+object AdapterParams {
+  def apply(p: Parameters) = p.alterPartial({
+    case NastiKey => NastiParameters(
+      dataBits = 32,
+      addrBits = 32,
+      idBits = 12)
+  })
+}
+
+trait PeripheryZynq extends LazyModule {
+  implicit val p: Parameters
+}
+
+trait PeripheryZynqBundle {
+  implicit val p: Parameters
+
+  val ps_axi_slave = new NastiIO()(AdapterParams(p)).flip
+}
+
+trait PeripheryZynqModule {
+  implicit val p: Parameters
+  val outer: PeripheryZynq
+  val io: PeripheryZynqBundle
+  val coreplexIO: BaseCoreplexBundle
+
+  val adapter = Module(new ZynqAdapter()(AdapterParams(p)))
+  adapter.io.nasti <> io.ps_axi_slave
+  coreplexIO.debug <> adapter.io.debug
+}
