@@ -8,6 +8,7 @@ import cde.{Parameters, Config, CDEMatchError}
 import rocketchip._
 import uncore.devices.{DebugBusIO}
 import uncore.tilelink2.{LazyModule, LazyModuleImp}
+import coreplex.BaseCoreplexBundle
 
 import java.io.File
 
@@ -100,19 +101,25 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
     s"NastiFIFO w cannot accept partial writes")
 }
 
+trait NoDebug {
+  val coreplexIO: BaseCoreplexBundle
+  coreplexIO.debug.req.valid := Bool(false)
+  coreplexIO.debug.resp.ready := Bool(false)
+}
+
 class FPGAZynqTop(q: Parameters) extends BaseTop(q)
     with PeripheryBootROM with PeripheryCoreplexLocalInterrupter
-    with PeripheryZynq with PeripheryMasterMem {
+    with PeripherySerial with PeripheryMasterMem {
   override lazy val module = Module(
     new FPGAZynqTopModule(p, this, new FPGAZynqTopBundle(p)))
 }
 
 class FPGAZynqTopBundle(p: Parameters) extends BaseTopBundle(p)
   with PeripheryBootROMBundle with PeripheryCoreplexLocalInterrupterBundle
-  with PeripheryMasterMemBundle with PeripheryZynqBundle
+  with PeripheryMasterMemBundle with PeripherySerialBundle
 
 class FPGAZynqTopModule(p: Parameters, l: FPGAZynqTop, b: => FPGAZynqTopBundle)
   extends BaseTopModule(p, l, b)
   with PeripheryBootROMModule with PeripheryCoreplexLocalInterrupterModule
-  with PeripheryMasterMemModule with PeripheryZynqModule
-  with HardwiredResetVector with DirectConnection
+  with PeripheryMasterMemModule with PeripherySerialModule
+  with HardwiredResetVector with DirectConnection with NoDebug

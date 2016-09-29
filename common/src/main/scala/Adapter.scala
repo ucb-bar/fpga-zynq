@@ -25,7 +25,7 @@ object AdapterParams {
   })
 }
 
-class ZynqAdapter(implicit p: Parameters) extends TLModule()(p) {
+class SerialAdapter(implicit p: Parameters) extends TLModule()(p) {
   val w = p(SerialInterfaceWidth)
   val io = new Bundle {
     val serial = new SerialIO(w)
@@ -196,45 +196,39 @@ class ZynqAdapter(implicit p: Parameters) extends TLModule()(p) {
   when (slave_req.fire()) { interrupt := Bool(false) }
 }
 
-trait PeripheryZynq extends LazyModule {
+trait PeripherySerial extends LazyModule {
   implicit val p: Parameters
   val pInterrupts: RangeManager
   val pBusMasters: RangeManager
   val pDevices: ResourceManager[AddrMapEntry]
 
-  pInterrupts.add("zynq", 1)
-  pBusMasters.add("zynq", 1)
-  pDevices.add(AddrMapEntry("zynq", MemSize(4096, MemAttr(AddrMapProt.RW))))
+  pInterrupts.add("serial", 1)
+  pBusMasters.add("serial", 1)
+  pDevices.add(AddrMapEntry("serial", MemSize(4096, MemAttr(AddrMapProt.RW))))
 }
 
-trait PeripheryZynqBundle {
+trait PeripherySerialBundle {
   implicit val p: Parameters
 
   val serial = new SerialIO(p(SerialInterfaceWidth))
 }
 
-trait PeripheryZynqModule {
+trait PeripherySerialModule {
   implicit val p: Parameters
-  val outer: PeripheryZynq
-  val io: PeripheryZynqBundle
+  val outer: PeripherySerial
+  val io: PeripherySerialBundle
   val pBus: TileLinkRecursiveInterconnect
   val coreplexIO: BaseCoreplexBundle
   val coreplex: Module
   val reset: Bool
 
-  val (int_idx, _) = outer.pInterrupts.range("zynq")
-  val (master_idx, _) = outer.pBusMasters.range("zynq")
+  val (int_idx, _) = outer.pInterrupts.range("serial")
+  val (master_idx, _) = outer.pBusMasters.range("serial")
 
-  val adapter = Module(new ZynqAdapter()(AdapterParams(p)))
-  adapter.io.slave <> pBus.port("zynq")
+  val adapter = Module(new SerialAdapter()(AdapterParams(p)))
+  adapter.io.slave <> pBus.port("serial")
   coreplexIO.slave(master_idx) <> adapter.io.master
   io.serial <> adapter.io.serial
   coreplexIO.interrupts(int_idx) := adapter.io.interrupt
   coreplex.reset := adapter.io.sys_reset || reset
-}
-
-trait NoDebug {
-  val coreplexIO: BaseCoreplexBundle
-  coreplexIO.debug.req.valid := Bool(false)
-  coreplexIO.debug.resp.ready := Bool(false)
 }
