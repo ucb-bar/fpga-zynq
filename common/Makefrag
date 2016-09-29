@@ -4,6 +4,8 @@ JOBS = 16
 ROCKET_DIR ?= $(base_dir)/rocket-chip
 TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
+CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
+CONFIG ?= ZynqConfig
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
@@ -20,9 +22,10 @@ proj_name = $(BOARD)_rocketchip_$(CONFIG)
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
-	src/verilog/Top.$(CONFIG).v \
+	src/verilog/$(TOP_MODULE).$(CONFIG).v \
 
-default: project
+bootimage = fpga-images-$(BOARD)/boot.bin
+bootimage: $(bootimage)
 
 # Taken from rocket chip 2a5aeea. TODO: Maybe source this directly from makefrag?
 SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar
@@ -69,17 +72,17 @@ $(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
 	touch $(common)/lib
 
-$(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom $(call lookup_scala_srcs,$(common))
+$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(common)/lib $(common)/bootrom $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
 	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 
-$(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
+$(common_build)/$(TOP_MODULE).$(CONFIG).v: $(common_build)/$(TOP_MODULE).$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
 
-src/verilog/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).v
+src/verilog/$(TOP_MODULE).$(CONFIG).v: $(common_build)/$(TOP_MODULE).$(CONFIG).v
 	cp $< $@
 
-rocket: src/verilog/Top.$(CONFIG).v
+rocket: src/verilog/$(TOP_MODULE).$(CONFIG).v
 
 
 # Project generation
@@ -87,7 +90,6 @@ rocket: src/verilog/Top.$(CONFIG).v
 project = $(proj_name)/$(proj_name).xpr
 $(project): | $(verilog_srcs) src/tcl/$(proj_name).tcl
 	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
-project: $(project)
 
 vivado: $(project)
 	vivado $(project) &
@@ -144,7 +146,7 @@ $(images):
 
 fetch-images: $(images)
 
-fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
+$(bootimage): $(images) $(bitstream)
 	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/rocketchip_wrapper.bit
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
