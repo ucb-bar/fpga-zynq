@@ -91,6 +91,8 @@ project = $(proj_name)/$(proj_name).xpr
 $(project): | $(verilog_srcs) src/tcl/$(proj_name).tcl
 	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
 
+project: $(project)
+
 vivado: $(project)
 	vivado $(project) &
 
@@ -231,4 +233,4 @@ fetch-riscv-linux-deliver:
 clean:
 	rm -f *.log *.jou *.str
 
-.PHONY: vivado init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado project init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
