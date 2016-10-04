@@ -60,11 +60,6 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-# TODO: Can we pass this as an argument to the generator, instead of having
-# to put the bootrom in a specific place?
-$(common)/bootrom:
-	ln -s $(ROCKET_DIR)/bootrom $(common)/bootrom
-
 # TODO: Need a clever way of knowing when to repack rocketchip
 $(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cd $(ROCKET_DIR) && sbt pack
@@ -72,7 +67,7 @@ $(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
 	touch $(common)/lib
 
-$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(common)/lib $(common)/bootrom $(call lookup_scala_srcs,$(common))
+$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(common)/lib $(common)/bootrom/bootrom.img $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
 	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 
