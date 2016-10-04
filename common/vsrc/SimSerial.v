@@ -53,4 +53,6 @@ module SimSerial (
         end
     end
 
+    assign #0.1 exit = __exit[0];
+
 endmodule
