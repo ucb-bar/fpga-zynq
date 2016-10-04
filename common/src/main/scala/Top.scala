@@ -57,10 +57,21 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   io.nasti.w.ready := inq.io.enq.ready && writing
   inq.io.enq.bits  := io.nasti.w.bits.data
 
-  io.nasti.r.valid := outq.io.deq.valid && reading
-  outq.io.deq.ready := io.nasti.r.ready && reading
+  val nRegisters = 3
+  val addrLSB = log2Up(w / 8)
+  val addrMSB = addrLSB + log2Up(nRegisters) - 1
+  val araddr = io.nasti.ar.bits.addr(addrMSB, addrLSB)
+  val awaddr = io.nasti.aw.bits.addr(addrMSB, addrLSB)
+  val raddr = Reg(araddr)
+
+  io.nasti.r.valid := reading && (raddr =/= UInt(0) || outq.io.deq.valid)
+  outq.io.deq.ready := reading && (raddr =/= UInt(0) || io.nasti.r.ready)
   io.nasti.r.bits := NastiReadDataChannel(
-    id = rid, data = outq.io.deq.bits)
+    id = rid,
+    data = MuxLookup(raddr, UInt(0), Seq(
+      UInt(0) -> outq.io.deq.bits,
+      UInt(1) -> outq.io.count, // available output FIFO data
+      UInt(2) -> (UInt(depth) - inq.io.count)))) // free input FIFO space
 
   io.nasti.aw.ready := !writing && !responding
   io.nasti.ar.ready := !reading
@@ -79,6 +90,7 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   when (io.nasti.ar.fire()) {
     len := io.nasti.ar.bits.len
     rid := io.nasti.ar.bits.id
+    raddr := araddr
     reading := Bool(true)
   }
   when (io.nasti.r.fire() && io.nasti.r.bits.last) { reading := Bool(false) }
