@@ -8,6 +8,7 @@ import cde.{Parameters, Config, CDEMatchError}
 import rocketchip._
 import uncore.devices.{DebugBusIO}
 import uncore.tilelink2.{LazyModule, LazyModuleImp}
+import testchipip._
 import coreplex.BaseCoreplexBundle
 
 import java.io.File

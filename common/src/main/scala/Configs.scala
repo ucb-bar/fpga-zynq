@@ -6,6 +6,7 @@ import rocket.{TileId, NUncachedTileLinkPorts}
 import coreplex.BuildTiles
 import uncore.devices.NTiles
 import uncore.tilelink.TLId
+import testchipip._
 import Chisel._
 
 class WithZynqAdapter extends Config(

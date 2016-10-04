@@ -2,6 +2,7 @@
 
 JOBS = 16
 ROCKET_DIR ?= $(base_dir)/rocket-chip
+TESTCHIP_DIR ?= $(base_dir)/testchipip
 TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
@@ -12,6 +13,10 @@ common = $(base_dir)/common
 common_build = $(common)/build
 output_delivery = deliver_output
 SHELL := /bin/bash
+
+bootrom_img = $(common)/bootrom/bootrom.img
+rocketchip_stamp = $(common)/lib/rocketchip.stamp
+testchipip_stamp = $(common)/lib/testchipip.stamp
 
 ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
@@ -60,14 +65,19 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-# TODO: Need a clever way of knowing when to repack rocketchip
-$(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
-	cd $(ROCKET_DIR) && sbt pack
+$(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
+	cd $(ROCKET_DIR) && $(SBT) pack
 	mkdir -p $(common)/lib
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
-	touch $(common)/lib
+	touch $(rocketchip_stamp)
 
-$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(common)/lib $(common)/bootrom/bootrom.img $(call lookup_scala_srcs,$(common))
+$(testchipip_stamp): $(call lookup_scala_srcs, $(TESTCHIP_DIR)) $(rocketchip_stamp)
+	ln -sf $(common)/lib $(TESTCHIP_DIR)/lib
+	cd $(TESTCHIP_DIR) && $(SBT) package
+	cp $(TESTCHIP_DIR)/target/scala-2.11/*.jar $(common)/lib
+	touch $(testchipip_stamp)
+
+$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(testchipip_stamp) $(bootrom_img) $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
 	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 

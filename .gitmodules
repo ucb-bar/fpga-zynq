@@ -21,3 +21,6 @@
 [submodule "riscv-fesvr"]
 	path = riscv-fesvr
 	url = git@github.com:riscv/riscv-fesvr.git
+[submodule "testchipip"]
+	path = testchipip
+	url = git@github.com:ucb-bar/testchipip.git
