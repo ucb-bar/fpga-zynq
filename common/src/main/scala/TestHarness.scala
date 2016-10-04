@@ -2,10 +2,10 @@ package zynq
 
 import Chisel._
 import cde.Parameters
+import diplomacy.LazyModule
 import rocketchip._
 import rocket.Tile
 import uncore.tilelink.{ClientTileLinkIO, ClientUncachedTileLinkIO}
-import uncore.tilelink2.LazyModule
 import uncore.coherence.ClientMetadata
 import junctions.SerialIO
 

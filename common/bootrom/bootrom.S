@@ -27,7 +27,7 @@ wfi_loop:
 boot_trap:
   csrr a0, mhartid
   sll a0, a0, 2 // offset for hart msip
-  li a1, 0x44000000 // base address of clint
+  li a1, 0x2000000 // base address of clint
   add a0, a0, a1
   sw zero, 0(a0) // clear the interrupt
   li a0, 0x80000000 // program reset vector

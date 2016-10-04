@@ -2,12 +2,12 @@
 package zynq
 
 import Chisel._
+import diplomacy.{LazyModule, LazyModuleImp}
 import junctions._
 import junctions.NastiConstants._
 import cde.{Parameters, Config, CDEMatchError}
 import rocketchip._
 import uncore.devices.{DebugBusIO}
-import uncore.tilelink2.{LazyModule, LazyModuleImp}
 import testchipip._
 import coreplex.BaseCoreplexBundle
 

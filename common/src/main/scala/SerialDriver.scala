@@ -3,7 +3,7 @@ package zynq
 import Chisel._
 import junctions.{SerialIO, PAddrBits}
 import cde.{Parameters, Field}
-import uncore.util._
+import util._
 import testchipip._
 
 case object BuildSerialDriver extends Field[Parameters => SerialDriver]
