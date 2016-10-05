@@ -85,7 +85,8 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
     data = MuxLookup(raddr, UInt(0), Seq(
       UInt(0) -> outq.io.deq.bits,
       UInt(1) -> outq.io.count,
-      UInt(3) -> (UInt(depth) - inq.io.count))))
+      UInt(3) -> (UInt(depth) - inq.io.count))),
+    last = len === UInt(0))
 
   io.nasti.aw.ready := !writing && !responding
   io.nasti.ar.ready := !reading
@@ -110,7 +111,10 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
     raddr := araddr
     reading := Bool(true)
   }
-  when (io.nasti.r.fire() && io.nasti.r.bits.last) { reading := Bool(false) }
+  when (io.nasti.r.fire()) {
+    len := len - UInt(1)
+    when (len === UInt(0)) { reading := Bool(false) }
+  }
 
   def addressOK(chan: NastiAddressChannel): Bool =
     (chan.len === UInt(0) || chan.burst === BURST_FIXED) &&
