@@ -1,18 +1,10 @@
 #include <vpi_user.h>
 #include <svdpi.h>
+#include <vector>
+#include <string>
 #include <fesvr/sai.h>
 
 sai_t *sai = NULL;
-
-std::vector<std::string> build_sai_args(int argc, char **argv)
-{
-    std::vector<std::string> out;
-
-    for (int i = 1; i < argc; i++)
-        out.push_back(argv[i]);
-
-    return out;
-}
 
 extern "C" int serial_tick(
         unsigned char out_valid,
@@ -27,7 +19,7 @@ extern "C" int serial_tick(
         s_vpi_vlog_info info;
         if (!vpi_get_vlog_info(&info))
           abort();
-        sai = new sai_t(build_sai_args(info.argc, info.argv));
+        sai = new sai_t(std::vector<std::string>(info.argv + 1, info.argv + info.argc));
     }
 
     *out_ready = true;

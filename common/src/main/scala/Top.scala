@@ -5,13 +5,15 @@ import Chisel._
 import diplomacy.{LazyModule, LazyModuleImp}
 import junctions._
 import junctions.NastiConstants._
-import cde.{Parameters, Config, CDEMatchError}
+import cde.{Parameters, Field}
 import rocketchip._
 import uncore.devices.{DebugBusIO}
 import testchipip._
 import coreplex.BaseCoreplexBundle
 
 import java.io.File
+
+case object SerialFIFODepth extends Field[Int]
 
 class Top(implicit val p: Parameters) extends Module {
   val io = new Bundle {
@@ -20,7 +22,7 @@ class Top(implicit val p: Parameters) extends Module {
   }
 
   val target = LazyModule(new FPGAZynqTop(p)).module
-  val fifo = Module(new NastiFIFO)
+  val fifo = Module(new NastiFIFO()(AdapterParams(p)))
 
   require(target.io.mem_axi.size == 1)
   require(target.io.mem_ahb.isEmpty)
@@ -42,6 +44,9 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
     val serial = new SerialIO(w).flip
   }
 
+  require(nastiXDataBits == 32)
+  require(nastiXDataBits == w)
+
   val outq = Module(new Queue(UInt(width = w), depth))
   val inq  = Module(new Queue(UInt(width = w), depth))
   val writing = Reg(init = Bool(false))
@@ -54,30 +59,41 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   io.serial.in <> inq.io.deq
   outq.io.enq <> io.serial.out
 
-  inq.io.enq.valid := io.nasti.w.valid && writing
-  io.nasti.w.ready := inq.io.enq.ready && writing
-  inq.io.enq.bits  := io.nasti.w.bits.data
-
   val nRegisters = 3
   val addrLSB = log2Up(w / 8)
   val addrMSB = addrLSB + log2Up(nRegisters) - 1
   val araddr = io.nasti.ar.bits.addr(addrMSB, addrLSB)
   val awaddr = io.nasti.aw.bits.addr(addrMSB, addrLSB)
   val raddr = Reg(araddr)
+  val waddr = Reg(awaddr)
 
+  inq.io.enq.valid := io.nasti.w.valid && writing && (waddr === UInt(2))
+  io.nasti.w.ready := (inq.io.enq.ready || waddr =/= UInt(2)) && writing
+  inq.io.enq.bits  := io.nasti.w.bits.data
+
+  /**
+   * Address Map
+   * 0x00 - out FIFO data
+   * 0x04 - out FIFO data available (words)
+   * 0x08 - in  FIFO data
+   * 0x0C - in  FIFO space available (words)
+   */
   io.nasti.r.valid := reading && (raddr =/= UInt(0) || outq.io.deq.valid)
   outq.io.deq.ready := reading && (raddr =/= UInt(0) || io.nasti.r.ready)
   io.nasti.r.bits := NastiReadDataChannel(
     id = rid,
     data = MuxLookup(raddr, UInt(0), Seq(
       UInt(0) -> outq.io.deq.bits,
-      UInt(1) -> outq.io.count, // available output FIFO data
-      UInt(2) -> (UInt(depth) - inq.io.count)))) // free input FIFO space
+      UInt(1) -> outq.io.count,
+      UInt(3) -> (UInt(depth) - inq.io.count))))
 
   io.nasti.aw.ready := !writing && !responding
   io.nasti.ar.ready := !reading
   io.nasti.b.valid := responding
-  io.nasti.b.bits := NastiWriteResponseChannel(id = bid)
+  io.nasti.b.bits := NastiWriteResponseChannel(
+    id = bid,
+    // writing to anything other that the in FIFO is an error
+    resp = Mux(waddr === UInt(2), RESP_OKAY, RESP_SLVERR))
 
   when (io.nasti.aw.fire()) {
     writing := Bool(true)
