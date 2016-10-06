@@ -67,31 +67,39 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
 
   val lastWriteIdx = 9 + testLen
 
-  when (state === s_idle) { state := s_write_addr }
+  when (state === s_idle) {
+    idx := UInt(0)
+    state := s_write_addr
+  }
 
   when (io.nasti.aw.fire()) {
-    idx := UInt(0)
     state := s_write_data
   }
 
   when (io.nasti.w.fire()) {
-    idx := idx + UInt(1)
+    state := s_write_resp
+  }
+
+  when (io.nasti.b.fire()) {
     when (idx === UInt(lastWriteIdx)) {
-      state := s_write_resp
+      idx := UInt(0)
+      state := s_read_addr
+    } .otherwise {
+      idx := idx + UInt(1)
+      state := s_write_addr
     }
   }
 
-  when (io.nasti.b.fire()) { state := s_read_addr }
-
   when (io.nasti.ar.fire()) {
-    idx := UInt(0)
     state := s_read_data
   }
 
   when (io.nasti.r.fire()) {
-    idx := idx + UInt(1)
-    when (io.nasti.r.bits.last) {
+    when (idx === UInt(testLen - 1)) {
       state := s_done
+    } .otherwise {
+      idx := idx + UInt(1)
+      state := s_read_addr
     }
   }
 
@@ -101,22 +109,16 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
   io.nasti.aw.bits := NastiWriteAddressChannel(
     id = UInt(0),
     addr = UInt(0x43C00008L),
-    size = UInt(2),
-    len = UInt(lastWriteIdx),
-    burst = BURST_FIXED)
+    size = UInt(2))
 
   io.nasti.w.valid := (state === s_write_data)
-  io.nasti.w.bits := NastiWriteDataChannel(
-    data = writeData,
-    last = idx === UInt(lastWriteIdx))
+  io.nasti.w.bits := NastiWriteDataChannel(data = writeData)
 
   io.nasti.ar.valid := (state === s_read_addr)
   io.nasti.ar.bits := NastiReadAddressChannel(
     id = UInt(0),
     addr = UInt(0x43C00000L),
-    size = UInt(2),
-    len = UInt(testLen - 1),
-    burst = BURST_FIXED)
+    size = UInt(2))
 
   io.nasti.b.ready := (state === s_write_resp)
   io.nasti.r.ready := (state === s_read_data)
