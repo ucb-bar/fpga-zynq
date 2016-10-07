@@ -79,7 +79,7 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
    * 0x0C - in  FIFO space available (words)
    */
   io.nasti.r.valid := reading && (raddr =/= UInt(0) || outq.io.deq.valid)
-  outq.io.deq.ready := reading && (raddr =/= UInt(0) || io.nasti.r.ready)
+  outq.io.deq.ready := reading && raddr === UInt(0) && io.nasti.r.ready
   io.nasti.r.bits := NastiReadDataChannel(
     id = rid,
     data = MuxLookup(raddr, UInt(0), Seq(
@@ -98,6 +98,7 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
 
   when (io.nasti.aw.fire()) {
     writing := Bool(true)
+    waddr := awaddr
     bid := io.nasti.aw.bits.id
   }
   when (io.nasti.w.fire() && io.nasti.w.bits.last) {

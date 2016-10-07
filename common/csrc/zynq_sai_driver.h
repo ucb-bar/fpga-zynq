@@ -12,8 +12,11 @@ class zynq_sai_driver_t {
     void poll(sai_t *sai);
 
   private:
-    volatile uint32_t *dev;
+    uint8_t *dev;
     int fd;
+
+    uint32_t read(int off);
+    void write(int off, uint32_t word);
 };
 
 #endif

@@ -46,6 +46,7 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
 
   val startAddr = 0x80000000L
   val testLen = 0x40
+  val readAddr = Reg(UInt(width = 4))
 
   val (cmd_read :: cmd_write :: Nil) = Enum(Bits(), 2)
 
@@ -69,6 +70,7 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
 
   when (state === s_idle) {
     idx := UInt(0)
+    readAddr := UInt(0x0)
     state := s_write_addr
   }
 
@@ -95,11 +97,18 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
   }
 
   when (io.nasti.r.fire()) {
-    when (idx === UInt(testLen - 1)) {
-      state := s_done
-    } .otherwise {
-      idx := idx + UInt(1)
-      state := s_read_addr
+    switch (readAddr) {
+      is (UInt(0x0)) {
+        when (idx === UInt(testLen - 1)) {
+          state := s_read_addr
+          readAddr := UInt(0x4)
+        } .otherwise {
+          idx := idx + UInt(1)
+          state := s_read_addr
+        }
+      }
+      is (UInt(0x4)) { readAddr := UInt(0xC); state := s_read_addr }
+      is (UInt(0xC)) { state := s_done }
     }
   }
 
@@ -117,15 +126,20 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
   io.nasti.ar.valid := (state === s_read_addr)
   io.nasti.ar.bits := NastiReadAddressChannel(
     id = UInt(0),
-    addr = UInt(0x43C00000L),
+    addr = UInt(0x43C00000L) | readAddr,
     size = UInt(2))
 
   io.nasti.b.ready := (state === s_write_resp)
   io.nasti.r.ready := (state === s_read_data)
 
+  val expectedData = MuxLookup(readAddr, UInt(0), Seq(
+    UInt(0xC) -> UInt(p(SerialFIFODepth)),
+    UInt(0x4) -> UInt(0),
+    UInt(0x0) -> testData(idx)))
+
   assert(!io.nasti.b.valid || io.nasti.b.bits.resp === RESP_OKAY,
          "Integration test write error")
-  assert(!io.nasti.r.valid || io.nasti.r.bits.data === testData(idx),
+  assert(!io.nasti.r.valid || io.nasti.r.bits.data === expectedData,
          "Integration test data mismatch")
 }
 
