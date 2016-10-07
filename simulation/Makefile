@@ -13,10 +13,10 @@ include ../common/Makefrag
 sim_vsrcs = \
 	src/verilog/$(TOP_MODULE).$(CONFIG).v \
 	$(common)/vsrc/TestDriver.v \
-	$(common)/vsrc/SimSerial.v
+	$(TESTCHIP_DIR)/vsrc/SimSerial.v
 
 sim_csrcs = \
-	$(common)/csrc/SimSerial.cc
+	$(TESTCHIP_DIR)/csrc/SimSerial.cc
 
 VCS = vcs -full64
 
