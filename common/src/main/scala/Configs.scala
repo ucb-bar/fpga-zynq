@@ -2,10 +2,11 @@ package zynq
 
 import cde.{Parameters, Config, CDEMatchError}
 import rocketchip._
-import rocket.{TileId, NUncachedTileLinkPorts}
+import rocket._
 import coreplex.BuildTiles
 import uncore.devices.NTiles
 import uncore.tilelink.TLId
+import uncore.agents.NAcquireTransactors
 import testchipip._
 import Chisel._
 
@@ -19,8 +20,26 @@ class WithZynqAdapter extends Config(
     case _ => throw new CDEMatchError
   })
 
+class WithSmallCores extends Config(
+  (pname, site, here) => pname match {
+    case MulDivKey => Some(MulDivConfig())
+    case FPUKey => None
+    case NTLBEntries => 4
+    case BtbKey => BtbParameters(nEntries = 0)
+    case NAcquireTransactors => 2
+    case _ => throw new CDEMatchError
+  },
+  knobValues = {
+    case "L1D_SETS" => 64
+    case "L1D_WAYS" => 1
+    case "L1I_SETS" => 64
+    case "L1I_WAYS" => 1
+    case "L1D_MSHRS" => 0
+    case _ => throw new CDEMatchError
+  })
+
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultFPGAConfig)
-class ZynqSmallConfig extends Config(new WithZynqAdapter ++ new DefaultFPGASmallConfig)
+class ZynqSmallConfig extends Config(new WithSmallCores ++ new ZynqConfig)
 
 class WithIntegrationTest extends Config(
   (pname, site, here) => pname match {
