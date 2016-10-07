@@ -1,14 +1,14 @@
-#include "zynq_sai_driver.h"
-#include "fesvr/sai.h"
+#include "zynq_tsi_driver.h"
+#include "fesvr/tsi.h"
 #include <vector>
 
 int main(int argc, char** argv)
 {
-  zynq_sai_driver_t sai_driver;
-  sai_t sai(std::vector<std::string>(argv + 1, argv + argc));
+  zynq_tsi_driver_t tsi_driver;
+  tsi_t tsi(std::vector<std::string>(argv + 1, argv + argc));
 
-  while(!sai.done()){
-    sai_driver.poll(&sai);
+  while(!tsi.done()){
+    tsi_driver.poll(&tsi);
   }
-  return sai.exit_code();
+  return tsi.exit_code();
 }

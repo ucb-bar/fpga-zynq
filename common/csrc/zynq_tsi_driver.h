@@ -1,15 +1,15 @@
 #ifndef __ZYNQ_SAI_DRIVER_H
 #define __ZYNQ_SAI_DRIVER_H
 
-#include "fesvr/sai.h"
+#include "fesvr/tsi.h"
 #include <stdint.h>
 
-class zynq_sai_driver_t {
+class zynq_tsi_driver_t {
   public:
-    zynq_sai_driver_t();
-    ~zynq_sai_driver_t();
+    zynq_tsi_driver_t();
+    ~zynq_tsi_driver_t();
 
-    void poll(sai_t *sai);
+    void poll(tsi_t *tsi);
 
   private:
     uint8_t *dev;

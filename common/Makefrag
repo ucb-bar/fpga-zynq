@@ -194,8 +194,8 @@ $(output_delivery)/boot.bin:
 # ------------------------------------------------------------------------------
 
 fesvr-main = fesvr-zynq
-fesvr-srcs = $(common)/csrc/fesvr_zynq.cc $(common)/csrc/zynq_sai_driver.cc
-fesvr-hdrs = $(common)/csrc/zynq_sai_driver.h
+fesvr-srcs = $(common)/csrc/fesvr_zynq.cc $(common)/csrc/zynq_tsi_driver.cc
+fesvr-hdrs = $(common)/csrc/zynq_tsi_driver.h
 fesvr-lib  = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
