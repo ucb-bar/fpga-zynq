@@ -13,6 +13,7 @@ class WithZynqAdapter extends Config(
   (pname, site, here) => pname match {
     case SerialInterfaceWidth => 32
     case SerialFIFODepth => 16
+    case ResetCycles => 10
     case BuildSerialDriver =>
       (p: Parameters) => Module(new SimSerialWrapper(p(SerialInterfaceWidth)))
     case _ => throw new CDEMatchError

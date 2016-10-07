@@ -6,10 +6,11 @@
 #include <assert.h>
 
 #define SAI_BASE_PADDR 0x43C00000L
-#define SAI_OUT_FIFO_DATA 0x0
-#define SAI_OUT_FIFO_COUNT 0x4
-#define SAI_IN_FIFO_DATA 0x8
-#define SAI_IN_FIFO_COUNT 0xC
+#define SAI_OUT_FIFO_DATA 0x00
+#define SAI_OUT_FIFO_COUNT 0x04
+#define SAI_IN_FIFO_DATA 0x08
+#define SAI_IN_FIFO_COUNT 0x0C
+#define SAI_SYS_RESET 0x10
 
 zynq_sai_driver_t::zynq_sai_driver_t()
 {
@@ -17,6 +18,10 @@ zynq_sai_driver_t::zynq_sai_driver_t()
     assert(fd != -1);
     dev = (uint8_t *) mmap(0, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, SAI_BASE_PADDR);
     assert(dev != MAP_FAILED);
+
+    // reset the target
+    write(SAI_SYS_RESET, 1);
+    write(SAI_SYS_RESET, 0);
 }
 
 

@@ -143,12 +143,41 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
          "Integration test data mismatch")
 }
 
+class IntegrationTestReset(implicit p: Parameters) extends Module {
+  val io = new Bundle {
+    val nasti = new NastiIO
+  }
+
+  val (s_idle :: s_write_addr :: s_write_data :: s_done :: Nil) = Enum(Bits(), 4)
+  val state = Reg(init = s_idle)
+
+  when (state === s_idle) { state := s_write_addr }
+  when (io.nasti.aw.fire()) { state := s_write_data }
+  when (io.nasti.w.fire()) { state := s_done }
+
+  io.nasti.aw.valid := state === s_write_addr
+  io.nasti.aw.bits := NastiWriteAddressChannel(
+    id = UInt(0),
+    addr = UInt(0x43C00010L),
+    size = UInt(2))
+
+  io.nasti.w.valid := state === s_write_data
+  io.nasti.w.bits := NastiWriteDataChannel(data = UInt(0))
+
+  io.nasti.b.ready := (state === s_done)
+  io.nasti.ar.valid := Bool(false)
+  io.nasti.r.ready := Bool(false)
+}
+
 class IntegrationTestSerial(implicit p: Parameters) extends SerialDriver(p(SerialInterfaceWidth)) {
   val testParams = AdapterParams(p)
-  val fifo = Module(new NastiFIFO()(testParams))
+  val slave = Module(new ZynqAXISlave(2)(testParams))
   val driver = Module(new IntegrationTestDriver()(testParams))
+  val resetter = Module(new IntegrationTestReset()(testParams))
 
   io.exit := driver.io.exit
-  fifo.io.nasti <> driver.io.nasti
-  fifo.io.serial <> io.serial
+  slave.io.nasti(0) <> driver.io.nasti
+  slave.io.nasti(1) <> resetter.io.nasti
+  slave.io.serial <> io.serial
+  driver.reset := slave.io.sys_reset
 }

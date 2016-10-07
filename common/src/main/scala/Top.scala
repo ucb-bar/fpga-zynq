@@ -8,12 +8,14 @@ import junctions.NastiConstants._
 import cde.{Parameters, Field}
 import rocketchip._
 import uncore.devices.{DebugBusIO}
+import uncore.tilelink.ClientUncachedTileLinkIOCrossbar
 import testchipip._
 import coreplex.BaseCoreplexBundle
 
 import java.io.File
 
 case object SerialFIFODepth extends Field[Int]
+case object ResetCycles extends Field[Int]
 
 class Top(implicit val p: Parameters) extends Module {
   val io = new Bundle {
@@ -22,7 +24,7 @@ class Top(implicit val p: Parameters) extends Module {
   }
 
   val target = LazyModule(new FPGAZynqTop(p)).module
-  val fifo = Module(new NastiFIFO()(AdapterParams(p)))
+  val slave = Module(new ZynqAXISlave(1)(AdapterParams(p)))
 
   require(target.io.mem_axi.size == 1)
   require(target.io.mem_ahb.isEmpty)
@@ -31,8 +33,94 @@ class Top(implicit val p: Parameters) extends Module {
   require(target.io.mem_rst.isEmpty)
 
   io.mem_axi <> target.io.mem_axi.head
-  fifo.io.nasti <> io.ps_axi_slave
-  fifo.io.serial <> target.io.serial
+
+  slave.io.nasti.head <> io.ps_axi_slave
+  slave.io.serial <> target.io.serial
+  target.reset := slave.io.sys_reset
+}
+
+class ZynqAXISlave(nPorts: Int)(implicit p: Parameters) extends Module {
+  val io = new Bundle {
+    val nasti = Vec(nPorts, new NastiIO()).flip
+    val sys_reset = Bool(OUTPUT)
+    val serial = new SerialIO(p(SerialInterfaceWidth)).flip
+  }
+
+  def routeSel(addr: UInt): UInt = {
+    // 0x00 - 0x0F go to FIFO
+    // 0x10 goes to Reset generator
+    UIntToOH(addr(4))
+  }
+
+  val xbar = Module(new NastiCrossbar(nPorts, 2, routeSel _))
+  val fifo = Module(new NastiFIFO)
+  val resetter = Module(new ResetController)
+
+  xbar.io.masters <> io.nasti
+  fifo.io.nasti <> xbar.io.slaves(0)
+  fifo.io.serial <> io.serial
+  resetter.io.nasti <> xbar.io.slaves(1)
+  io.sys_reset := resetter.io.sys_reset
+}
+
+class ResetController(implicit p: Parameters) extends NastiModule()(p) {
+  val io = new Bundle {
+    val nasti = new NastiIO().flip
+    val sys_reset = Bool(OUTPUT)
+  }
+
+  val reg_reset = Reg(init = Bool(true))
+
+  val readId = Reg(UInt(width = nastiXIdBits))
+
+  val r_addr :: r_data :: Nil = Enum(Bits(), 2)
+  val r_state = Reg(init = r_addr)
+
+  io.nasti.ar.ready := r_state === r_addr
+  io.nasti.r.valid := r_state === r_data
+  io.nasti.r.bits := NastiReadDataChannel(
+    id = readId,
+    data = reg_reset)
+
+  when (io.nasti.ar.fire()) {
+    readId := io.nasti.ar.bits.id
+    r_state := r_data
+  }
+
+  when (io.nasti.r.fire()) {
+    r_state := r_addr
+  }
+
+  val writeId = Reg(UInt(width = nastiXIdBits))
+
+  val w_addr :: w_data :: w_resp :: Nil = Enum(Bits(), 3)
+  val w_state = Reg(init = w_addr)
+  val timer = Reg(init = UInt(p(ResetCycles) - 1))
+
+  // Make sure reset period lasts for a certain number of cycles
+  when (timer =/= UInt(0)) { timer := timer - UInt(1) }
+
+  when (io.nasti.aw.fire()) {
+    writeId := io.nasti.aw.bits.id
+    w_state := w_data
+  }
+
+  when (io.nasti.w.fire()) {
+    timer := UInt(p(ResetCycles) - 1)
+    reg_reset := io.nasti.w.bits.data(0)
+    w_state := w_resp
+  }
+
+  when (io.nasti.b.fire()) {
+    w_state := w_addr
+  }
+
+  io.nasti.aw.ready := w_state === w_addr
+  io.nasti.w.ready := w_state === w_data
+  io.nasti.b.valid := w_state === w_resp && timer === UInt(0)
+  io.nasti.b.bits := NastiWriteResponseChannel(id = writeId)
+
+  io.sys_reset := reg_reset
 }
 
 class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
