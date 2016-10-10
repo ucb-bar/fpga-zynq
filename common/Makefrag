@@ -2,11 +2,11 @@
 
 JOBS = 16
 ROCKET_DIR ?= $(base_dir)/rocket-chip
-TESTCHIP_DIR ?= $(base_dir)/testchipip
 TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
+EXTRA_PACKAGES=testchipip
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
@@ -16,7 +16,7 @@ SHELL := /bin/bash
 
 bootrom_img = $(common)/bootrom/bootrom.img
 rocketchip_stamp = $(common)/lib/rocketchip.stamp
-testchipip_stamp = $(common)/lib/testchipip.stamp
+extra_stamps = $(addprefix $(common)/lib/,$(addsuffix .stamp,$(EXTRA_PACKAGES)))
 
 ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
@@ -71,13 +71,14 @@ $(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
 	touch $(rocketchip_stamp)
 
-$(testchipip_stamp): $(call lookup_scala_srcs, $(TESTCHIP_DIR)) $(rocketchip_stamp)
-	ln -sf $(common)/lib $(TESTCHIP_DIR)/lib
-	cd $(TESTCHIP_DIR) && $(SBT) package
-	cp $(TESTCHIP_DIR)/target/scala-2.11/*.jar $(common)/lib
-	touch $(testchipip_stamp)
+$(common)/%.stamp: $(call lookup_scala_srcs, %) $(rocketchip_stamp)
+	rm -f $(base_dir)/$(patsubst %.stamp,%,$(notdir $@))/lib
+	ln -s $(common)/lib $(base_dir)/$(patsubst %.stamp,%,$(notdir $@))/lib
+	cd $(base_dir)/$(patsubst %.stamp,%,$(notdir $@)) && $(SBT) package
+	cp $(base_dir)/$(patsubst %.stamp,%,$(notdir $@))/target/scala-2.11/*.jar $(common)/lib
+	touch $@
 
-$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(testchipip_stamp) $(bootrom_img) $(call lookup_scala_srcs,$(common))
+$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(extra_stamps) $(bootrom_img) $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
 	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 
