@@ -6,7 +6,7 @@ TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
-EXTRA_PACKAGES=testchipip
+EXTRA_PACKAGES=testchipip dma
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
