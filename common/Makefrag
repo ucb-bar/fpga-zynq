@@ -71,12 +71,10 @@ $(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
 	touch $(rocketchip_stamp)
 
-$(common)/%.stamp: $(call lookup_scala_srcs, %) $(rocketchip_stamp)
-	rm -f $(base_dir)/$(patsubst %.stamp,%,$(notdir $@))/lib
-	ln -s $(common)/lib $(base_dir)/$(patsubst %.stamp,%,$(notdir $@))/lib
-	cd $(base_dir)/$(patsubst %.stamp,%,$(notdir $@)) && $(SBT) package
-	cp $(base_dir)/$(patsubst %.stamp,%,$(notdir $@))/target/scala-2.11/*.jar $(common)/lib
-	touch $@
+$(common)/Makefrag.pkgs: $(common)/generate-pkg-mk.sh
+	bash $(common)/generate-pkg-mk.sh $(EXTRA_PACKAGES) > $@
+
+include $(common)/Makefrag.pkgs
 
 $(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(extra_stamps) $(bootrom_img) $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
