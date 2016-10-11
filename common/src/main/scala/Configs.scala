@@ -8,6 +8,7 @@ import uncore.devices.NTiles
 import uncore.tilelink.TLId
 import uncore.agents.NAcquireTransactors
 import testchipip._
+import dma._
 import Chisel._
 
 class WithZynqAdapter extends Config(
@@ -56,3 +57,5 @@ class WithIntegrationTest extends Config(
   })
 
 class IntegrationTestConfig extends Config(new WithIntegrationTest ++ new ZynqConfig)
+
+class ZynqDmaConfig extends Config(new WithDma ++ new ZynqConfig)
