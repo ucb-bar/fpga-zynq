@@ -24,3 +24,6 @@
 [submodule "dma"]
 	path = dma
 	url = git@github.com:zhemao/riscv-dma2.git
+[submodule "dma-tests"]
+	path = dma-tests
+	url = git@github.com:zhemao/dma-tests.git
