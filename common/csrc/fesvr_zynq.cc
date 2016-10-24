@@ -1,14 +1,14 @@
-#include "zynq_dtm_driver.h"
-#include "fesvr/dtm.h"
+#include "zynq_tsi_driver.h"
+#include "fesvr/tsi.h"
 #include <vector>
 
 int main(int argc, char** argv)
 {
-  zynq_dtm_driver_t dtm_driver;
-  dtm_t dtm(std::vector<std::string>(argv + 1, argv + argc));
+  zynq_tsi_driver_t tsi_driver;
+  tsi_t tsi(std::vector<std::string>(argv + 1, argv + argc));
 
-  while(!dtm.done()){
-    dtm_driver.poll(&dtm);
+  while(!tsi.done()){
+    tsi_driver.poll(&tsi);
   }
-  return dtm.exit_code();
+  return tsi.exit_code();
 }

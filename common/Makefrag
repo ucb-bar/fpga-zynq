@@ -4,12 +4,19 @@ JOBS = 16
 ROCKET_DIR ?= $(base_dir)/rocket-chip
 TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
+CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
+CONFIG ?= ZynqConfig
+EXTRA_PACKAGES=testchipip
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
 common_build = $(common)/build
 output_delivery = deliver_output
 SHELL := /bin/bash
+
+bootrom_img = $(common)/bootrom/bootrom.img
+rocketchip_stamp = $(common)/lib/rocketchip.stamp
+extra_stamps = $(addprefix $(common)/lib/,$(addsuffix .stamp,$(EXTRA_PACKAGES)))
 
 ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
@@ -20,9 +27,10 @@ proj_name = $(BOARD)_rocketchip_$(CONFIG)
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
-	src/verilog/Top.$(CONFIG).v \
+	src/verilog/$(TOP_MODULE).$(CONFIG).v \
 
-default: project
+bootimage = fpga-images-$(BOARD)/boot.bin
+bootimage: $(bootimage)
 
 # Taken from rocket chip 2a5aeea. TODO: Maybe source this directly from makefrag?
 SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar
@@ -57,29 +65,28 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-# TODO: Can we pass this as an argument to the generator, instead of having
-# to put the bootrom in a specific place?
-$(common)/bootrom:
-	ln -s $(ROCKET_DIR)/bootrom $(common)/bootrom
-
-# TODO: Need a clever way of knowing when to repack rocketchip
-$(common)/lib: $(call lookup_scala_srcs, $(ROCKET_DIR))
-	cd $(ROCKET_DIR) && sbt pack
+$(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
+	cd $(ROCKET_DIR) && $(SBT) pack
 	mkdir -p $(common)/lib
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
-	touch $(common)/lib
+	touch $(rocketchip_stamp)
 
-$(common_build)/Top.$(CONFIG).fir: $(common)/lib $(common)/bootrom $(call lookup_scala_srcs,$(common))
+$(common)/Makefrag.pkgs: $(common)/generate-pkg-mk.sh
+	bash $(common)/generate-pkg-mk.sh $(EXTRA_PACKAGES) > $@
+
+include $(common)/Makefrag.pkgs
+
+$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(extra_stamps) $(bootrom_img) $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
 	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 
-$(common_build)/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).fir $(FIRRTL_JAR)
+$(common_build)/$(TOP_MODULE).$(CONFIG).v: $(common_build)/$(TOP_MODULE).$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
 
-src/verilog/Top.$(CONFIG).v: $(common_build)/Top.$(CONFIG).v
+src/verilog/$(TOP_MODULE).$(CONFIG).v: $(common_build)/$(TOP_MODULE).$(CONFIG).v
 	cp $< $@
 
-rocket: src/verilog/Top.$(CONFIG).v
+rocket: src/verilog/$(TOP_MODULE).$(CONFIG).v
 
 
 # Project generation
@@ -87,6 +94,7 @@ rocket: src/verilog/Top.$(CONFIG).v
 project = $(proj_name)/$(proj_name).xpr
 $(project): | $(verilog_srcs) src/tcl/$(proj_name).tcl
 	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
+
 project: $(project)
 
 vivado: $(project)
@@ -144,7 +152,7 @@ $(images):
 
 fetch-images: $(images)
 
-fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
+$(bootimage): $(images) $(bitstream)
 	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/rocketchip_wrapper.bit
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
@@ -185,8 +193,8 @@ $(output_delivery)/boot.bin:
 # ------------------------------------------------------------------------------
 
 fesvr-main = fesvr-zynq
-fesvr-srcs = $(wildcard $(common)/csrc/*.cc)
-fesvr-hdrs = $(wildcard $(common)/csrc/*.h)
+fesvr-srcs = $(common)/csrc/fesvr_zynq.cc $(common)/csrc/zynq_tsi_driver.cc
+fesvr-hdrs = $(common)/csrc/zynq_tsi_driver.h
 fesvr-lib  = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
@@ -229,4 +237,4 @@ fetch-riscv-linux-deliver:
 clean:
 	rm -f *.log *.jou *.str
 
-.PHONY: vivado init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado project init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean

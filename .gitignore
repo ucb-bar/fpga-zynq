@@ -7,7 +7,7 @@ common/build
 common/target
 common/project/target
 common/lib
-common/bootrom
+common/Makefrag.pkgs
 
 zedboard/zedboard_rocketchip_*
 zedboard/src/tcl/zedboard_rocketchip_*.tcl
