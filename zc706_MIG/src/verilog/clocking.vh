@@ -27,7 +27,7 @@ hw/src/constrs/pin_constraints.xdc
 
 `define RC_CLK_MULT      4.0
 
-`define RC_CLK_DIVIDE   16.0
+`define RC_CLK_DIVIDE   20.0
 
 `define differential_clock
 
