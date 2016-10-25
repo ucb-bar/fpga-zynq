@@ -236,5 +236,6 @@ fetch-riscv-linux-deliver:
 
 clean:
 	rm -f *.log *.jou *.str
+	rm -rf csrc simv-* output ucli.key vc_hdrs.h DVEfiles
 
 .PHONY: vivado project init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
