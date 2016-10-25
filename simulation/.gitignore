@@ -2,6 +2,6 @@
 /csrc
 /simv-*
 /output
-/src/verilog
+/src/verilog/*.v
 /ucli.key
 /vc_hdrs.h

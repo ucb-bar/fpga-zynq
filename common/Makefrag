@@ -74,7 +74,7 @@ $(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
 $(common)/Makefrag.pkgs: $(common)/generate-pkg-mk.sh
 	bash $(common)/generate-pkg-mk.sh $(EXTRA_PACKAGES) > $@
 
-include $(common)/Makefrag.pkgs
+-include $(common)/Makefrag.pkgs
 
 $(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(extra_stamps) $(bootrom_img) $(call lookup_scala_srcs,$(common))
 	mkdir -p $(@D)
@@ -236,5 +236,6 @@ fetch-riscv-linux-deliver:
 
 clean:
 	rm -f *.log *.jou *.str
+	rm -rf csrc simv-* output ucli.key vc_hdrs.h DVEfiles
 
 .PHONY: vivado project init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
