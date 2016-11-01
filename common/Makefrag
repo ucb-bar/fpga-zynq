@@ -48,8 +48,8 @@ lookup_scala_srcs = $(shell find $(1)/. -iname "*.scala" 2> /dev/null)
 # Initialize rocket-chip submodule
 # ------------------------------------------------------------------------------
 
-init-rocket-submodule:
-	cd $(base_dir) && git submodule update --init rocket-chip
+init-submodules:
+	cd $(base_dir) && git submodule update --init rocket-chip $(EXTRA_PACKAGES)
 	cd $(ROCKET_DIR) && git submodule update --init
 
 # Specialize sources for board
@@ -238,4 +238,4 @@ clean:
 	rm -f *.log *.jou *.str
 	rm -rf csrc simv-* output ucli.key vc_hdrs.h DVEfiles
 
-.PHONY: vivado project init-rocket-submodule pack-rocket rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado project init-submodules rocket fesvr-zynq fetch-images load-sd ramdisk-open ramdisk-close clean
