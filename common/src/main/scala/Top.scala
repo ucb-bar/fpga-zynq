@@ -223,13 +223,6 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
     s"NastiFIFO w cannot accept partial writes")
 }
 
-
-trait NoDebug {
-  val coreplexIO: BaseCoreplexBundle
-  coreplexIO.debug.req.valid := Bool(false)
-  coreplexIO.debug.resp.ready := Bool(false)
-}
-
 class FPGAZynqTop(q: Parameters) extends BaseTop(q)
     with PeripheryBootROM with PeripheryCoreplexLocalInterrupter
     with PeripherySerial with PeripheryMasterMem {
