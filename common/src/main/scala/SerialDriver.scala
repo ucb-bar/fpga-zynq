@@ -3,7 +3,7 @@ package zynq
 import Chisel._
 import junctions._
 import junctions.NastiConstants._
-import cde.{Parameters, Field}
+import config.{Parameters, Field}
 import util._
 import testchipip._
 import rocket.XLen

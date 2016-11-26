@@ -5,7 +5,7 @@ import Chisel._
 import diplomacy.{LazyModule, LazyModuleImp}
 import junctions._
 import junctions.NastiConstants._
-import cde.{Parameters, Field}
+import config.{Parameters, Field}
 import rocketchip._
 import uncore.devices.{DebugBusIO}
 import uncore.tilelink.ClientUncachedTileLinkIOCrossbar

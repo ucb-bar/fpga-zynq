@@ -1,6 +1,6 @@
 package zynq
 
-import cde.{Parameters, Config, CDEMatchError}
+import config.{Parameters, Config, CDEMatchError}
 import rocketchip._
 import rocket._
 import coreplex.BuildTiles
