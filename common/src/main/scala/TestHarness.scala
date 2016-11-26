@@ -1,7 +1,7 @@
 package zynq
 
 import Chisel._
-import cde.Parameters
+import config.Parameters
 import diplomacy.LazyModule
 import rocketchip._
 import rocket.Tile
