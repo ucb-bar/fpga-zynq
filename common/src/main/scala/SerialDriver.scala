@@ -144,7 +144,7 @@ class IntegrationTestReset(implicit p: Parameters) extends Module {
   io.nasti.ar.valid := Bool(false)
   io.nasti.r.ready := Bool(false)
 }
-
+/*
 class IntegrationTestSerial(implicit p: Parameters) extends SerialDriver(p(SerialInterfaceWidth)) {
   val testParams = AdapterParams(p)
   val slave = Module(new ZynqAXISlave(2)(testParams))
@@ -157,3 +157,4 @@ class IntegrationTestSerial(implicit p: Parameters) extends SerialDriver(p(Seria
   slave.io.serial <> io.serial
   driver.reset := slave.io.sys_reset
 }
+*/
