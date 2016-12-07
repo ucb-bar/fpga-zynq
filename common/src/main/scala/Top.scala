@@ -10,6 +10,9 @@ import junctions.NastiConstants._
 import rocketchip._
 import uncore.axi4._
 import uncore.tilelink2._
+import uncore.devices._
+import coreplex._
+import util.ConfigStringOutput
 import testchipip._
 
 import java.io.File
@@ -18,21 +21,17 @@ case object SerialFIFODepth extends Field[Int]
 case object ResetCycles extends Field[Int]
 
 class Top(implicit val p: Parameters) extends Module {
+  val target = Module(LazyModule(new FPGAZynqTop).module)
+  require(target.io.mem_axi4.head.size == 1)
+  val toMem = (target.io.mem_axi4.head)(0)
+
   val io = new Bundle {
     val ps_axi_slave = new NastiIO()(AdapterParams(p)).flip
-    val mem_axi = AXI4Bundle(AXI4BundleParameters(
-      addrBits = log2Up(p(ExtMem).size),
-      dataBits = p(ExtMem).beatBytes * 8,
-      idBits = p(ExtMem).idBits)).flip
+    val mem_axi = toMem.cloneType
   }
 
-  val target = Module(LazyModule(new FPGAZynqTop).module)
   val slave = Module(new ZynqAXISlave(1)(AdapterParams(p)))
-
-  require(target.io.mem_axi4.size == 1)
-
-  //io.mem_axi <> target.io.mem_axi4.head
-
+  io.mem_axi <> toMem
   slave.io.nasti.head <> io.ps_axi_slave
   slave.io.serial <> target.io.serial
   target.reset := slave.io.sys_reset
@@ -222,27 +221,76 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
     s"NastiFIFO w cannot accept partial writes")
 }
 
+trait PeripheryBootROMWithHack {
+  this: TopNetwork =>
+  val coreplex: CoreplexRISCVPlatform
+
+  private val bootrom_address = 0x1000
+  private val bootrom_size = 0x1000
+
+  // Currently RC emits a config string that uses a name for offchip memory
+  // that does not comform to PK's expectation. So we prepend what we want.
+  private lazy val hackedConfigString = {
+    val sb = new StringBuilder
+    sb append "ram {\n"
+    sb append "  0 {\n"
+    sb append "  addr 0x%x;\n".format(p(ExtMem).base)
+    sb append "  size 0x%x;\n".format(p(ExtMem).size)
+    sb append "  };\n"
+    sb append "};\n"
+    sb append coreplex.configString
+    val configString = sb.toString
+
+    println(s"\nBIANCOLIN'S HACK: Generated Configuration String\n${configString}")
+    ConfigStringOutput.contents = Some(configString)
+    configString
+  }
+
+  private lazy val bootrom_contents = GenerateBootROM(p, bootrom_address, hackedConfigString)
+  val bootrom = LazyModule(new TLROM(bootrom_address, bootrom_size, bootrom_contents, true, peripheryBusConfig.beatBytes))
+  bootrom.node := TLFragmenter(peripheryBusConfig.beatBytes, cacheBlockBytes)(peripheryBus.node)
+}
+
+trait PeripheryBootROMWithHackBundle {
+  this: TopNetworkBundle {
+    val outer: PeripheryBootROMWithHack
+  } =>
+}
+
+trait PeripheryBootROMWithHackModule {
+  this: TopNetworkModule {
+    val outer: PeripheryBootROMWithHack
+    val io: PeripheryBootROMWithHackBundle
+  } =>
+}
+
 class FPGAZynqTop(implicit p: Parameters) extends BaseTop
-    with PeripheryBootROM
     with PeripheryMasterAXI4Mem
-    with HardwiredResetVector
     with PeripherySerial
+    with PeripheryBootROMWithHack
+    with PeripheryDTM
+    with PeripheryCounter
+    with HardwiredResetVector
     with RocketPlexMaster {
   override lazy val module = new FPGAZynqTopModule(this,
     () => new FPGAZynqTopBundle(this))
 }
 
 class FPGAZynqTopBundle[+L <: FPGAZynqTop](_outer: L) extends BaseTopBundle(_outer)
-    with PeripheryBootROMBundle
     with PeripheryMasterAXI4MemBundle
-    with HardwiredResetVectorBundle
     with PeripherySerialBundle
+    with PeripheryBootROMWithHackBundle
+    with PeripheryDTMBundle
+    with PeripheryCounterBundle
+    with HardwiredResetVectorBundle
     with RocketPlexMasterBundle
 
 class FPGAZynqTopModule[+L <: FPGAZynqTop, +B <: FPGAZynqTopBundle[L]](_outer: L, _io: () => B)
     extends BaseTopModule(_outer, _io)
-    with PeripheryBootROMModule
     with PeripheryMasterAXI4MemModule
-    with HardwiredResetVectorModule
     with PeripherySerialModule
+    with PeripheryBootROMWithHackModule
+    with PeripheryDTMModule
+    with PeripheryCounterModule
+    with HardwiredResetVectorModule
     with RocketPlexMasterModule

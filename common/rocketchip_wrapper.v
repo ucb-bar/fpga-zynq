@@ -77,10 +77,12 @@ module rocketchip_wrapper
   wire M_AXI_awvalid;
   wire M_AXI_bready;
   wire M_AXI_bvalid;
+  wire [1:0] M_AXI_bresp;
   wire [31:0]M_AXI_rdata;
   wire M_AXI_rlast;
   wire M_AXI_rready;
   wire M_AXI_rvalid;
+  wire [1:0] M_AXI_rresp;
   wire [31:0]M_AXI_wdata;
   wire M_AXI_wlast;
   wire M_AXI_wready;
@@ -188,14 +190,14 @@ module rocketchip_wrapper
         //
         .M_AXI_bid(M_AXI_bid),
         .M_AXI_bready(M_AXI_bready),
-        .M_AXI_bresp(2'b00),
+        .M_AXI_bresp(M_AXI_bresp),
         .M_AXI_bvalid(M_AXI_bvalid),
         //
         .M_AXI_rdata(M_AXI_rdata),
         .M_AXI_rid(M_AXI_rid),
         .M_AXI_rlast(M_AXI_rlast),
         .M_AXI_rready(M_AXI_rready),
-        .M_AXI_rresp(),
+        .M_AXI_rresp(M_AXI_rresp),
         .M_AXI_rvalid(M_AXI_rvalid),
         //
         .M_AXI_wdata(M_AXI_wdata),
@@ -215,7 +217,7 @@ module rocketchip_wrapper
         .S_AXI_arprot(S_AXI_arprot),
         .S_AXI_arqos(S_AXI_arqos),
         .S_AXI_arready(S_AXI_arready),
-        .S_AXI_arregion(S_AXI_arregion),
+        .S_AXI_arregion(4'b0),
         .S_AXI_arsize(S_AXI_arsize),
         .S_AXI_arvalid(S_AXI_arvalid),
         //
@@ -228,7 +230,7 @@ module rocketchip_wrapper
         .S_AXI_awprot(S_AXI_awprot),
         .S_AXI_awqos(S_AXI_awqos),
         .S_AXI_awready(S_AXI_awready),
-        .S_AXI_awregion(S_AXI_awregion),
+        .S_AXI_awregion(4'b0),
         .S_AXI_awsize(S_AXI_awsize),
         .S_AXI_awvalid(S_AXI_awvalid),
         //
@@ -318,7 +320,6 @@ module rocketchip_wrapper
    .io_mem_axi_ar_bits_lock (S_AXI_arlock),
    .io_mem_axi_ar_bits_prot (S_AXI_arprot),
    .io_mem_axi_ar_bits_qos (S_AXI_arqos),
-   .io_mem_axi_ar_bits_region(S_AXI_arregion),
    .io_mem_axi_aw_valid (S_AXI_awvalid),
    .io_mem_axi_aw_ready (S_AXI_awready),
    .io_mem_axi_aw_bits_addr (mem_awaddr),
@@ -330,7 +331,6 @@ module rocketchip_wrapper
    .io_mem_axi_aw_bits_lock (S_AXI_awlock),
    .io_mem_axi_aw_bits_prot (S_AXI_awprot),
    .io_mem_axi_aw_bits_qos (S_AXI_awqos),
-   .io_mem_axi_aw_bits_region(S_AXI_awregion),
    .io_mem_axi_w_valid (S_AXI_wvalid),
    .io_mem_axi_w_ready (S_AXI_wready),
    .io_mem_axi_w_bits_strb (S_AXI_wstrb),
