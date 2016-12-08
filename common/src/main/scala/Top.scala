@@ -271,6 +271,7 @@ class FPGAZynqTop(implicit p: Parameters) extends BaseTop
     with PeripheryDTM
     with PeripheryCounter
     with HardwiredResetVector
+    with TiedOffPeripheryDebug
     with RocketPlexMaster {
   override lazy val module = new FPGAZynqTopModule(this,
     () => new FPGAZynqTopBundle(this))
@@ -283,6 +284,7 @@ class FPGAZynqTopBundle[+L <: FPGAZynqTop](_outer: L) extends BaseTopBundle(_out
     with PeripheryDTMBundle
     with PeripheryCounterBundle
     with HardwiredResetVectorBundle
+    with TiedOffPeripheryDebugBundle
     with RocketPlexMasterBundle
 
 class FPGAZynqTopModule[+L <: FPGAZynqTop, +B <: FPGAZynqTopBundle[L]](_outer: L, _io: () => B)
@@ -293,4 +295,5 @@ class FPGAZynqTopModule[+L <: FPGAZynqTop, +B <: FPGAZynqTopBundle[L]](_outer: L
     with PeripheryDTMModule
     with PeripheryCounterModule
     with HardwiredResetVectorModule
+    with TiedOffPeripheryDebugModule
     with RocketPlexMasterModule
