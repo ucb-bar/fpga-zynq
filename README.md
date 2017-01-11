@@ -448,7 +448,7 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 
 ###F) <a name="fesvr"></a> Building fesvr-zynq
 
-The [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr) provides against which the zynq-fesvr is linked. Additionally, `common/csrc` includes source for main, and a simple driver, which hands off debug module requests and reponses between the ARM core and rocket chip. Before building, make sure the 2015.4 version of settings64.sh is sourced. To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
+The [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr) provides against which the zynq-fesvr is linked. Additionally, `common/csrc` includes source for main, and a simple driver, which hands off debug module requests and reponses between the ARM core and rocket chip. Before building, make sure the 2016.2 version of settings64.sh is sourced. To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
 
     $ make fesvr-zynq
 
