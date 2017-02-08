@@ -26,9 +26,9 @@ class TestHarness(implicit val p: Parameters) extends Module {
 
 class DummyTile(implicit p: Parameters) extends Tile()(p) {
   def tieOff(cached: ClientTileLinkIO) {
-    cached.acquire.valid := Bool(false)
-    cached.grant.ready := Bool(false)
-    cached.finish.valid := Bool(false)
+    cached.acquire.valid := false.B
+    cached.grant.ready := false.B
+    cached.finish.valid := false.B
 
     val prb = Queue(cached.probe)
     cached.release.valid := prb.valid
@@ -37,8 +37,8 @@ class DummyTile(implicit p: Parameters) extends Tile()(p) {
   }
 
   def tieOff(uncached: ClientUncachedTileLinkIO) {
-    uncached.acquire.valid := Bool(false)
-    uncached.grant.ready := Bool(false)
+    uncached.acquire.valid := false.B
+    uncached.grant.ready := false.B
   }
 
   io.cached.foreach(tieOff(_))

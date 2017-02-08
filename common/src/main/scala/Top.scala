@@ -70,11 +70,11 @@ class ResetController(implicit p: Parameters) extends NastiModule()(p) {
     val sys_reset = Output(Bool())
   })
 
-  val reg_reset = Reg(init = Bool(true))
+  val reg_reset = Reg(init = true.B)
 
   val readId = Reg(UInt(nastiXIdBits.W))
 
-  val r_addr :: r_data :: Nil = Enum(Bits(), 2)
+  val r_addr :: r_data :: Nil = Enum(2)
   val r_state = Reg(init = r_addr)
 
   io.nasti.ar.ready := r_state === r_addr
@@ -94,12 +94,12 @@ class ResetController(implicit p: Parameters) extends NastiModule()(p) {
 
   val writeId = Reg(UInt(nastiXIdBits.W))
 
-  val w_addr :: w_data :: w_resp :: Nil = Enum(Bits(), 3)
+  val w_addr :: w_data :: w_resp :: Nil = Enum(3)
   val w_state = Reg(init = w_addr)
-  val timer = Reg(init = UInt(p(ResetCycles) - 1))
+  val timer = Reg(init = (p(ResetCycles) - 1).U)
 
   // Make sure reset period lasts for a certain number of cycles
-  when (timer =/= UInt(0)) { timer := timer - UInt(1) }
+  when (timer =/= 0.U) { timer := timer - 1.U }
 
   when (io.nasti.aw.fire()) {
     writeId := io.nasti.aw.bits.id
@@ -107,7 +107,7 @@ class ResetController(implicit p: Parameters) extends NastiModule()(p) {
   }
 
   when (io.nasti.w.fire()) {
-    timer := UInt(p(ResetCycles) - 1)
+    timer := (p(ResetCycles) - 1).U
     reg_reset := io.nasti.w.bits.data(0)
     w_state := w_resp
   }
@@ -118,7 +118,7 @@ class ResetController(implicit p: Parameters) extends NastiModule()(p) {
 
   io.nasti.aw.ready := w_state === w_addr
   io.nasti.w.ready := w_state === w_data
-  io.nasti.b.valid := w_state === w_resp && timer === UInt(0)
+  io.nasti.b.valid := w_state === w_resp && timer === 0.U
   io.nasti.b.bits := NastiWriteResponseChannel(id = writeId)
 
   io.sys_reset := reg_reset
@@ -138,9 +138,9 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
 
   val outq = Module(new Queue(UInt(w.W), depth))
   val inq  = Module(new Queue(UInt(w.W), depth))
-  val writing = Reg(init = Bool(false))
-  val reading = Reg(init = Bool(false))
-  val responding = Reg(init = Bool(false))
+  val writing = Reg(init = false.B)
+  val reading = Reg(init = false.B)
+  val responding = Reg(init = false.B)
   val len = Reg(UInt(nastiXLenBits.W))
   val bid = Reg(UInt(nastiXIdBits.W))
   val rid = Reg(UInt(nastiXIdBits.W))
@@ -156,8 +156,8 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   val raddr = Reg(araddr)
   val waddr = Reg(awaddr)
 
-  inq.io.enq.valid := io.nasti.w.valid && writing && (waddr === UInt(2))
-  io.nasti.w.ready := (inq.io.enq.ready || waddr =/= UInt(2)) && writing
+  inq.io.enq.valid := io.nasti.w.valid && writing && (waddr === 2.U)
+  io.nasti.w.ready := (inq.io.enq.ready || waddr =/= 2.U) && writing
   inq.io.enq.bits  := io.nasti.w.bits.data
 
   /**
@@ -167,15 +167,15 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
    * 0x08 - in  FIFO data
    * 0x0C - in  FIFO space available (words)
    */
-  io.nasti.r.valid := reading && (raddr =/= UInt(0) || outq.io.deq.valid)
-  outq.io.deq.ready := reading && raddr === UInt(0) && io.nasti.r.ready
+  io.nasti.r.valid := reading && (raddr =/= 0.U || outq.io.deq.valid)
+  outq.io.deq.ready := reading && raddr === 0.U && io.nasti.r.ready
   io.nasti.r.bits := NastiReadDataChannel(
     id = rid,
-    data = MuxLookup(raddr, UInt(0), Seq(
-      UInt(0) -> outq.io.deq.bits,
-      UInt(1) -> outq.io.count,
-      UInt(3) -> (UInt(depth) - inq.io.count))),
-    last = len === UInt(0))
+    data = MuxLookup(raddr, 0.U, Seq(
+      0.U -> outq.io.deq.bits,
+      1.U -> outq.io.count,
+      3.U -> (depth.U - inq.io.count))),
+    last = len === 0.U)
 
   io.nasti.aw.ready := !writing && !responding
   io.nasti.ar.ready := !reading
@@ -183,33 +183,33 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   io.nasti.b.bits := NastiWriteResponseChannel(
     id = bid,
     // writing to anything other that the in FIFO is an error
-    resp = Mux(waddr === UInt(2), RESP_OKAY, RESP_SLVERR))
+    resp = Mux(waddr === 2.U, RESP_OKAY, RESP_SLVERR))
 
   when (io.nasti.aw.fire()) {
-    writing := Bool(true)
+    writing := true.B
     waddr := awaddr
     bid := io.nasti.aw.bits.id
   }
   when (io.nasti.w.fire() && io.nasti.w.bits.last) {
-    writing := Bool(false)
-    responding := Bool(true)
+    writing := false.B
+    responding := true.B
   }
-  when (io.nasti.b.fire()) { responding := Bool(false) }
+  when (io.nasti.b.fire()) { responding := false.B }
   when (io.nasti.ar.fire()) {
     len := io.nasti.ar.bits.len
     rid := io.nasti.ar.bits.id
     raddr := araddr
-    reading := Bool(true)
+    reading := true.B
   }
   when (io.nasti.r.fire()) {
-    len := len - UInt(1)
-    when (len === UInt(0)) { reading := Bool(false) }
+    len := len - 1.U
+    when (len === 0.U) { reading := false.B }
   }
 
   def addressOK(chan: NastiAddressChannel): Bool =
-    (chan.len === UInt(0) || chan.burst === BURST_FIXED) &&
-    chan.size === UInt(log2Up(w/8)) &&
-    chan.addr(log2Up(nastiWStrobeBits)-1, 0) === UInt(0)
+    (chan.len === 0.U || chan.burst === BURST_FIXED) &&
+    chan.size === log2Up(w/8).U &&
+    chan.addr(log2Up(nastiWStrobeBits)-1, 0) === 0.U
 
   def dataOK(chan: NastiWriteDataChannel): Bool =
     chan.strb(w/8-1, 0).andR
