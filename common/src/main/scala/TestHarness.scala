@@ -1,6 +1,7 @@
 package zynq
 
-import Chisel._
+import chisel3._
+import chisel3.util.Queue
 import cde.Parameters
 import diplomacy.LazyModule
 import rocketchip._
@@ -10,9 +11,9 @@ import uncore.coherence.ClientMetadata
 import junctions.SerialIO
 
 class TestHarness(implicit val p: Parameters) extends Module {
-  val io = new Bundle {
-    val success = Bool(OUTPUT)
-  }
+  val io = IO(new Bundle {
+    val success = Output(Bool())
+  })
 
   val dut = LazyModule(new FPGAZynqTop(p)).module
   val mem = Module(new SimAXIMem(BigInt(p(ExtMemSize))))

@@ -1,20 +1,21 @@
 package zynq
 
-import Chisel._
+import chisel3._
+import chisel3.util._
 import junctions._
 import junctions.NastiConstants._
 import cde.{Parameters, Field}
-import util._
+import _root_.util._
 import testchipip._
 import rocket.XLen
 
 case object BuildSerialDriver extends Field[Parameters => SerialDriver]
 
 class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
-  val io = new Bundle {
+  val io = IO(new Bundle {
     val nasti = new NastiIO
-    val exit = Bool(OUTPUT)
-  }
+    val exit = Output(Bool())
+  })
 
   require(p(XLen) == 64)
   require(p(SerialInterfaceWidth) == 32)
@@ -22,7 +23,7 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
 
   val startAddr = 0x80000000L
   val testLen = 0x40
-  val readAddr = Reg(UInt(width = 4))
+  val readAddr = Reg(UInt(4.W))
 
   val (cmd_read :: cmd_write :: Nil) = Enum(Bits(), 2)
 
@@ -31,7 +32,7 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
   val state = Reg(init = s_idle)
 
   val testData = Vec(Seq.tabulate(testLen)(i => UInt(i * 3)))
-  val idx = Reg(UInt(width = 32))
+  val idx = Reg(UInt(32.W))
 
   val writeData = MuxCase(UInt(0), Seq(
     (idx === UInt(0)) -> cmd_write,
@@ -120,9 +121,9 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
 }
 
 class IntegrationTestReset(implicit p: Parameters) extends Module {
-  val io = new Bundle {
+  val io = IO(new Bundle {
     val nasti = new NastiIO
-  }
+  })
 
   val (s_idle :: s_write_addr :: s_write_data :: s_done :: Nil) = Enum(Bits(), 4)
   val state = Reg(init = s_idle)

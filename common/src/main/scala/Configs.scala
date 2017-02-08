@@ -8,7 +8,7 @@ import uncore.devices.NTiles
 import uncore.tilelink.TLId
 import uncore.agents.NAcquireTransactors
 import testchipip._
-import Chisel._
+import chisel3._
 
 class WithZynqAdapter extends Config(
   (pname, site, here) => pname match {
