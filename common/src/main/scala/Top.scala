@@ -1,7 +1,8 @@
 
 package zynq
 
-import Chisel._
+import chisel3._
+import chisel3.util._
 import diplomacy.{LazyModule, LazyModuleImp}
 import junctions._
 import junctions.NastiConstants._
@@ -18,10 +19,10 @@ case object SerialFIFODepth extends Field[Int]
 case object ResetCycles extends Field[Int]
 
 class Top(implicit val p: Parameters) extends Module {
-  val io = new Bundle {
-    val ps_axi_slave = new NastiIO()(AdapterParams(p)).flip
+  val io = IO(new Bundle {
+    val ps_axi_slave = Flipped(new NastiIO()(AdapterParams(p)))
     val mem_axi = new NastiIO
-  }
+  })
 
   val target = LazyModule(new FPGAZynqTop(p)).module
   val slave = Module(new ZynqAXISlave(1)(AdapterParams(p)))
@@ -40,11 +41,11 @@ class Top(implicit val p: Parameters) extends Module {
 }
 
 class ZynqAXISlave(nPorts: Int)(implicit p: Parameters) extends Module {
-  val io = new Bundle {
-    val nasti = Vec(nPorts, new NastiIO()).flip
-    val sys_reset = Bool(OUTPUT)
-    val serial = new SerialIO(p(SerialInterfaceWidth)).flip
-  }
+  val io = IO(new Bundle {
+    val nasti = Flipped(Vec(nPorts, new NastiIO()))
+    val sys_reset = Output(Bool())
+    val serial = Flipped(new SerialIO(p(SerialInterfaceWidth)))
+  })
 
   def routeSel(addr: UInt): UInt = {
     // 0x00 - 0x0F go to FIFO
@@ -64,14 +65,14 @@ class ZynqAXISlave(nPorts: Int)(implicit p: Parameters) extends Module {
 }
 
 class ResetController(implicit p: Parameters) extends NastiModule()(p) {
-  val io = new Bundle {
-    val nasti = new NastiIO().flip
-    val sys_reset = Bool(OUTPUT)
-  }
+  val io = IO(new Bundle {
+    val nasti = Flipped(new NastiIO())
+    val sys_reset = Output(Bool())
+  })
 
   val reg_reset = Reg(init = Bool(true))
 
-  val readId = Reg(UInt(width = nastiXIdBits))
+  val readId = Reg(UInt(nastiXIdBits.W))
 
   val r_addr :: r_data :: Nil = Enum(Bits(), 2)
   val r_state = Reg(init = r_addr)
@@ -91,7 +92,7 @@ class ResetController(implicit p: Parameters) extends NastiModule()(p) {
     r_state := r_addr
   }
 
-  val writeId = Reg(UInt(width = nastiXIdBits))
+  val writeId = Reg(UInt(nastiXIdBits.W))
 
   val w_addr :: w_data :: w_resp :: Nil = Enum(Bits(), 3)
   val w_state = Reg(init = w_addr)
@@ -135,14 +136,14 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   require(nastiXDataBits == 32)
   require(nastiXDataBits == w)
 
-  val outq = Module(new Queue(UInt(width = w), depth))
-  val inq  = Module(new Queue(UInt(width = w), depth))
+  val outq = Module(new Queue(UInt(w.W), depth))
+  val inq  = Module(new Queue(UInt(w.W), depth))
   val writing = Reg(init = Bool(false))
   val reading = Reg(init = Bool(false))
   val responding = Reg(init = Bool(false))
-  val len = Reg(UInt(width = nastiXLenBits))
-  val bid = Reg(UInt(width = nastiXIdBits))
-  val rid = Reg(UInt(width = nastiXIdBits))
+  val len = Reg(UInt(nastiXLenBits.W))
+  val bid = Reg(UInt(nastiXIdBits.W))
+  val rid = Reg(UInt(nastiXIdBits.W))
 
   io.serial.in <> inq.io.deq
   outq.io.enq <> io.serial.out
