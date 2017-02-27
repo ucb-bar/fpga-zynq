@@ -128,10 +128,10 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   val w = p(SerialInterfaceWidth)
   val depth = p(SerialFIFODepth)
 
-  val io = new Bundle {
-    val nasti = new NastiIO().flip
-    val serial = new SerialIO(w).flip
-  }
+  val io = IO(new Bundle {
+    val nasti = Flipped(new NastiIO())
+    val serial = Flipped(new SerialIO(w))
+  })
 
   require(nastiXDataBits == 32)
   require(nastiXDataBits == w)
@@ -153,8 +153,8 @@ class NastiFIFO(implicit p: Parameters) extends NastiModule()(p) {
   val addrMSB = addrLSB + log2Up(nRegisters) - 1
   val araddr = io.nasti.ar.bits.addr(addrMSB, addrLSB)
   val awaddr = io.nasti.aw.bits.addr(addrMSB, addrLSB)
-  val raddr = Reg(araddr)
-  val waddr = Reg(awaddr)
+  val raddr = Reg(araddr.cloneType)
+  val waddr = Reg(awaddr.cloneType)
 
   inq.io.enq.valid := io.nasti.w.valid && writing && (waddr === 2.U)
   io.nasti.w.ready := (inq.io.enq.ready || waddr =/= 2.U) && writing
