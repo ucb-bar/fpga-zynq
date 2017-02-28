@@ -396,6 +396,18 @@ set_property SLEW FAST [get_ports {DDR3_SODIMM_dq[63]}]
 set_property IOSTANDARD SSTL15_T_DCI [get_ports {DDR3_SODIMM_dq[63]}]
 set_property PACKAGE_PIN B14 [get_ports {DDR3_SODIMM_dq[63]}]
 
+# Address 15
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_addr[15]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_addr[15]}]
+set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_addr[15]}]
+set_property PACKAGE_PIN C6 [get_ports {DDR3_SODIMM_addr[15]}]
+
+# Address 14
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_addr[14]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_addr[14]}]
+set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_addr[14]}]
+set_property PACKAGE_PIN G11 [get_ports {DDR3_SODIMM_addr[14]}]
+
 # PadFunction: IO_L1N_T0_34 
 set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_addr[13]}]
 set_property SLEW FAST [get_ports {DDR3_SODIMM_addr[13]}]
@@ -528,17 +540,35 @@ set_property SLEW FAST [get_ports {DDR3_SODIMM_cke[0]}]
 set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_cke[0]}]
 set_property PACKAGE_PIN D10 [get_ports {DDR3_SODIMM_cke[0]}]
 
+# CKE1
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_cke[1]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_cke[1]}]
+set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_cke[1]}]
+set_property PACKAGE_PIN C7 [get_ports {DDR3_SODIMM_cke[1]}]
+
 # PadFunction: IO_L18N_T2_34 
 set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_odt[0]}]
 set_property SLEW FAST [get_ports {DDR3_SODIMM_odt[0]}]
 set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_odt[0]}]
 set_property PACKAGE_PIN G7 [get_ports {DDR3_SODIMM_odt[0]}]
 
+# ODT1
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_odt[1]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_odt[1]}]
+set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_odt[1]}]
+set_property PACKAGE_PIN C9 [get_ports {DDR3_SODIMM_odt[1]}]
+
 # PadFunction: IO_L7P_T1_34 
 set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_cs_n[0]}]
 set_property SLEW FAST [get_ports {DDR3_SODIMM_cs_n[0]}]
 set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_cs_n[0]}]
 set_property PACKAGE_PIN J11 [get_ports {DDR3_SODIMM_cs_n[0]}]
+
+# CS_n1
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_cs_n[1]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_cs_n[1]}]
+set_property IOSTANDARD SSTL15 [get_ports {DDR3_SODIMM_cs_n[1]}]
+set_property PACKAGE_PIN H8 [get_ports {DDR3_SODIMM_cs_n[1]}]
 
 # PadFunction: IO_L1N_T0_33 
 set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_dm[0]}]
@@ -695,6 +725,18 @@ set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_ck_n[0]}]
 set_property SLEW FAST [get_ports {DDR3_SODIMM_ck_n[0]}]
 set_property IOSTANDARD DIFF_SSTL15 [get_ports {DDR3_SODIMM_ck_n[0]}]
 set_property PACKAGE_PIN F10 [get_ports {DDR3_SODIMM_ck_n[0]}]
+
+# CK1_p
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_ck_p[1]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_ck_p[1]}]
+set_property IOSTANDARD DIFF_SSTL15 [get_ports {DDR3_SODIMM_ck_p[1]}]
+set_property PACKAGE_PIN D9 [get_ports {DDR3_SODIMM_ck_p[1]}]
+
+# PadFunction: IO_L11N_T1_SRCC_34 
+set_property VCCAUX_IO HIGH [get_ports {DDR3_SODIMM_ck_n[1]}]
+set_property SLEW FAST [get_ports {DDR3_SODIMM_ck_n[1]}]
+set_property IOSTANDARD DIFF_SSTL15 [get_ports {DDR3_SODIMM_ck_n[1]}]
+set_property PACKAGE_PIN D8 [get_ports {DDR3_SODIMM_ck_n[1]}]
 
 
 

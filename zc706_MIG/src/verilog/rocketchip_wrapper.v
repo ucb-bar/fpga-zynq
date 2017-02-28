@@ -68,18 +68,18 @@ module rocketchip_wrapper
   inout FIXED_IO_ps_porb;
   inout FIXED_IO_ps_srstb;
 
-  output [13:0]DDR3_SODIMM_addr;
+  output [15:0]DDR3_SODIMM_addr;
   output [2:0]DDR3_SODIMM_ba;
   output DDR3_SODIMM_cas_n;
-  output [0:0]DDR3_SODIMM_ck_n;
-  output [0:0]DDR3_SODIMM_ck_p;
-  output [0:0]DDR3_SODIMM_cke;
-  output [0:0]DDR3_SODIMM_cs_n;
+  output [1:0]DDR3_SODIMM_ck_n;
+  output [1:0]DDR3_SODIMM_ck_p;
+  output [1:0]DDR3_SODIMM_cke;
+  output [1:0]DDR3_SODIMM_cs_n;
   output [7:0]DDR3_SODIMM_dm;
   inout [63:0]DDR3_SODIMM_dq;
   inout [7:0]DDR3_SODIMM_dqs_n;
   inout [7:0]DDR3_SODIMM_dqs_p;
-  output [0:0]DDR3_SODIMM_odt;
+  output [1:0]DDR3_SODIMM_odt;
   output DDR3_SODIMM_ras_n;
   output DDR3_SODIMM_reset_n;
   output DDR3_SODIMM_we_n;
