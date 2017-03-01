@@ -28,3 +28,11 @@ class WithZynqAdapter extends Config(
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultFPGAConfig)
 class ZynqSmallConfig extends Config(new WithSmallCores ++ new ZynqConfig)
 class ZC706MIGConfig extends Config(new WithExtMemSize(0x40000000L) ++ new ZynqConfig)
+class ZC706MIG2GConfig extends Config(new WithExtMemSize(0x80000000L) ++ new ZynqConfig)
+class With8GExtMem extends Config(
+  (pname, site, here) => pname match {
+    case ExtMem => MasterConfig(base=0x200000000L, size=0x200000000L, beatBytes=8, idBits=6)
+    case _ => throw new CDEMatchError
+  })
+// TODO: This is broken.
+class ZC706MIG8GConfig extends Config(new With8GExtMem ++ new ZynqConfig)
