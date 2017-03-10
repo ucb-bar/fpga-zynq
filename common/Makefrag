@@ -65,7 +65,12 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-$(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR))
+
+$(ROCKET_DIR)/lib/firrtl.jar: $(FIRRTL_JAR)
+	mkdir -p $(@D)
+	cp $< $@
+
+$(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR)) $(ROCKET_DIR)/lib/firrtl.jar
 	cd $(ROCKET_DIR) && $(SBT) pack
 	mkdir -p $(common)/lib
 	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
