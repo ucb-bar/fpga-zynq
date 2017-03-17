@@ -5,7 +5,7 @@ This repository contains the files needed to run the RISC-V [rocket chip](https:
 various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2016.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
 
 
-###How to use this README
+### How to use this README
 
 This README contains 3 major sets of instructions:
 
@@ -80,7 +80,7 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 
 
 
-1) <a name="quickinst"></a> Quick Instructions 
+1)<a name="quickinst"></a> Quick Instructions 
 ------------------
 _Using prebuilt images, run hello world and/or linux on rocket_
 
@@ -106,7 +106,7 @@ Awesome! You can now run RISC-V binaries on Rocket. If you'd like to boot linux 
 
 
 
-2) <a name="bitstream"></a> Pushing Your Rocket Modifications to the FPGA
+2)<a name="bitstream"></a> Pushing Your Rocket Modifications to the FPGA
 -------------------------
 
 #### <a name="workspace"></a> Setting Up Your Workspace
@@ -161,7 +161,7 @@ If you have modified the verilog for your project but not generated a new bitstr
 
 
 
-3) <a name="fromscratch"></a> Building Everything from Scratch
+3)<a name="fromscratch"></a> Building Everything from Scratch
 -----------------------
 This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this README may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2016.2.
 
@@ -306,57 +306,61 @@ There are two options to obtain riscv-linux:
 
 #### Method 1) Build from Source
 
-Note: If you are working with the Zybo, you should not build `riscv-linux` from source. The Zybo cannot fit an FPU and thus uses a modified version of the kernel that ignores FPU instructions. Software floating point emulation support is planned but not yet available. The binary for this build can be obtained using Method 2 below.
+To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman). Since we currently have no support for a real block device the projects of this repository, you'll need to include an initramfs with your complete filesystem. 
 
-To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman). Upon completing the linked tutorial, you should have two files: `vmlinux` and `root.bin`. You should place them on your SD card in a directory called `riscv`.
+Next, you'll need to build an instance of the Berkeley Bootloader(BBL) that contains your linux image as a payload. BBL is provided alongside the proxy kernel at [this repository](https://github.com/riscv/riscv-pk).
 
-#### Method 2) Download the Pre-Built Binary and Root FS
+Finally, drop your bbl image into SD_ROOT/, which will be mounted as `/mnt/boot/` in the ARM core's filesystem.
 
-Run the following from within `$REPO/zybo`.
+Warning: If you are working with the Zybo, you need to make sure you compile with a version of the riscv-gnu-toolchain that targets RV64IMA, as the zybo configuration does not possess an FPU.
 
-    $ make fetch-riscv-linux-deliver
+#### Method 2) Use the provided BBL instance
 
-Then, copy the `$REPO/zybo/deliver_output/riscv` directory to the root of your SD Card.
-
-#### Continuing:
-
-After performing either of these steps, your SD card layout should match the following:
-
-	SD_ROOT/
-	|-> riscv/
-	    |-> root.bin
-	    |-> vmlinux
-	|-> boot.bin
-	|-> devicetree.dtb
-	|-> uImage
-	|-> uramdisk.image.gz
-
+Included in the home directory of the ARM core's ramdisk we've provided an instance of bbl preloaded with a miniminal linux image. All you have to do is follow the instructions in the [next](#booting) section.
  
 ### 3.8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
 
-First, insert the SD card and follow the instructions in [Appendix A](#connecting) 
-to connect to your board. You can login to the board with username _root_ and 
-password _root_. Once you're at the prompt, you can run a basic hello world 
-program on rocket like so:
+First, insert the SD card and follow the instructions in [Appendix A](#connecting) to connect to your board. You can login to the board with username _root_ and password _root_. Once you're at the prompt, you can run a basic hello world program on rocket like so:
 
     root@zynq:~# ./fesvr-zynq pk hello
     hello!
 
-If you've downloaded the necessary files to boot riscv-linux, you may now do so.
-First however, you should mount the SD card using the instructions in [Appendix B](#mountsd).
-Then, to boot riscv-linux, run:
+To boot riscv-linux, run:
 
-    root@zynq:~# ./fesvr-zynq +disk=/sdcard/riscv/root.bin bbl /sdcard/riscv/vmlinux
+    root@zynq:~# ./fesvr-zynq bbl
+                  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                      vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
+    rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
+    rr                vvvvvvvvvvvvvvvvvvvvvv      
+    rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
+    rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
+    rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
+    rrrrrrrr      vvvvvvvvvvvvvvvvvv      rrrrrrrr
+    rrrrrrrrrr      vvvvvvvvvvvvvv      rrrrrrrrrr
+    rrrrrrrrrrrr      vvvvvvvvvv      rrrrrrrrrrrr
+    rrrrrrrrrrrrrr      vvvvvv      rrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrr      vv      rrrrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrrrr          rrrrrrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrrrrrr      rrrrrrrrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
 
-Once you hit enter, you'll see the linux boot messages scroll by, and you'll be
-presented with a busybox prompt from riscv-linux running on rocket!
+           INSTRUCTION SETS WANT TO BE FREE
+    [    0.000000] Linux version 4.6.2 <more messages follow>
+
+After linux boots you'll be presented with a busybox prompt from riscv-linux running on rocket!
 
 <a name="appendices"></a> Appendices 
 ------------
 
-###A) <a name="connecting"></a> Connecting to the Board
+### A) <a name="connecting"></a> Connecting to the Board
 
-####Serial-USB
+#### Serial-USB
 On the Zybo and Zedboard a single serial-USB cable is needed but on the ZC706 you will also need a USB type A to type B cable (and possibly some drivers). To connect:
 
     $ screen /dev/tty.usbmodem1411 115200,cs8,-parenb,-cstopb
@@ -365,7 +369,7 @@ _Note:_ The numbers following `tty.usbmodem` may vary slightly. On the Zybo,
 replace `usbmodem` with `usbserial-` and on the ZC706, replace it with 
 `SLAB_USBtoUART`.
 
-####Ethernet
+#### Ethernet
 The board has an IP of 192.168.1.5 and can be accessed by username/password of root/root on telnet and ssh. For example:
 
     $ ssh root@192.168.1.5
@@ -373,26 +377,16 @@ The board has an IP of 192.168.1.5 and can be accessed by username/password of r
 _Note:_ Make sure your development system ethernet interface is configured to be on the 192.168.1.x subnet. The default configuration intends for the board to be directly attached to the development system (single cable). If you want to place the board on a larger network, we recommend changing the root password to something stronger and changing the IP configuration to mesh well with your network.
 
 
-###B) <a name="transferring"></a> Getting Files On & Off the Board
+### B) <a name="transferring"></a> Getting Files On & Off the Board
 
-####Copying Files over Ethernet
+#### Copying Files over Ethernet
 The easiest way to get a file onto the board is to copy it with scp over ethernet:
 
     $ scp file root@192.168.1.5:~/
 
 _Note:_ Linux is running out of a RAMdisk, so to make a file available after a reboot, copy it to the SD card or modify the RAMdisk.
 
-#### <a name="mountsd"></a> Mounting the SD Card on the Board
-You can mount the SD card on the board by:
-
-    root@zynq:~# mkdir /sdcard
-    root@zynq:~# mount /dev/mmcblk0p1 /sdcard
-
-When you are done, don't forget to unmount it:
-
-    root@zynq:~# umount /sdcard
-
-####Changing the RAMDisk
+#### Changing the RAMDisk
 _Requires: [u-boot](http://www.denx.de/wiki/U-Boot/) and sudo_
 
 The RAMDisk (`uramdisk.image.gz`) that holds Linux for the ARM cores is a gzipped cpio archive with a u-boot header for the board. To open the RAMdisk:
@@ -408,7 +402,7 @@ A useful application of this is to add your SSH public key to `.ssh/authorized_k
 _Note:_ Since these ramdisk operations use sudo on files, they may not work on a network mounted filesystem. To get around this limitation, it is easiest to just copy it to a local filesystem when modifying the ramdisk.
 
 
-###C) <a name="vivado"></a> Working with Vivado
+### C) <a name="vivado"></a> Working with Vivado
 
 _Requires: Vivado 2016.2 and its settings64.sh sourced_
 
@@ -425,13 +419,13 @@ To launch Vivado in GUI mode:
     $ make vivado
 
 
-###D) <a name="clockrate"></a> Changing the Processor's Clockrate
+### D) <a name="clockrate"></a> Changing the Processor's Clockrate
 You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `RC_CLK_DIVIDE` within a board's `src/verilog/clocking.vh`. After that change, you will need to generate a new bitstream (and `boot.bin`).
 
 _Note:_ Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`. This will also require regenerating `FSBL.elf`, the bitstream, and of course `boot.bin`.
 
 
-###E) <a name="sdcard"></a> Contents of the SD Card
+### E) <a name="sdcard"></a> Contents of the SD Card
 The SD card is used by the board to configure the FPGA and boot up the ARM core. All of these files are available within a board's fpga-images submodule, but they can also be built from scratch. Here is a summary of the files and their purposes:
 
 * `boot.bin` is generated by the Xilinx SDK and is actually three files. To generate it from scratch, follow the instructions from Section 3 up through [Section 3.5 Creating boot.bin](#boot.bin). To repack it from existing components, follow [Repacking boot.bin](#repack). `boot.bin` contains:
@@ -441,12 +435,9 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 * ARM Linux (`uImage`) - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [Section 3.6](#arm-linux))
 * ARM RAMDisk (`uramdisk.image.gz`) - The RAMDisk is mounted by ARM Linux and contains the root filesystem. For obtaining it, see [Section 3.6](#arm-linux), and for modifying it, see [Appendix B](#transferring).
 * `devicetree.dtb` - Contains information about the ARM core's peripherals for Linux. (See [Section 3.6](#arm-linux))
-* `riscv/` (optional) - This directory is only needed if you intend to run Linux on the rocket chip itself.
-  * RISC-V Linux (`riscv/vmlinux`) - This is the kernel binary for Linux on Rocket. If you are using the zybo, you will need to use a special kernel that ignores floating point instructions, since the zybo cannot fit an FPU. Fetching this version is handled automatically by our scripts. (See [Section 3.7](#riscv-linux))
-  * RISC-V RAMDisk (`riscv/root.bin`) - The RAMDisk is mounted by RISC-V Linux and contains the root filesystem. (See [Section 3.7](#riscv-linux))
 
 
-###F) <a name="fesvr"></a> Building fesvr-zynq
+### F) <a name="fesvr"></a> Building fesvr-zynq
 
 The [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr) provides against which the zynq-fesvr is linked. Additionally, `common/csrc` includes source for main, and a simple driver, which hands off debug module requests and reponses between the ARM core and rocket chip. Before building, make sure the 2016.2 version of settings64.sh is sourced. To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
 
@@ -455,7 +446,7 @@ The [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr) provides against whi
 and make sure you have the Xilinx SDK in your PATH, and the riscv-tools/riscv-fesvr submodule initialized in your rocket chip directory. When installing fesvr-zynq, don't forget to copy the library as well (`common/build/libfesvr.so` to `/usr/local/lib` on the board).
 
 
-###G) <a name="zybotools"></a> Building riscv-tools for Zybo
+### G) <a name="zybotools"></a> Building riscv-tools for Zybo
 
 The Zybo build was last tested with [this version of the toolchain](https://github.com/ucb-bar/rocket-chip/commit/2f71a3da5a7d41b4aa2c7a617902f2aee8f2cbe1).
 
@@ -468,9 +459,6 @@ Then run `./build.sh` as normal.
 When testing on spike, run spike with the `--isa=RV64IMA` flag.
 
 If [pk](https://github.com/riscv/riscv-pk) does not work, make sure it is being built using this version of the toolchain, since it is specifically generated to not have floating point instructions. Also make sure any binaries you want to run on the Zybo are compiled using this toolchain.
-
-
-
 
 <a name="ack"></a> Acknowledgments 
 ---------------
