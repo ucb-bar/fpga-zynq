@@ -5,7 +5,7 @@ This repository contains the files needed to run the RISC-V [rocket chip](https:
 various Zynq FPGA boards ([Zybo](http://www.digilentinc.com/Products/Detail.cfm?NavPath=2,400,1198&Prod=ZYBO), [Zedboard](http://zedboard.org/product/zedboard), [ZC706](http://www.xilinx.com/products/boards-and-kits/EK-Z7-ZC706-G.htm)) with Vivado 2016.2. Efforts have been made to not only automate the process of generating files for these boards, but to also reduce duplication as well as the size of this repo. Prebuilt images are available in git submodules, and they are only shallowly cloned if requested.
 
 
-###How to use this README
+### How to use this README
 
 This README contains 3 major sets of instructions:
 
@@ -80,7 +80,7 @@ Our system will allow you to run a RISC-V binary on a rocket core instantiated o
 
 
 
-1) <a name="quickinst"></a> Quick Instructions 
+1)<a name="quickinst"></a> Quick Instructions 
 ------------------
 _Using prebuilt images, run hello world and/or linux on rocket_
 
@@ -106,7 +106,7 @@ Awesome! You can now run RISC-V binaries on Rocket. If you'd like to boot linux 
 
 
 
-2) <a name="bitstream"></a> Pushing Your Rocket Modifications to the FPGA
+2)<a name="bitstream"></a> Pushing Your Rocket Modifications to the FPGA
 -------------------------
 
 #### <a name="workspace"></a> Setting Up Your Workspace
@@ -161,7 +161,7 @@ If you have modified the verilog for your project but not generated a new bitstr
 
 
 
-3) <a name="fromscratch"></a> Building Everything from Scratch
+3)<a name="fromscratch"></a> Building Everything from Scratch
 -----------------------
 This section describes how to build the entire project from scratch. Most likely, you will not need to perform all of these steps, however we keep them here for reference. Various other sections of this README may selectively refer to these sections. This section assumes that you've just pulled this repository and have sourced the settings file for Vivado 2016.2.
 
@@ -358,9 +358,9 @@ After linux boots you'll be presented with a busybox prompt from riscv-linux run
 <a name="appendices"></a> Appendices 
 ------------
 
-###A) <a name="connecting"></a> Connecting to the Board
+### A) <a name="connecting"></a> Connecting to the Board
 
-####Serial-USB
+#### Serial-USB
 On the Zybo and Zedboard a single serial-USB cable is needed but on the ZC706 you will also need a USB type A to type B cable (and possibly some drivers). To connect:
 
     $ screen /dev/tty.usbmodem1411 115200,cs8,-parenb,-cstopb
@@ -369,7 +369,7 @@ _Note:_ The numbers following `tty.usbmodem` may vary slightly. On the Zybo,
 replace `usbmodem` with `usbserial-` and on the ZC706, replace it with 
 `SLAB_USBtoUART`.
 
-####Ethernet
+#### Ethernet
 The board has an IP of 192.168.1.5 and can be accessed by username/password of root/root on telnet and ssh. For example:
 
     $ ssh root@192.168.1.5
@@ -377,16 +377,16 @@ The board has an IP of 192.168.1.5 and can be accessed by username/password of r
 _Note:_ Make sure your development system ethernet interface is configured to be on the 192.168.1.x subnet. The default configuration intends for the board to be directly attached to the development system (single cable). If you want to place the board on a larger network, we recommend changing the root password to something stronger and changing the IP configuration to mesh well with your network.
 
 
-###B) <a name="transferring"></a> Getting Files On & Off the Board
+### B) <a name="transferring"></a> Getting Files On & Off the Board
 
-####Copying Files over Ethernet
+#### Copying Files over Ethernet
 The easiest way to get a file onto the board is to copy it with scp over ethernet:
 
     $ scp file root@192.168.1.5:~/
 
 _Note:_ Linux is running out of a RAMdisk, so to make a file available after a reboot, copy it to the SD card or modify the RAMdisk.
 
-####Changing the RAMDisk
+#### Changing the RAMDisk
 _Requires: [u-boot](http://www.denx.de/wiki/U-Boot/) and sudo_
 
 The RAMDisk (`uramdisk.image.gz`) that holds Linux for the ARM cores is a gzipped cpio archive with a u-boot header for the board. To open the RAMdisk:
@@ -402,7 +402,7 @@ A useful application of this is to add your SSH public key to `.ssh/authorized_k
 _Note:_ Since these ramdisk operations use sudo on files, they may not work on a network mounted filesystem. To get around this limitation, it is easiest to just copy it to a local filesystem when modifying the ramdisk.
 
 
-###C) <a name="vivado"></a> Working with Vivado
+### C) <a name="vivado"></a> Working with Vivado
 
 _Requires: Vivado 2016.2 and its settings64.sh sourced_
 
@@ -419,13 +419,13 @@ To launch Vivado in GUI mode:
     $ make vivado
 
 
-###D) <a name="clockrate"></a> Changing the Processor's Clockrate
+### D) <a name="clockrate"></a> Changing the Processor's Clockrate
 You can change the clockrate for the rocket chip by changing `RC_CLK_MULT` and `RC_CLK_DIVIDE` within a board's `src/verilog/clocking.vh`. After that change, you will need to generate a new bitstream (and `boot.bin`).
 
 _Note:_ Although rarely needed, it is possible to change the input clockrate to the FPGA by changing it within the block design, `src/constrs/base.xdc`, and `ZYNQ_CLK_PERIOD` within `src/verilog/clocking.vh`. This will also require regenerating `FSBL.elf`, the bitstream, and of course `boot.bin`.
 
 
-###E) <a name="sdcard"></a> Contents of the SD Card
+### E) <a name="sdcard"></a> Contents of the SD Card
 The SD card is used by the board to configure the FPGA and boot up the ARM core. All of these files are available within a board's fpga-images submodule, but they can also be built from scratch. Here is a summary of the files and their purposes:
 
 * `boot.bin` is generated by the Xilinx SDK and is actually three files. To generate it from scratch, follow the instructions from Section 3 up through [Section 3.5 Creating boot.bin](#boot.bin). To repack it from existing components, follow [Repacking boot.bin](#repack). `boot.bin` contains:
@@ -437,7 +437,7 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 * `devicetree.dtb` - Contains information about the ARM core's peripherals for Linux. (See [Section 3.6](#arm-linux))
 
 
-###F) <a name="fesvr"></a> Building fesvr-zynq
+### F) <a name="fesvr"></a> Building fesvr-zynq
 
 The [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr) provides against which the zynq-fesvr is linked. Additionally, `common/csrc` includes source for main, and a simple driver, which hands off debug module requests and reponses between the ARM core and rocket chip. Before building, make sure the 2016.2 version of settings64.sh is sourced. To build the riscv-fesvr binary for Linux ARM target (to run on Zynq board), type:
 
@@ -446,7 +446,7 @@ The [riscv-fesvr repo](http://github.com/riscv/riscv-fesvr) provides against whi
 and make sure you have the Xilinx SDK in your PATH, and the riscv-tools/riscv-fesvr submodule initialized in your rocket chip directory. When installing fesvr-zynq, don't forget to copy the library as well (`common/build/libfesvr.so` to `/usr/local/lib` on the board).
 
 
-###G) <a name="zybotools"></a> Building riscv-tools for Zybo
+### G) <a name="zybotools"></a> Building riscv-tools for Zybo
 
 The Zybo build was last tested with [this version of the toolchain](https://github.com/ucb-bar/rocket-chip/commit/2f71a3da5a7d41b4aa2c7a617902f2aee8f2cbe1).
 
