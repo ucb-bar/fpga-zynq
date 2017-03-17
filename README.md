@@ -325,7 +325,7 @@ First, insert the SD card and follow the instructions in [Appendix A](#connectin
     root@zynq:~# ./fesvr-zynq pk hello
     hello!
 
-If you've downloaded the necessary files to boot riscv-linux, you may now do so.  First however, you should mount the SD card using the instructions in [Appendix B](#mountsd).  Then, to boot riscv-linux, run:
+To boot riscv-linux, run:
 
     root@zynq:~# ./fesvr-zynq bbl
                   vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
