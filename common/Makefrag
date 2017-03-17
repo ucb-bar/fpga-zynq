@@ -217,28 +217,6 @@ $(common_build)/$(fesvr_main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
 
 fesvr-zynq: $(common_build)/$(fesvr_main)
 
-# Fetch pre-built risc-v linux binary and root fs from S3
-# ------------------------------------------------------------------------------
-
-riscv_root_bin = $(s3_url)/root.bin
-ifeq ($(BOARD), zybo)
-	riscv_vmlinux = $(s3_url)/vmlinux_nofpu
-else
-	riscv_vmlinux = $(s3_url)/vmlinux
-endif
-sd_riscv = fpga-images-$(BOARD)/riscv
-sd_riscv_scratch = $(output_delivery)/riscv
-
-fetch-riscv-linux:
-	mkdir -p $(sd_riscv)
-	curl $(riscv_root_bin) > $(sd_riscv)/root.bin
-	curl $(riscv_vmlinux) > $(sd_riscv)/vmlinux
-
-fetch-riscv-linux-deliver:
-	mkdir -p $(sd_riscv_scratch)
-	curl $(riscv_root_bin) > $(sd_riscv_scratch)/root.bin
-	curl $(riscv_vmlinux) > $(sd_riscv_scratch)/vmlinux
-
 clean:
 	rm -f *.log *.jou *.str
 	rm -rf csrc simv-* output ucli.key vc_hdrs.h DVEfiles

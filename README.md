@@ -306,50 +306,54 @@ There are two options to obtain riscv-linux:
 
 #### Method 1) Build from Source
 
-Note: If you are working with the Zybo, you should not build `riscv-linux` from source. The Zybo cannot fit an FPU and thus uses a modified version of the kernel that ignores FPU instructions. Software floating point emulation support is planned but not yet available. The binary for this build can be obtained using Method 2 below.
+To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman). Since we currently have no support for a real block device the projects of this repository, you'll need to include an initramfs with your complete filesystem. 
 
-To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman). Upon completing the linked tutorial, you should have two files: `vmlinux` and `root.bin`. You should place them on your SD card in a directory called `riscv`.
+Next, you'll need to build an instance of the Berkeley Bootloader(BBL) that contains your linux image as a payload. BBL is provided alongside the proxy kernel at [this repository](https://github.com/riscv/riscv-pk).
 
-#### Method 2) Download the Pre-Built Binary and Root FS
+Finally, drop your bbl image into SD_ROOT/, which will be mounted as `/mnt/boot/` in the ARM core's filesystem.
 
-Run the following from within `$REPO/zybo`.
+Warning: If you are working with the Zybo, you need to make sure you compile with a version of the riscv-gnu-toolchain that targets RV64IMA, as the zybo configuration does not possess an FPU.
 
-    $ make fetch-riscv-linux-deliver
+#### Method 2) Use the provided BBL instance
 
-Then, copy the `$REPO/zybo/deliver_output/riscv` directory to the root of your SD Card.
-
-#### Continuing:
-
-After performing either of these steps, your SD card layout should match the following:
-
-	SD_ROOT/
-	|-> riscv/
-	    |-> root.bin
-	    |-> vmlinux
-	|-> boot.bin
-	|-> devicetree.dtb
-	|-> uImage
-	|-> uramdisk.image.gz
-
+Included in the home directory of the ARM core's ramdisk we've provided an instance of bbl preloaded with a miniminal linux image. All you have to do is follow the instructions in the [next](#booting) section.
  
 ### 3.8) <a name="booting"></a> Booting Up and Interacting with the RISC-V Rocket Core
 
-First, insert the SD card and follow the instructions in [Appendix A](#connecting) 
-to connect to your board. You can login to the board with username _root_ and 
-password _root_. Once you're at the prompt, you can run a basic hello world 
-program on rocket like so:
+First, insert the SD card and follow the instructions in [Appendix A](#connecting) to connect to your board. You can login to the board with username _root_ and password _root_. Once you're at the prompt, you can run a basic hello world program on rocket like so:
 
     root@zynq:~# ./fesvr-zynq pk hello
     hello!
 
-If you've downloaded the necessary files to boot riscv-linux, you may now do so.
-First however, you should mount the SD card using the instructions in [Appendix B](#mountsd).
-Then, to boot riscv-linux, run:
+If you've downloaded the necessary files to boot riscv-linux, you may now do so.  First however, you should mount the SD card using the instructions in [Appendix B](#mountsd).  Then, to boot riscv-linux, run:
 
-    root@zynq:~# ./fesvr-zynq +disk=/sdcard/riscv/root.bin bbl /sdcard/riscv/vmlinux
+    root@zynq:~# ./fesvr-zynq bbl
+                  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                      vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+    rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
+    rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
+    rr                vvvvvvvvvvvvvvvvvvvvvv      
+    rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
+    rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
+    rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
+    rrrrrrrr      vvvvvvvvvvvvvvvvvv      rrrrrrrr
+    rrrrrrrrrr      vvvvvvvvvvvvvv      rrrrrrrrrr
+    rrrrrrrrrrrr      vvvvvvvvvv      rrrrrrrrrrrr
+    rrrrrrrrrrrrrr      vvvvvv      rrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrr      vv      rrrrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrrrr          rrrrrrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrrrrrr      rrrrrrrrrrrrrrrrrrrr
+    rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
 
-Once you hit enter, you'll see the linux boot messages scroll by, and you'll be
-presented with a busybox prompt from riscv-linux running on rocket!
+           INSTRUCTION SETS WANT TO BE FREE
+    [    0.000000] Linux version 4.6.2 <more messages follow>
+
+After linux boots you'll be presented with a busybox prompt from riscv-linux running on rocket!
 
 <a name="appendices"></a> Appendices 
 ------------
@@ -381,16 +385,6 @@ The easiest way to get a file onto the board is to copy it with scp over etherne
     $ scp file root@192.168.1.5:~/
 
 _Note:_ Linux is running out of a RAMdisk, so to make a file available after a reboot, copy it to the SD card or modify the RAMdisk.
-
-#### <a name="mountsd"></a> Mounting the SD Card on the Board
-You can mount the SD card on the board by:
-
-    root@zynq:~# mkdir /sdcard
-    root@zynq:~# mount /dev/mmcblk0p1 /sdcard
-
-When you are done, don't forget to unmount it:
-
-    root@zynq:~# umount /sdcard
 
 ####Changing the RAMDisk
 _Requires: [u-boot](http://www.denx.de/wiki/U-Boot/) and sudo_
@@ -441,9 +435,6 @@ The SD card is used by the board to configure the FPGA and boot up the ARM core.
 * ARM Linux (`uImage`) - This is a copy of linux designed to run on the ARM processing system. From within this linux environment, we will be able to run tools (like `fesvr-zedboard`) to interact with the RISC-V Rocket Core. We build directly from the [Xilinx linux repository](https://github.com/Xilinx/linux-xlnx), with a custom device tree file to support Rocket. (see [Section 3.6](#arm-linux))
 * ARM RAMDisk (`uramdisk.image.gz`) - The RAMDisk is mounted by ARM Linux and contains the root filesystem. For obtaining it, see [Section 3.6](#arm-linux), and for modifying it, see [Appendix B](#transferring).
 * `devicetree.dtb` - Contains information about the ARM core's peripherals for Linux. (See [Section 3.6](#arm-linux))
-* `riscv/` (optional) - This directory is only needed if you intend to run Linux on the rocket chip itself.
-  * RISC-V Linux (`riscv/vmlinux`) - This is the kernel binary for Linux on Rocket. If you are using the zybo, you will need to use a special kernel that ignores floating point instructions, since the zybo cannot fit an FPU. Fetching this version is handled automatically by our scripts. (See [Section 3.7](#riscv-linux))
-  * RISC-V RAMDisk (`riscv/root.bin`) - The RAMDisk is mounted by RISC-V Linux and contains the root filesystem. (See [Section 3.7](#riscv-linux))
 
 
 ###F) <a name="fesvr"></a> Building fesvr-zynq
@@ -468,9 +459,6 @@ Then run `./build.sh` as normal.
 When testing on spike, run spike with the `--isa=RV64IMA` flag.
 
 If [pk](https://github.com/riscv/riscv-pk) does not work, make sure it is being built using this version of the toolchain, since it is specifically generated to not have floating point instructions. Also make sure any binaries you want to run on the Zybo are compiled using this toolchain.
-
-
-
 
 <a name="ack"></a> Acknowledgments 
 ---------------
