@@ -88,10 +88,6 @@ First, enter into the directory for your board (current options are `zybo`, `zed
 
     $ make fetch-images
 
-If you'd also like to try riscv-linux on rocket, run the following:
-
-    $ make fetch-riscv-linux
-
 Next, insert the SD card on the development system and copy over the images:
 
     $ make load-sd SD=path_to_mounted_sdcard
