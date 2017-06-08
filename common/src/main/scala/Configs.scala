@@ -13,6 +13,7 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case SerialFIFODepth => 16
   case ResetCycles => 10
   case ExtMem => up(ExtMem, site).copy(idBits = 6)
+  case BlockDeviceKey => BlockDeviceConfig()
 })
 
 class WithNMediumCores(n: Int) extends Config((site, here, up) => {

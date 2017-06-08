@@ -34,7 +34,8 @@ class FPGAZynqTop(implicit p: Parameters) extends BaseTop
     with HardwiredResetVector
     with RocketPlexMaster
     with NoDebug
-    with PeripherySerial {
+    with PeripherySerial
+    with PeripheryBlockDevice {
   override lazy val module = Module(
     new FPGAZynqTopModule(this, () => new FPGAZynqTopBundle(this)))
 }
@@ -47,6 +48,7 @@ class FPGAZynqTopBundle(outer: FPGAZynqTop) extends BaseTopBundle(outer)
     with HardwiredResetVectorBundle
     with RocketPlexMasterBundle
     with PeripherySerialBundle
+    with PeripheryBlockDeviceBundle
 
 class FPGAZynqTopModule(outer: FPGAZynqTop, bundle: () => FPGAZynqTopBundle)
   extends BaseTopModule(outer, bundle)
@@ -58,3 +60,4 @@ class FPGAZynqTopModule(outer: FPGAZynqTop, bundle: () => FPGAZynqTopBundle)
     with RocketPlexMasterModule
     with NoDebugModule
     with PeripherySerialModule
+    with PeripheryBlockDeviceModule
