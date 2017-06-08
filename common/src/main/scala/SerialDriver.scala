@@ -148,7 +148,7 @@ class IntegrationTestReset(implicit p: Parameters) extends Module {
 
 class IntegrationTestSerial(implicit p: Parameters) extends SerialDriver(p(SerialInterfaceWidth)) {
   val testParams = AdapterParams(p)
-  val slave = Module(new ZynqAXISlave(2)(testParams))
+  val slave = Module(new ZynqAdapter(2)(testParams))
   val driver = Module(new IntegrationTestDriver()(testParams))
   val resetter = Module(new IntegrationTestReset()(testParams))
 
