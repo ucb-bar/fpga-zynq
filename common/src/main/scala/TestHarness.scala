@@ -2,47 +2,75 @@ package zynq
 
 import chisel3._
 import chisel3.util.Queue
-import cde.Parameters
-import diplomacy.LazyModule
-import rocketchip._
-import rocket.Tile
-import uncore.tilelink.{ClientTileLinkIO, ClientUncachedTileLinkIO}
-import uncore.coherence.ClientMetadata
-import junctions.SerialIO
+import freechips.rocketchip.amba.axi4._
+import freechips.rocketchip.subsystem.ExtIn
+import freechips.rocketchip.config.Parameters
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
+import freechips.rocketchip.tilelink._
+import testchipip._
+import testchipip.SerialAdapter._
 
 class TestHarness(implicit val p: Parameters) extends Module {
   val io = IO(new Bundle {
     val success = Output(Bool())
   })
 
-  val dut = LazyModule(new FPGAZynqTop(p)).module
-  val mem = Module(new SimAXIMem(BigInt(p(ExtMemSize))))
-  val ser = p(BuildSerialDriver)(p)
+  val config = p(ExtIn)
+  val driver = Module(LazyModule(new TestHarnessDriver).module)
+  val dut = Module(LazyModule(new FPGAZynqTop).module)
 
-  mem.io.axi <> dut.io.mem_axi.head
-  ser.io.serial <> dut.io.serial
-  io.success := ser.io.exit
+  dut.reset := driver.io.sys_reset
+  dut.debug := DontCare
+  dut.tieOffInterrupts()
+  dut.dontTouchPorts()
+  dut.connectSimAXIMem()
+
+  driver.io.serial <> dut.serial
+  driver.io.bdev <> dut.bdev
+  io.success := driver.io.success
 }
 
-class DummyTile(implicit p: Parameters) extends Tile()(p) {
-  def tieOff(cached: ClientTileLinkIO) {
-    cached.acquire.valid := false.B
-    cached.grant.ready := false.B
-    cached.finish.valid := false.B
+class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
+  val xbar = LazyModule(new TLXbar)
+  val config = p(ExtIn)
+  val base = p(ZynqAdapterBase)
 
-    val prb = Queue(cached.probe)
-    cached.release.valid := prb.valid
-    prb.ready := cached.release.ready
-    cached.release.bits := ClientMetadata.onReset.makeRelease(prb.bits)
+  val zynq = LazyModule(new ZynqAdapterCore(base, config.beatBytes))
+  val converter = LazyModule(new TLToAXI4)
+
+  val serDriver = LazyModule(new SerialDriver)
+  val resetDriver = LazyModule(new ResetDriver)
+  val blkdevDriver = LazyModule(new BlockDeviceDriver)
+
+  xbar.node := serDriver.node
+  xbar.node := resetDriver.node
+  xbar.node := blkdevDriver.node
+  converter.node := xbar.node
+  zynq.node := converter.node
+
+  lazy val module = new LazyModuleImp(this) {
+    val io = IO(new Bundle {
+      val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
+      val bdev = Flipped(new BlockDeviceIO)
+      val sys_reset = Output(Bool())
+      val success = Output(Bool())
+    })
+
+    val simSerial = Module(new SimSerial(SERIAL_IF_WIDTH))
+    val simBlockDev = Module(new SimBlockDevice)
+    simSerial.io.clock := clock
+    simSerial.io.reset := reset
+    simBlockDev.io.clock := clock
+    simBlockDev.io.reset := reset
+    serDriver.module.reset := zynq.module.io.sys_reset
+    blkdevDriver.module.reset := zynq.module.io.sys_reset
+
+    zynq.module.io.serial <> io.serial
+    simSerial.io.serial <> serDriver.module.io.serial
+    zynq.module.io.bdev <> io.bdev
+    simBlockDev.io.bdev <> blkdevDriver.module.io.bdev
+
+    io.sys_reset := zynq.module.io.sys_reset
+    io.success := simSerial.io.exit
   }
-
-  def tieOff(uncached: ClientUncachedTileLinkIO) {
-    uncached.acquire.valid := false.B
-    uncached.grant.ready := false.B
-  }
-
-  io.cached.foreach(tieOff(_))
-  io.uncached.foreach(tieOff(_))
-
-  require(io.slave.isEmpty)
 }

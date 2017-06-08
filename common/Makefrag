@@ -6,15 +6,17 @@ TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
+SCALA_VERSION=2.11.12
 EXTRA_PACKAGES=testchipip
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
 common_build = $(common)/build
+testchipip = $(base_dir)/testchipip
 output_delivery = deliver_output
 SHELL := /bin/bash
 
-bootrom_img = $(common)/bootrom/bootrom.img
+bootrom_img = $(testchipip)/bootrom/bootrom.rv64.img $(testchipip)/bootrom/bootrom.rv32.img
 rocketchip_stamp = $(common)/lib/rocketchip.stamp
 extra_stamps = $(addprefix $(common)/lib/,$(addsuffix .stamp,$(EXTRA_PACKAGES)))
 
@@ -28,6 +30,8 @@ verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
 	src/verilog/$(TOP_MODULE).$(CONFIG).v \
+	src/verilog/AsyncResetReg.v \
+	src/verilog/plusarg_reader.v \
 
 bootimage = fpga-images-$(BOARD)/boot.bin
 bootimage: $(bootimage)
@@ -65,6 +69,8 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
+src/verilog/%.v: $(ROCKET_DIR)/vsrc/%.v
+	cp $< $@
 
 $(ROCKET_DIR)/lib/firrtl.jar: $(FIRRTL_JAR)
 	mkdir -p $(@D)
@@ -97,7 +103,8 @@ rocket: src/verilog/$(TOP_MODULE).$(CONFIG).v
 # Project generation
 # ------------------------------------------------------------------------------
 project = $(proj_name)/$(proj_name).xpr
-$(project): | $(verilog_srcs) src/tcl/$(proj_name).tcl
+$(project): src/tcl/$(proj_name).tcl | $(verilog_srcs) 
+	rm -rf $(proj_name)
 	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
 
 project: $(project)
@@ -198,24 +205,35 @@ $(output_delivery)/boot.bin:
 # ------------------------------------------------------------------------------
 
 fesvr-main = fesvr-zynq
-fesvr-srcs = $(common)/csrc/fesvr_zynq.cc $(common)/csrc/zynq_tsi_driver.cc
-fesvr-hdrs = $(common)/csrc/zynq_tsi_driver.h
-fesvr-lib  = $(common_build)/libfesvr.so
+fesvr-srcs = \
+	$(common)/csrc/fesvr_zynq.cc \
+	$(common)/csrc/zynq_driver.cc \
+	$(testchipip)/csrc/blkdev.cc \
+
+fesvr-hdrs = \
+	$(common)/csrc/zynq_driver.h \
+	$(testchipip)/csrc/blkdev.h \
+
+fesvr-lib = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
 CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr \
-                -Wl,-rpath,/usr/local/lib -I $(common)/csrc -I \
-                $(ROCKET_DIR)/riscv-tools/riscv-fesvr/
+                -Wl,-rpath,/usr/local/lib \
+		-I $(common)/csrc -I $(testchipip)/csrc -I \
+		-I $(ROCKET_DIR)/riscv-tools/riscv-fesvr/ \
+		-Wl,-rpath,/usr/local/lib \
 
 $(fesvr-lib):
 	mkdir -p $(common_build)
-	cd $(common_build); $(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
-    --host=arm-xilinx-linux-gnueabi; make
+	cd $(common_build) && \
+	$(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
+		--host=arm-xilinx-linux-gnueabi && \
+	make libfesvr.so
 
-$(common_build)/$(fesvr_main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
+$(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
 	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) $(fesvr-srcs)
 
-fesvr-zynq: $(common_build)/$(fesvr_main)
+fesvr-zynq: $(common_build)/$(fesvr-main)
 
 clean:
 	rm -f *.log *.jou *.str
