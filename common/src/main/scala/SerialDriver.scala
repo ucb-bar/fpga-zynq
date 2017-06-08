@@ -4,10 +4,10 @@ import chisel3._
 import chisel3.util._
 import junctions._
 import junctions.NastiConstants._
-import cde.{Parameters, Field}
+import config.{Parameters, Field}
 import _root_.util._
 import testchipip._
-import rocket.XLen
+import tile.XLen
 
 case object BuildSerialDriver extends Field[Parameters => SerialDriver]
 
@@ -29,7 +29,7 @@ class IntegrationTestDriver(implicit p: Parameters) extends NastiModule()(p) {
 
   val (s_idle :: s_write_addr :: s_write_data :: s_write_resp ::
        s_read_addr :: s_read_data :: s_done :: Nil) = Enum(7)
-  val state = Reg(init = s_idle)
+  val state = RegInit(s_idle)
 
   val testData = Vec(Seq.tabulate(testLen)(i => (i * 3).U))
   val idx = Reg(UInt(32.W))
@@ -126,7 +126,7 @@ class IntegrationTestReset(implicit p: Parameters) extends Module {
   })
 
   val (s_idle :: s_write_addr :: s_write_data :: s_done :: Nil) = Enum(4)
-  val state = Reg(init = s_idle)
+  val state = RegInit(s_idle)
 
   when (state === s_idle) { state := s_write_addr }
   when (io.nasti.aw.fire()) { state := s_write_data }
@@ -153,8 +153,8 @@ class IntegrationTestSerial(implicit p: Parameters) extends SerialDriver(p(Seria
   val resetter = Module(new IntegrationTestReset()(testParams))
 
   io.exit := driver.io.exit
-  slave.io.nasti(0) <> driver.io.nasti
-  slave.io.nasti(1) <> resetter.io.nasti
+  slave.io.axi(0) <> driver.io.nasti
+  slave.io.axi(1) <> resetter.io.nasti
   slave.io.serial <> io.serial
   driver.reset := slave.io.sys_reset
 }

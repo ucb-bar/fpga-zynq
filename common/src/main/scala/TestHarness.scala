@@ -2,11 +2,9 @@ package zynq
 
 import chisel3._
 import chisel3.util.Queue
-import cde.Parameters
+import config.Parameters
 import diplomacy.LazyModule
 import rocketchip._
-import rocket.Tile
-import uncore.tilelink.{ClientTileLinkIO, ClientUncachedTileLinkIO}
 import uncore.coherence.ClientMetadata
 import junctions.SerialIO
 
@@ -15,34 +13,12 @@ class TestHarness(implicit val p: Parameters) extends Module {
     val success = Output(Bool())
   })
 
-  val dut = LazyModule(new FPGAZynqTop(p)).module
-  val mem = Module(new SimAXIMem(BigInt(p(ExtMemSize))))
+  val dut = LazyModule(new FPGAZynqTop()(p)).module
   val ser = p(BuildSerialDriver)(p)
 
-  mem.io.axi <> dut.io.mem_axi.head
+  val nMemChannels = p(coreplex.BankedL2Config).nMemoryChannels
+  val mem = Module(LazyModule(new SimAXIMem(nMemChannels)).module)
+  mem.io.axi4 <> dut.io.mem_axi4
   ser.io.serial <> dut.io.serial
   io.success := ser.io.exit
-}
-
-class DummyTile(implicit p: Parameters) extends Tile()(p) {
-  def tieOff(cached: ClientTileLinkIO) {
-    cached.acquire.valid := false.B
-    cached.grant.ready := false.B
-    cached.finish.valid := false.B
-
-    val prb = Queue(cached.probe)
-    cached.release.valid := prb.valid
-    prb.ready := cached.release.ready
-    cached.release.bits := ClientMetadata.onReset.makeRelease(prb.bits)
-  }
-
-  def tieOff(uncached: ClientUncachedTileLinkIO) {
-    uncached.acquire.valid := false.B
-    uncached.grant.ready := false.B
-  }
-
-  io.cached.foreach(tieOff(_))
-  io.uncached.foreach(tieOff(_))
-
-  require(io.slave.isEmpty)
 }

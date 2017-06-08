@@ -99,7 +99,7 @@ module rocketchip_wrapper
   wire [3:0]  S_AXI_arcache;
   wire [2:0]  S_AXI_arprot;
   wire [3:0]  S_AXI_arqos;
-  wire [3:0]  S_AXI_arregion;
+  //wire [3:0]  S_AXI_arregion;
 
   wire S_AXI_awready;
   wire S_AXI_awvalid;
@@ -112,7 +112,7 @@ module rocketchip_wrapper
   wire [3:0]  S_AXI_awcache;
   wire [2:0]  S_AXI_awprot;
   wire [3:0]  S_AXI_awqos;
-  wire [3:0]  S_AXI_awregion;
+  //wire [3:0]  S_AXI_awregion;
 
   wire S_AXI_wready;
   wire S_AXI_wvalid;
@@ -215,7 +215,7 @@ module rocketchip_wrapper
         .S_AXI_arprot(S_AXI_arprot),
         .S_AXI_arqos(S_AXI_arqos),
         .S_AXI_arready(S_AXI_arready),
-        .S_AXI_arregion(S_AXI_arregion),
+        .S_AXI_arregion(4'b0),
         .S_AXI_arsize(S_AXI_arsize),
         .S_AXI_arvalid(S_AXI_arvalid),
         //
@@ -228,7 +228,7 @@ module rocketchip_wrapper
         .S_AXI_awprot(S_AXI_awprot),
         .S_AXI_awqos(S_AXI_awqos),
         .S_AXI_awready(S_AXI_awready),
-        .S_AXI_awregion(S_AXI_awregion),
+        .S_AXI_awregion(4'b0),
         .S_AXI_awsize(S_AXI_awsize),
         .S_AXI_awvalid(S_AXI_awvalid),
         //
@@ -318,7 +318,6 @@ module rocketchip_wrapper
    .io_mem_axi_ar_bits_lock (S_AXI_arlock),
    .io_mem_axi_ar_bits_prot (S_AXI_arprot),
    .io_mem_axi_ar_bits_qos (S_AXI_arqos),
-   .io_mem_axi_ar_bits_region(S_AXI_arregion),
    .io_mem_axi_aw_valid (S_AXI_awvalid),
    .io_mem_axi_aw_ready (S_AXI_awready),
    .io_mem_axi_aw_bits_addr (mem_awaddr),
@@ -330,7 +329,6 @@ module rocketchip_wrapper
    .io_mem_axi_aw_bits_lock (S_AXI_awlock),
    .io_mem_axi_aw_bits_prot (S_AXI_awprot),
    .io_mem_axi_aw_bits_qos (S_AXI_awqos),
-   .io_mem_axi_aw_bits_region(S_AXI_awregion),
    .io_mem_axi_w_valid (S_AXI_wvalid),
    .io_mem_axi_w_ready (S_AXI_wready),
    .io_mem_axi_w_bits_strb (S_AXI_wstrb),
