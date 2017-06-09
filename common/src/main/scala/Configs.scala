@@ -12,8 +12,6 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case SerialInterfaceWidth => 32
   case SerialFIFODepth => 16
   case ResetCycles => 10
-  case BuildSerialDriver =>
-    (p: Parameters) => Module(new SimSerialWrapper(p(SerialInterfaceWidth)))
   case ExtMem => up(ExtMem, site).copy(idBits = 6)
 })
 
@@ -51,12 +49,3 @@ class ZynqSmallConfig extends Config(new WithZynqAdapter ++ new DefaultSmallConf
 class ZynqFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqConfig)
 class ZynqMediumFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqMediumConfig)
 class ZynqSmallFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqSmallConfig)
-
-class WithIntegrationTest extends Config((site, here, up) => {
-  case BuildCore => (p: Parameters) => new DummyCore()(p)
-  case BuildSerialDriver =>
-    (p: Parameters) => Module(new IntegrationTestSerial()(p))
-})
-
-class IntegrationTestConfig extends Config(
-  new WithIntegrationTest ++ new ZynqSmallConfig)
