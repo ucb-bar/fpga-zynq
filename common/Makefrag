@@ -216,10 +216,10 @@ $(fesvr-lib):
 	cd $(common_build); $(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
     --host=arm-xilinx-linux-gnueabi; make
 
-$(common_build)/$(fesvr_main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
+$(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
 	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) $(fesvr-srcs)
 
-fesvr-zynq: $(common_build)/$(fesvr_main)
+fesvr-zynq: $(common_build)/$(fesvr-main)
 
 clean:
 	rm -f *.log *.jou *.str
