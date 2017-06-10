@@ -136,3 +136,27 @@ class ResetDriver(implicit p: Parameters) extends NastiModule {
   driver.io.value := 0.U
 }
 
+class BlockDeviceDriver(implicit p: Parameters) extends NastiModule {
+  val io = IO(new Bundle {
+    val axi = new NastiIO
+    val bdev = new BlockDeviceIO
+  })
+
+  val w = nastiXDataBits
+  val desser  = Module(new BlockDeviceDesser(w))
+  val reqdrv  = Module(new OutFIFODriver(0x43C00020L))
+  val datadrv = Module(new OutFIFODriver(0x43C00028L))
+  val respdrv = Module(new InFIFODriver(0x43C00030L))
+  val infodrv = Module(new SetRegisterDriver(0x43C00038L))
+
+  io.bdev <> desser.io.bdev
+  desser.io.ser.req <> reqdrv.io.out
+  desser.io.ser.data <> datadrv.io.out
+  respdrv.io.in <> desser.io.ser.resp
+  infodrv.io.value := io.bdev.info.nsectors
+
+  val arb = Module(new NastiArbiter(4))
+  arb.io.master <> Seq(
+    reqdrv.io.axi, datadrv.io.axi, respdrv.io.axi, infodrv.io.axi)
+  io.axi <> arb.io.slave
+}

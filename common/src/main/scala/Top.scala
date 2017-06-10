@@ -23,6 +23,7 @@ class Top(implicit val p: Parameters) extends Module {
   io.mem_axi <> target.io.mem_axi4.head
   slave.io.axi.head <> io.ps_axi_slave
   slave.io.serial <> target.io.serial
+  slave.io.bdev <> target.io.bdev
   target.reset := slave.io.sys_reset
 }
 

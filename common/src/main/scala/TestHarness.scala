@@ -35,20 +35,20 @@ class TestHarnessDriver(implicit p: Parameters) extends Module {
     val success = Output(Bool())
   })
 
-  val zynq = Module(new ZynqAdapter(2))
+  val zynq = Module(new ZynqAdapter(3))
   val serDriver = Module(new SerialDriver)
   val resetDriver = Module(new ResetDriver)
+  val blkdevDriver = Module(new BlockDeviceDriver)
   val simSerial = Module(new SimSerialWrapper(serialWidth))
   val simBlockDev = Module(new SimBlockDevice)
   simBlockDev.io.clock := clock
   simBlockDev.io.reset := reset
 
-  zynq.io.axi(0) <> serDriver.io.axi
-  zynq.io.axi(1) <> resetDriver.io.axi
-
+  zynq.io.axi <> Seq(serDriver.io.axi, resetDriver.io.axi, blkdevDriver.io.axi)
   zynq.io.serial <> io.serial
   simSerial.io.serial <> serDriver.io.serial
-  simBlockDev.io.bdev <> io.bdev
+  zynq.io.bdev <> io.bdev
+  simBlockDev.io.bdev <> blkdevDriver.io.bdev
 
   io.sys_reset := zynq.io.sys_reset
   io.success := simSerial.io.exit
