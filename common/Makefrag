@@ -11,6 +11,7 @@ EXTRA_PACKAGES=testchipip
 base_dir = $(abspath ..)
 common = $(base_dir)/common
 common_build = $(common)/build
+testchipip = $(base_dir)/testchipip
 output_delivery = deliver_output
 SHELL := /bin/bash
 
@@ -202,19 +203,30 @@ $(output_delivery)/boot.bin:
 # ------------------------------------------------------------------------------
 
 fesvr-main = fesvr-zynq
-fesvr-srcs = $(common)/csrc/fesvr_zynq.cc $(common)/csrc/zynq_tsi_driver.cc
-fesvr-hdrs = $(common)/csrc/zynq_tsi_driver.h
+fesvr-srcs = \
+	$(common)/csrc/fesvr_zynq.cc \
+	$(common)/csrc/zynq_driver.cc \
+	$(testchipip)/csrc/blkdev.cc \
+
+fesvr-hdrs = \
+	$(common)/csrc/zynq_driver.h \
+	$(testchipip)/csrc/blkdev.h \
+
 fesvr-lib  = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
 CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr \
-                -Wl,-rpath,/usr/local/lib -I $(common)/csrc -I \
-                $(ROCKET_DIR)/riscv-tools/riscv-fesvr/
+                -Wl,-rpath,/usr/local/lib \
+		-I $(common)/csrc -I $(base_dir)/testchipip/csrc \
+		-I $(ROCKET_DIR)/riscv-tools/riscv-fesvr/ \
+		-Wl,-rpath,/usr/local/lib \
 
 $(fesvr-lib):
 	mkdir -p $(common_build)
-	cd $(common_build); $(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
-    --host=arm-xilinx-linux-gnueabi; make
+	cd $(common_build)
+	$(ROCKET_DIR)/riscv-tools/riscv-fesvr/configure \
+		--host=arm-xilinx-linux-gnueabi
+	make libfesvr.so
 
 $(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
 	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) $(fesvr-srcs)
