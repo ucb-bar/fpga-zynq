@@ -6,25 +6,26 @@ import config.{Parameters, Field}
 import rocketchip._
 import testchipip._
 
-class Top(implicit val p: Parameters) extends Module {
-  val extMem = p(ExtMem)
-  val inParams = AdapterParams(p)
+case object ZynqAdapterBase extends Field[BigInt]
 
-  val target = LazyModule(new FPGAZynqTop).module
-  val slave = Module(new ZynqAdapter(1)(inParams))
+class Top(implicit val p: Parameters) extends Module {
+  val address = p(ZynqAdapterBase)
+  val config = p(ExtIn)
+  val target = Module(LazyModule(new FPGAZynqTop).module)
+  val adapter = Module(LazyModule(new ZynqAdapter(address, config)).module)
 
   require(target.io.mem_axi4.size == 1)
 
   val io = IO(new Bundle {
-    val ps_axi_slave = Flipped(slave.io.axi.head.cloneType)
+    val ps_axi_slave = Flipped(adapter.io.axi.head.cloneType)
     val mem_axi = target.io.mem_axi4.head.cloneType
   })
 
   io.mem_axi <> target.io.mem_axi4.head
-  slave.io.axi.head <> io.ps_axi_slave
-  slave.io.serial <> target.io.serial
-  slave.io.bdev <> target.io.bdev
-  target.reset := slave.io.sys_reset
+  adapter.io.axi.head <> io.ps_axi_slave
+  adapter.io.serial <> target.io.serial
+  adapter.io.bdev <> target.io.bdev
+  target.reset := adapter.io.sys_reset
 }
 
 class FPGAZynqTop(implicit p: Parameters) extends BaseTop
@@ -37,8 +38,7 @@ class FPGAZynqTop(implicit p: Parameters) extends BaseTop
     with NoDebug
     with PeripherySerial
     with PeripheryBlockDevice {
-  override lazy val module = Module(
-    new FPGAZynqTopModule(this, () => new FPGAZynqTopBundle(this)))
+  override lazy val module = new FPGAZynqTopModule(this, () => new FPGAZynqTopBundle(this))
 }
 
 class FPGAZynqTopBundle(outer: FPGAZynqTop) extends BaseTopBundle(outer)

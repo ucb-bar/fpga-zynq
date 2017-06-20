@@ -4,7 +4,7 @@ import chisel3._
 import config.{Parameters, Config}
 import coreplex.{RocketTilesKey, L1toL2Config, CacheBlockBytes}
 import rocket.{RocketTileParams, RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
-import rocketchip.{ExtMem, DefaultConfig, DefaultSmallConfig, BaseConfig, WithoutTLMonitors}
+import rocketchip.{ExtMem, ExtIn, DefaultConfig, DefaultSmallConfig, BaseConfig, WithoutTLMonitors}
 import testchipip._
 import tile.BuildCore
 
@@ -12,7 +12,9 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case SerialInterfaceWidth => 32
   case SerialFIFODepth => 16
   case ResetCycles => 10
+  case ZynqAdapterBase => BigInt(0x43C00000L)
   case ExtMem => up(ExtMem, site).copy(idBits = 6)
+  case ExtIn => up(ExtIn, site).copy(beatBytes = 4, idBits = 12)
   case BlockDeviceKey => BlockDeviceConfig()
   case BlockDeviceFIFODepth => 16
 })

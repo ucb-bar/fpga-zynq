@@ -4,9 +4,10 @@ import chisel3._
 import chisel3.util.Queue
 import config.Parameters
 import diplomacy.LazyModule
+import rocket.PAddrBits
 import rocketchip._
 import uncore.coherence.ClientMetadata
-import junctions.SerialIO
+import junctions.{SerialIO, NastiArbiter, NastiKey, NastiParameters}
 import testchipip._
 
 class TestHarness(implicit val p: Parameters) extends Module {
@@ -14,8 +15,15 @@ class TestHarness(implicit val p: Parameters) extends Module {
     val success = Output(Bool())
   })
 
-  val driver = Module(new TestHarnessDriver()(AdapterParams(p)))
-  val dut = LazyModule(new FPGAZynqTop).module
+  val config = p(ExtIn)
+  val driverParams = p.alterPartial({
+    case NastiKey => NastiParameters(
+      dataBits = config.beatBytes * 8,
+      addrBits = p(PAddrBits),
+      idBits = config.idBits)
+  })
+  val driver = Module(new TestHarnessDriver()(driverParams))
+  val dut = Module(LazyModule(new FPGAZynqTop).module)
   dut.reset := driver.io.sys_reset
   driver.io.serial <> dut.io.serial
   driver.io.bdev <> dut.io.bdev
@@ -35,7 +43,9 @@ class TestHarnessDriver(implicit p: Parameters) extends Module {
     val success = Output(Bool())
   })
 
-  val zynq = Module(new ZynqAdapter(3))
+  val arbiter = Module(new NastiArbiter(3))
+  val zynq = Module(LazyModule(
+    new ZynqAdapter(p(ZynqAdapterBase), p(ExtIn))).module)
   val serDriver = Module(new SerialDriver)
   val resetDriver = Module(new ResetDriver)
   val blkdevDriver = Module(new BlockDeviceDriver)
@@ -43,8 +53,12 @@ class TestHarnessDriver(implicit p: Parameters) extends Module {
   val simBlockDev = Module(new SimBlockDevice)
   simBlockDev.io.clock := clock
   simBlockDev.io.reset := reset
+  serDriver.reset := zynq.io.sys_reset
+  blkdevDriver.reset := zynq.io.sys_reset
 
-  zynq.io.axi <> Seq(serDriver.io.axi, resetDriver.io.axi, blkdevDriver.io.axi)
+  arbiter.io.master <> Seq(
+    serDriver.io.axi, resetDriver.io.axi, blkdevDriver.io.axi)
+  NastiAXIConnect(zynq.io.axi.head, arbiter.io.slave)
   zynq.io.serial <> io.serial
   simSerial.io.serial <> serDriver.io.serial
   zynq.io.bdev <> io.bdev
