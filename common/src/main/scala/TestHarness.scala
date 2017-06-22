@@ -25,13 +25,11 @@ class TestHarness(implicit val p: Parameters) extends Module {
   val driver = Module(new TestHarnessDriver()(driverParams))
   val dut = Module(LazyModule(new FPGAZynqTop).module)
   dut.reset := driver.io.sys_reset
-  driver.io.serial <> dut.io.serial
-  driver.io.bdev <> dut.io.bdev
+  driver.io.serial <> dut.serial
+  driver.io.bdev <> dut.bdev
   io.success := driver.io.success
 
-  val nMemChannels = p(coreplex.BankedL2Config).nMemoryChannels
-  val mem = Module(LazyModule(new SimAXIMem(nMemChannels)).module)
-  mem.io.axi4 <> dut.io.mem_axi4
+  dut.connectSimAXIMem()
 }
 
 class TestHarnessDriver(implicit p: Parameters) extends Module {
