@@ -68,6 +68,8 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
    * 0x30 - resp FIFO data
    * 0x34 - resp FIFO space available (words)
    * 0x38 - nsectors
+   * 0x3C - max request length
+   * 0x40 - # of trackers
    */
   regmap(
     0x00 -> Seq(RegField.r(w, ser_out_fifo.io.deq)),
@@ -81,7 +83,8 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
     0x2C -> Seq(RegField.r(bdevCountBits, bdev_data_fifo.io.count)),
     0x30 -> Seq(RegField.w(w, bdev_resp_fifo.io.enq)),
     0x34 -> Seq(RegField.r(bdevCountBits, bdev_resp_space)),
-    0x38 -> Seq(RegField(sectorBits, bdev_info.nsectors)))
+    0x38 -> Seq(RegField(sectorBits, bdev_info.nsectors)),
+    0x3C -> Seq(RegField(sectorBits, bdev_info.max_req_len)))
 }
 
 class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)

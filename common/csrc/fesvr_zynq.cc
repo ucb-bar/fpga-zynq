@@ -6,7 +6,11 @@
 
 int main(int argc, char** argv)
 {
+    tsi_t tsi(std::vector<std::string>(argv + 1, argv + argc));
+
     const char *fname = NULL;
+    BlockDevice *blkdev = NULL;
+    zynq_driver_t *driver;
 
     for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], "+blkdev=", 8) == 0) {
@@ -15,13 +19,17 @@ int main(int argc, char** argv)
         }
     }
 
-    tsi_t tsi(std::vector<std::string>(argv + 1, argv + argc));
-    BlockDevice blkdev(fname, BLKDEV_NTAGS);
-    zynq_driver_t driver(&tsi, &blkdev);
+    if (fname != NULL)
+        blkdev = new BlockDevice(fname, BLKDEV_NTAGS);
+    driver = new zynq_driver_t(&tsi, blkdev);
 
     while(!tsi.done()){
-        driver.poll();
+        driver->poll();
     }
+
+    delete driver;
+    if (blkdev != NULL)
+        delete blkdev;
 
     return tsi.exit_code();
 }

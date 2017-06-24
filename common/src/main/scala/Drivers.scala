@@ -119,31 +119,57 @@ class OutFIFODriver(addr: BigInt, maxCount: Int)(implicit p: Parameters)
   }
 }
 
-class SetRegisterDriver(addr: BigInt)(implicit p: Parameters) extends NastiModule {
+class SetRegisterDriver(addr: BigInt, n: Int)(implicit p: Parameters) extends NastiModule {
   val io = IO(new Bundle {
     val axi = new NastiIO
-    val value = Input(UInt(nastiXDataBits.W))
+    val values = Input(Vec(n, UInt(nastiXDataBits.W)))
   })
 
   val (s_start :: s_write_addr :: s_write_data ::
        s_write_resp :: s_wait :: Nil) = Enum(5)
   val state = RegInit(s_start)
-  val value = Reg(UInt(nastiXDataBits.W))
+  val values = Reg(Vec(n, UInt(nastiXDataBits.W)))
 
-  when (state === s_start) { state := s_write_addr; value := io.value }
+  val value_diff = Cat(io.values.zip(values).map {
+    case (iovalue, value) => iovalue != value
+  }.reverse)
+  val value_set = RegInit(UInt(n.W), ~0.U(n.W))
+  val value_set_oh = PriorityEncoderOH(value_set)
+  val value_idx = OHToUInt(value_set_oh)
+
+  when (state === s_start) {
+    state := s_write_addr
+    for (i <- 0 until n) {
+      when (value_set(i)) {
+        values(i) := io.values(i)
+      }
+    }
+  }
   when (io.axi.aw.fire()) { state := s_write_data }
   when (io.axi.w.fire()) { state := s_write_resp }
-  when (io.axi.b.fire()) { state := s_wait }
-  when (state === s_wait && io.value =/= value) { state := s_start }
+  when (io.axi.b.fire()) {
+    value_set := value_set & ~value_set_oh
+    state := s_wait
+  }
+  when (state === s_wait) {
+    when (value_set.orR) {
+      state := s_write_addr
+    } .elsewhen (value_diff.orR) {
+      value_set := value_diff
+      state := s_start
+    }
+  }
+
+  val full_size = log2Ceil(nastiXDataBits/8)
 
   io.axi.aw.valid := state === s_write_addr
   io.axi.aw.bits := NastiWriteAddressChannel(
     id = 0.U,
-    addr = addr.U,
-    size = 2.U)
+    addr = addr.U + (value_idx << full_size.U),
+    size = full_size.U)
 
   io.axi.w.valid := state === s_write_data
-  io.axi.w.bits := NastiWriteDataChannel(data = value)
+  io.axi.w.bits := NastiWriteDataChannel(data = values(value_idx))
 
   io.axi.b.ready := (state === s_write_resp)
   io.axi.ar.valid := false.B
@@ -177,9 +203,9 @@ class ResetDriver(implicit p: Parameters) extends NastiModule {
   })
 
   val base = p(ZynqAdapterBase)
-  val driver = Module(new SetRegisterDriver(base + BigInt(0x10)))
+  val driver = Module(new SetRegisterDriver(base + BigInt(0x10), 1))
   io.axi <> driver.io.axi
-  driver.io.value := 0.U
+  driver.io.values(0) := 0.U
 }
 
 class BlockDeviceDriver(implicit p: Parameters) extends NastiModule {
@@ -195,13 +221,13 @@ class BlockDeviceDriver(implicit p: Parameters) extends NastiModule {
   val reqdrv  = Module(new OutFIFODriver(base + BigInt(0x20), depth))
   val datadrv = Module(new OutFIFODriver(base + BigInt(0x28), depth))
   val respdrv = Module(new InFIFODriver(base + BigInt(0x30), depth))
-  val infodrv = Module(new SetRegisterDriver(base + BigInt(0x38)))
+  val infodrv = Module(new SetRegisterDriver(base + BigInt(0x38), 2))
 
   io.bdev <> desser.io.bdev
   desser.io.ser.req <> reqdrv.io.out
   desser.io.ser.data <> datadrv.io.out
   respdrv.io.in <> desser.io.ser.resp
-  infodrv.io.value := io.bdev.info.nsectors
+  infodrv.io.values := Seq(io.bdev.info.nsectors, io.bdev.info.max_req_len)
 
   val arb = Module(new NastiArbiter(4))
   arb.io.master <> Seq(

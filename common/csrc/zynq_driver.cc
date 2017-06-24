@@ -18,7 +18,8 @@
 #define BLKDEV_DATA_FIFO_COUNT 0x2C
 #define BLKDEV_RESP_FIFO_DATA 0x30
 #define BLKDEV_RESP_FIFO_COUNT 0x34
-#define BLKDEV_NSECTORS_REG 0x38
+#define BLKDEV_NSECTORS 0x38
+#define BLKDEV_MAX_REQUEST_LENGTH 0x3C
 
 #define BLKDEV_REQ_NWORDS 4
 #define BLKDEV_DATA_NWORDS 3
@@ -39,8 +40,14 @@ zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev)
     write(SYSTEM_RESET, 1);
     write(SYSTEM_RESET, 0);
 
-    // set nsectors
-    write(BLKDEV_NSECTORS_REG, bdev->nsectors());
+    // set nsectors and max_request_length
+    if (bdev == NULL) {
+        write(BLKDEV_NSECTORS, 0);
+        write(BLKDEV_MAX_REQUEST_LENGTH, 0);
+    } else {
+        write(BLKDEV_NSECTORS, bdev->nsectors());
+        write(BLKDEV_MAX_REQUEST_LENGTH, bdev->max_request_length());
+    }
 }
 
 zynq_driver_t::~zynq_driver_t()
@@ -109,6 +116,11 @@ void zynq_driver_t::poll(void)
         write(TSI_IN_FIFO_DATA, in_data);
     }
 
+    tsi->switch_to_host();
+
+    if (bdev == NULL)
+        return;
+
     while (read(BLKDEV_REQ_FIFO_COUNT) >= BLKDEV_REQ_NWORDS) {
         struct blkdev_request req = read_request();
         bdev->send_request(req);
@@ -124,6 +136,5 @@ void zynq_driver_t::poll(void)
         write_response(resp);
     }
 
-    tsi->switch_to_host();
     bdev->switch_to_host();
 }
