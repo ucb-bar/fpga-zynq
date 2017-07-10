@@ -234,3 +234,25 @@ class BlockDeviceDriver(implicit p: Parameters) extends NastiModule {
     reqdrv.io.axi, datadrv.io.axi, respdrv.io.axi, infodrv.io.axi)
   io.axi <> arb.io.slave
 }
+
+class NetworkDriver(implicit p: Parameters) extends NastiModule {
+  val io = IO(new Bundle {
+    val axi = new NastiIO
+    val net = new StreamIO(64)
+  })
+
+  val w = nastiXDataBits
+  val base = p(ZynqAdapterBase)
+  val depth = p(NetworkFIFODepth)
+  val desser = Module(new NetworkDesser(w))
+  val outdrv = Module(new OutFIFODriver(base + BigInt(0x40), depth))
+  val indrv  = Module(new InFIFODriver(base + BigInt(0x48), depth))
+
+  desser.io.ser.out <> outdrv.io.out
+  indrv.io.in <> desser.io.ser.in
+  io.net <> desser.io.net
+
+  val arb = Module(new NastiArbiter(2))
+  arb.io.master <> Seq(outdrv.io.axi, indrv.io.axi)
+  io.axi <> arb.io.slave
+}

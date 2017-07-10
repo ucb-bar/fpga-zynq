@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import config.{Parameters, Field}
 import diplomacy.{LazyModule, LazyModuleImp, IdRange}
-import junctions.{SerialIO, NastiIO}
+import junctions.{SerialIO, NastiIO, StreamIO}
 import testchipip._
 import uncore.axi4._
 import regmapper.{RegField, HasRegMap}
@@ -12,6 +12,7 @@ import rocketchip.SlaveConfig
 
 case object SerialFIFODepth extends Field[Int]
 case object BlockDeviceFIFODepth extends Field[Int]
+case object NetworkFIFODepth extends Field[Int]
 case object ResetCycles extends Field[Int]
 
 trait ZynqAdapterCoreBundle extends Bundle {
@@ -20,6 +21,7 @@ trait ZynqAdapterCoreBundle extends Bundle {
   val sys_reset = Output(Bool())
   val serial = Flipped(new SerialIO(p(SerialInterfaceWidth)))
   val bdev = Flipped(new BlockDeviceIO)
+  val net = Flipped(new StreamIO(64))
 }
 
 trait ZynqAdapterCoreModule extends Module with HasRegMap
@@ -30,29 +32,43 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
 
   val serDepth = p(SerialFIFODepth)
   val bdevDepth = p(BlockDeviceFIFODepth)
+  val netDepth = p(NetworkFIFODepth)
   val serCountBits = log2Ceil(serDepth + 1)
   val bdevCountBits = log2Ceil(bdevDepth + 1)
+  val netCountBits = log2Ceil(netDepth + 1)
 
   val ser_out_fifo = Module(new Queue(UInt(w.W), serDepth))
   val ser_in_fifo  = Module(new Queue(UInt(w.W), serDepth))
+
+  ser_out_fifo.io.enq <> io.serial.out
+  io.serial.in <> ser_in_fifo.io.deq
+
   val sys_reset = RegInit(true.B)
+  io.sys_reset := sys_reset
+
   val bdev_req_fifo  = Module(new Queue(UInt(w.W), bdevDepth))
   val bdev_data_fifo = Module(new Queue(UInt(w.W), bdevDepth))
   val bdev_resp_fifo = Module(new Queue(UInt(w.W), bdevDepth))
   val bdev_info = Reg(new BlockDeviceInfo)
-  val serdes = Module(new BlockDeviceSerdes(w))
+  val bdev_serdes = Module(new BlockDeviceSerdes(w))
 
-  serdes.io.bdev <> io.bdev
-  bdev_req_fifo.io.enq <> serdes.io.ser.req
-  bdev_data_fifo.io.enq <> serdes.io.ser.data
-  serdes.io.ser.resp <> bdev_resp_fifo.io.deq
+  bdev_serdes.io.bdev <> io.bdev
+  bdev_req_fifo.io.enq <> bdev_serdes.io.ser.req
+  bdev_data_fifo.io.enq <> bdev_serdes.io.ser.data
+  bdev_serdes.io.ser.resp <> bdev_resp_fifo.io.deq
   io.bdev.info := bdev_info
-  ser_out_fifo.io.enq <> io.serial.out
-  io.serial.in <> ser_in_fifo.io.deq
-  io.sys_reset := sys_reset
+
+  val net_out_fifo = Module(new Queue(UInt(w.W), netDepth))
+  val net_in_fifo = Module(new Queue(UInt(w.W), netDepth))
+  val net_serdes = Module(new NetworkSerdes(w))
+
+  net_serdes.io.net <> io.net
+  net_out_fifo.io.enq <> net_serdes.io.ser.out
+  net_serdes.io.ser.in <> net_in_fifo.io.deq
 
   val ser_in_space = (serDepth.U - ser_in_fifo.io.count)
   val bdev_resp_space = (bdevDepth.U - bdev_resp_fifo.io.count)
+  val net_in_space = (netDepth.U - net_in_fifo.io.count)
 
   /**
    * Address Map
@@ -69,7 +85,10 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
    * 0x34 - resp FIFO space available (words)
    * 0x38 - nsectors
    * 0x3C - max request length
-   * 0x40 - # of trackers
+   * 0x40 - network out FIFO data
+   * 0x44 - network out FIFO data available (words)
+   * 0x48 - network in FIFO data
+   * 0x4C - network in FIFO space available (words)
    */
   regmap(
     0x00 -> Seq(RegField.r(w, ser_out_fifo.io.deq)),
@@ -84,7 +103,11 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
     0x30 -> Seq(RegField.w(w, bdev_resp_fifo.io.enq)),
     0x34 -> Seq(RegField.r(bdevCountBits, bdev_resp_space)),
     0x38 -> Seq(RegField(sectorBits, bdev_info.nsectors)),
-    0x3C -> Seq(RegField(sectorBits, bdev_info.max_req_len)))
+    0x3C -> Seq(RegField(sectorBits, bdev_info.max_req_len)),
+    0x40 -> Seq(RegField.r(w, net_out_fifo.io.deq)),
+    0x44 -> Seq(RegField.r(netCountBits, net_out_fifo.io.count)),
+    0x48 -> Seq(RegField.w(w, net_in_fifo.io.enq)),
+    0x4C -> Seq(RegField.r(netCountBits, net_in_space)))
 }
 
 class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)
@@ -110,12 +133,14 @@ class ZynqAdapter(address: BigInt, config: SlaveConfig)(implicit p: Parameters)
       val sys_reset = Output(Bool())
       val serial = Flipped(new SerialIO(p(SerialInterfaceWidth)))
       val bdev = Flipped(new BlockDeviceIO)
+      val net = Flipped(new StreamIO(64))
     }
 
     val coreIO = core.module.io
     io.sys_reset := coreIO.sys_reset
     coreIO.serial <> io.serial
     coreIO.bdev <> io.bdev
+    coreIO.net <> io.net
   }
 }
 

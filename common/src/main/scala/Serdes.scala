@@ -3,6 +3,7 @@ package zynq
 import chisel3._
 import chisel3.util._
 import config.Parameters
+import junctions.{StreamIO, StreamChannel, SerialIO}
 import testchipip._
 
 class BlockDeviceSerialIO(w: Int) extends Bundle {
@@ -163,4 +164,57 @@ class BlockDeviceDesser(w: Int)(implicit p: Parameters) extends BlockDeviceModul
   io.ser.data.ready := !data_send
   io.ser.resp.valid := resp_send
   io.ser.resp.bits := resp_vec(resp_idx)
+}
+
+class NetworkSerdes(w: Int) extends Module {
+  val io = IO(new Bundle {
+    val net = Flipped(new StreamIO(64))
+    val ser = new SerialIO(w)
+  })
+
+  require(64 % w == 0)
+
+  val dataBeats = 64 / w
+  val outnet = Reg(new StreamChannel(64))
+  val outvec = Vec(Seq.tabulate(dataBeats) { i =>
+    outnet.data(w * (i + 1) - 1, w * i)
+  } :+ outnet.last)
+  val invec = Reg(Vec(dataBeats + 1, UInt(w.W)))
+
+  val out_valid = RegInit(false.B)
+  val in_valid = RegInit(false.B)
+
+  val (outcnt, outdone) = Counter(io.ser.out.fire(), dataBeats + 1)
+  val (incnt, indone) = Counter(io.ser.in.fire(), dataBeats + 1)
+
+  when (io.net.out.fire()) {
+    out_valid := true.B
+    outnet := io.net.out.bits
+  }
+  when (outdone) { out_valid := false.B }
+  when (io.ser.in.fire()) { invec(incnt) := io.ser.in.bits }
+  when (indone) { in_valid := true.B }
+  when (io.net.in.fire()) { in_valid := false.B }
+
+  io.net.out.ready := !out_valid
+  io.ser.out.valid := out_valid
+  io.ser.out.bits := outvec(outcnt)
+  io.ser.in.ready := !in_valid
+  io.net.in.valid := in_valid
+  io.net.in.bits.data := Cat(invec.take(dataBeats).reverse)
+  io.net.in.bits.last := invec(dataBeats)(0)
+}
+
+class NetworkDesser(w: Int) extends Module {
+  val io = IO(new Bundle {
+    val ser = Flipped(new SerialIO(w))
+    val net = new StreamIO(64)
+  })
+
+  // Yes, the desser is just the reverse of the serdes
+  val serdes = Module(new NetworkSerdes(w))
+  serdes.io.ser.in <> io.ser.out
+  io.ser.in <> serdes.io.ser.out
+  io.net.out <> serdes.io.net.in
+  serdes.io.net.out <> io.net.in
 }

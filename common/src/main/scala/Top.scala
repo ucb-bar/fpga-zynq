@@ -25,6 +25,7 @@ class Top(implicit val p: Parameters) extends Module {
   adapter.io.axi.head <> io.ps_axi_slave
   adapter.io.serial <> target.serial
   adapter.io.bdev <> target.bdev
+  adapter.io.net <> target.net
   target.reset := adapter.io.sys_reset
 }
 
@@ -37,7 +38,8 @@ class FPGAZynqTop(implicit p: Parameters) extends BaseSystem
     with HasRocketPlexMaster
     with HasNoDebug
     with HasPeripherySerial
-    with HasPeripheryBlockDevice {
+    with HasPeripheryBlockDevice
+    with HasPeripherySimpleNIC {
   override lazy val module = new FPGAZynqTopModule(this)
 }
 
@@ -49,3 +51,4 @@ class FPGAZynqTopModule(outer: FPGAZynqTop) extends BaseSystemModule(outer)
     with HasNoDebugModuleImp
     with HasPeripherySerialModuleImp
     with HasPeripheryBlockDeviceModuleImp
+    with HasPeripherySimpleNICModuleImp

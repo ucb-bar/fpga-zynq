@@ -17,6 +17,7 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case ExtIn => up(ExtIn, site).copy(beatBytes = 4, idBits = 12)
   case BlockDeviceKey => BlockDeviceConfig(nTrackers = 2)
   case BlockDeviceFIFODepth => 16
+  case NetworkFIFODepth => 16
 })
 
 class WithNMediumCores(n: Int) extends Config((site, here, up) => {

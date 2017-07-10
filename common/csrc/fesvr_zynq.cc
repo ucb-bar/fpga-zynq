@@ -8,20 +8,23 @@ int main(int argc, char** argv)
 {
     tsi_t tsi(std::vector<std::string>(argv + 1, argv + argc));
 
-    const char *fname = NULL;
     BlockDevice *blkdev = NULL;
+    NetworkDevice *netdev = NULL;
     zynq_driver_t *driver;
 
     for (int i = 1; i < argc; i++) {
+        const char *name = NULL;
+
         if (strncmp(argv[i], "+blkdev=", 8) == 0) {
-            fname = argv[i] + 8;
-            break;
+            name = argv[i] + 8;
+            blkdev = new BlockDevice(name, BLKDEV_NTAGS);
+        } else if (strncmp(argv[i], "+netdev=", 8) == 0) {
+            name = argv[i] + 8;
+            netdev = new NetworkDevice(name);
         }
     }
 
-    if (fname != NULL)
-        blkdev = new BlockDevice(fname, BLKDEV_NTAGS);
-    driver = new zynq_driver_t(&tsi, blkdev);
+    driver = new zynq_driver_t(&tsi, blkdev, netdev);
 
     while(!tsi.done()){
         driver->poll();
@@ -30,6 +33,8 @@ int main(int argc, char** argv)
     delete driver;
     if (blkdev != NULL)
         delete blkdev;
+    if (netdev != NULL)
+        delete netdev;
 
     return tsi.exit_code();
 }

@@ -207,6 +207,7 @@ fesvr-srcs = \
 	$(common)/csrc/fesvr_zynq.cc \
 	$(common)/csrc/zynq_driver.cc \
 	$(testchipip)/csrc/blkdev.cc \
+	$(testchipip)/csrc/network.cc \
 
 fesvr-hdrs = \
 	$(common)/csrc/zynq_driver.h \
