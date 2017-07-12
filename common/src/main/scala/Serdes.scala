@@ -2,8 +2,7 @@ package zynq
 
 import chisel3._
 import chisel3.util._
-import config.Parameters
-import junctions.{StreamIO, StreamChannel, SerialIO}
+import freechips.rocketchip.config.Parameters
 import testchipip._
 
 class BlockDeviceSerialIO(w: Int) extends Bundle {

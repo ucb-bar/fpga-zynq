@@ -1,12 +1,12 @@
 package zynq
 
 import chisel3._
-import config.{Parameters, Config}
-import coreplex.{RocketTilesKey, L1toL2Config, CacheBlockBytes}
-import rocket.{RocketTileParams, RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
-import rocketchip.{ExtMem, ExtIn, DefaultConfig, DefaultSmallConfig, BaseConfig, WithoutTLMonitors}
+import freechips.rocketchip.chip.{ExtMem, ExtIn, DefaultConfig, DefaultSmallConfig, BaseConfig, WithoutTLMonitors}
+import freechips.rocketchip.config.{Parameters, Config}
+import freechips.rocketchip.coreplex.{RocketTilesKey, L1toL2Config, CacheBlockBytes}
+import freechips.rocketchip.rocket.{RocketTileParams, RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
+import freechips.rocketchip.tile.BuildCore
 import testchipip._
-import tile.BuildCore
 
 class WithZynqAdapter extends Config((site, here, up) => {
   case SerialInterfaceWidth => 32

@@ -2,13 +2,12 @@ package zynq
 
 import chisel3._
 import chisel3.util._
-import config.{Parameters, Field}
-import diplomacy.{LazyModule, LazyModuleImp, IdRange}
-import junctions.{SerialIO, NastiIO, StreamIO}
+import freechips.rocketchip.config.{Parameters, Field}
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp, IdRange}
+import freechips.rocketchip.amba.axi4._
+import freechips.rocketchip.regmapper.{RegField, HasRegMap}
+import freechips.rocketchip.chip.SlaveConfig
 import testchipip._
-import uncore.axi4._
-import regmapper.{RegField, HasRegMap}
-import rocketchip.SlaveConfig
 
 case object SerialFIFODepth extends Field[Int]
 case object BlockDeviceFIFODepth extends Field[Int]
@@ -141,55 +140,5 @@ class ZynqAdapter(address: BigInt, config: SlaveConfig)(implicit p: Parameters)
     coreIO.serial <> io.serial
     coreIO.bdev <> io.bdev
     coreIO.net <> io.net
-  }
-}
-
-object NastiAXIConnect {
-  def apply(left: AXI4Bundle, right: NastiIO) {
-    left.ar.valid      := right.ar.valid
-    left.ar.bits.id    := right.ar.bits.id
-    left.ar.bits.addr  := right.ar.bits.addr
-    left.ar.bits.len   := right.ar.bits.len
-    left.ar.bits.size  := right.ar.bits.size
-    left.ar.bits.burst := right.ar.bits.burst
-    left.ar.bits.lock  := right.ar.bits.lock
-    left.ar.bits.cache := right.ar.bits.cache
-    left.ar.bits.prot  := right.ar.bits.prot
-    left.ar.bits.qos   := right.ar.bits.qos
-    left.ar.bits.user.foreach(_ := right.ar.bits.user)
-    right.ar.ready     := left.ar.ready
-
-    left.aw.valid      := right.aw.valid
-    left.aw.bits.id    := right.aw.bits.id
-    left.aw.bits.addr  := right.aw.bits.addr
-    left.aw.bits.len   := right.aw.bits.len
-    left.aw.bits.size  := right.aw.bits.size
-    left.aw.bits.burst := right.aw.bits.burst
-    left.aw.bits.lock  := right.aw.bits.lock
-    left.aw.bits.cache := right.aw.bits.cache
-    left.aw.bits.prot  := right.aw.bits.prot
-    left.aw.bits.qos   := right.aw.bits.qos
-    left.aw.bits.user.foreach(_ := right.aw.bits.user)
-    right.aw.ready     := left.aw.ready
-
-    left.w.valid     := right.w.valid
-    left.w.bits.data := right.w.bits.data
-    left.w.bits.strb := right.w.bits.strb
-    left.w.bits.last := right.w.bits.last
-    right.w.ready    := left.w.ready
-
-    right.r.valid     := left.r.valid
-    right.r.bits.id   := left.r.bits.id
-    right.r.bits.resp := left.r.bits.resp
-    right.r.bits.data := left.r.bits.data
-    right.r.bits.last := left.r.bits.last
-    left.r.bits.user.foreach(right.r.bits.user := _)
-    left.r.ready      := right.r.ready
-
-    right.b.valid     := left.b.valid
-    right.b.bits.id   := left.b.bits.id
-    right.b.bits.resp := left.b.bits.resp
-    left.b.bits.user.foreach(right.b.bits.user := _)
-    left.b.ready      := right.b.ready
   }
 }

@@ -1,9 +1,9 @@
 package zynq
 
 import chisel3._
-import diplomacy.{LazyModule, LazyModuleImp}
-import config.{Parameters, Field}
-import rocketchip._
+import freechips.rocketchip.config.{Parameters, Field}
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
+import freechips.rocketchip.chip._
 import testchipip._
 
 case object ZynqAdapterBase extends Field[BigInt]

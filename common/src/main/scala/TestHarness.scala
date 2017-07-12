@@ -2,12 +2,12 @@ package zynq
 
 import chisel3._
 import chisel3.util.Queue
-import config.Parameters
-import diplomacy.LazyModule
-import rocket.PAddrBits
-import rocketchip._
-import uncore.coherence.ClientMetadata
-import junctions.{SerialIO, NastiArbiter, NastiKey, NastiParameters, StreamIO}
+import freechips.rocketchip.amba.axi4._
+import freechips.rocketchip.chip._
+import freechips.rocketchip.config.Parameters
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
+import freechips.rocketchip.rocket.PAddrBits
+import freechips.rocketchip.tilelink._
 import testchipip._
 
 class TestHarness(implicit val p: Parameters) extends Module {
@@ -16,13 +16,7 @@ class TestHarness(implicit val p: Parameters) extends Module {
   })
 
   val config = p(ExtIn)
-  val driverParams = p.alterPartial({
-    case NastiKey => NastiParameters(
-      dataBits = config.beatBytes * 8,
-      addrBits = p(PAddrBits),
-      idBits = config.idBits)
-  })
-  val driver = Module(new TestHarnessDriver()(driverParams))
+  val driver = Module(LazyModule(new TestHarnessDriver).module)
   val dut = Module(LazyModule(new FPGAZynqTop).module)
   dut.reset := driver.io.sys_reset
   driver.io.serial <> dut.serial
@@ -33,47 +27,57 @@ class TestHarness(implicit val p: Parameters) extends Module {
   dut.connectSimAXIMem()
 }
 
-class TestHarnessDriver(implicit p: Parameters) extends Module {
-  val serialWidth = p(SerialInterfaceWidth)
-  val io = IO(new Bundle {
-    val serial = Flipped(new SerialIO(serialWidth))
-    val bdev = Flipped(new BlockDeviceIO)
-    val net = Flipped(new StreamIO(64))
-    val sys_reset = Output(Bool())
-    val success = Output(Bool())
-  })
+class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
+  val xbar = LazyModule(new TLXbar)
+  val config = p(ExtIn)
+  val base = p(ZynqAdapterBase)
 
-  val arbiter = Module(new NastiArbiter(4))
-  val zynq = Module(LazyModule(
-    new ZynqAdapter(p(ZynqAdapterBase), p(ExtIn))).module)
-  val serDriver = Module(new SerialDriver)
-  val resetDriver = Module(new ResetDriver)
-  val blkdevDriver = Module(new BlockDeviceDriver)
-  val netDriver = Module(new NetworkDriver)
-  val simSerial = Module(new SimSerial(serialWidth))
-  val simBlockDev = Module(new SimBlockDevice)
-  val simNetwork = Module(new SimNetwork)
-  simSerial.io.clock := clock
-  simSerial.io.reset := reset
-  simBlockDev.io.clock := clock
-  simBlockDev.io.reset := reset
-  simNetwork.io.clock := clock
-  simNetwork.io.reset := reset
-  serDriver.reset := zynq.io.sys_reset
-  blkdevDriver.reset := zynq.io.sys_reset
-  netDriver.reset := zynq.io.sys_reset
+  val zynq = LazyModule(new ZynqAdapterCore(base, config.beatBytes))
+  val converter = LazyModule(new TLToAXI4(config.beatBytes))
 
-  arbiter.io.master <> Seq(
-    serDriver.io.axi, resetDriver.io.axi,
-    blkdevDriver.io.axi, netDriver.io.axi)
-  NastiAXIConnect(zynq.io.axi.head, arbiter.io.slave)
-  zynq.io.serial <> io.serial
-  simSerial.io.serial <> serDriver.io.serial
-  zynq.io.bdev <> io.bdev
-  zynq.io.net <> io.net
-  simBlockDev.io.bdev <> blkdevDriver.io.bdev
-  simNetwork.io.net <> netDriver.io.net
+  val serDriver = LazyModule(new SerialDriver)
+  val resetDriver = LazyModule(new ResetDriver)
+  val blkdevDriver = LazyModule(new BlockDeviceDriver)
+  val netDriver = LazyModule(new NetworkDriver)
 
-  io.sys_reset := zynq.io.sys_reset
-  io.success := simSerial.io.exit
+  xbar.node := serDriver.node
+  xbar.node := resetDriver.node
+  xbar.node := blkdevDriver.node
+  xbar.node := netDriver.node
+  converter.node := xbar.node
+  zynq.node := converter.node
+
+  lazy val module = new LazyModuleImp(this) {
+    val serialWidth = p(SerialInterfaceWidth)
+    val io = IO(new Bundle {
+      val serial = Flipped(new SerialIO(serialWidth))
+      val bdev = Flipped(new BlockDeviceIO)
+      val net = Flipped(new StreamIO(64))
+      val sys_reset = Output(Bool())
+      val success = Output(Bool())
+    })
+
+    val simSerial = Module(new SimSerial(serialWidth))
+    val simBlockDev = Module(new SimBlockDevice)
+    val simNetwork = Module(new SimNetwork)
+    simSerial.io.clock := clock
+    simSerial.io.reset := reset
+    simBlockDev.io.clock := clock
+    simBlockDev.io.reset := reset
+    simNetwork.io.clock := clock
+    simNetwork.io.reset := reset
+    serDriver.module.reset := zynq.module.io.sys_reset
+    blkdevDriver.module.reset := zynq.module.io.sys_reset
+    netDriver.module.reset := zynq.module.io.sys_reset
+
+    zynq.module.io.serial <> io.serial
+    simSerial.io.serial <> serDriver.module.io.serial
+    zynq.module.io.bdev <> io.bdev
+    zynq.module.io.net <> io.net
+    simBlockDev.io.bdev <> blkdevDriver.module.io.bdev
+    simNetwork.io.net <> netDriver.module.io.net
+
+    io.sys_reset := zynq.module.io.sys_reset
+    io.success := simSerial.io.exit
+  }
 }
