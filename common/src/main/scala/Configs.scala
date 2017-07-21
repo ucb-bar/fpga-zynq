@@ -9,7 +9,6 @@ import freechips.rocketchip.tile.BuildCore
 import testchipip._
 
 class WithZynqAdapter extends Config((site, here, up) => {
-  case SerialInterfaceWidth => 32
   case SerialFIFODepth => 16
   case ResetCycles => 10
   case ZynqAdapterBase => BigInt(0x43C00000L)

@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import freechips.rocketchip.config.Parameters
 import testchipip._
+import testchipip.SimpleNIC._
 
 class BlockDeviceSerialIO(w: Int) extends Bundle {
   val req = Decoupled(UInt(w.W))
@@ -167,7 +168,7 @@ class BlockDeviceDesser(w: Int)(implicit p: Parameters) extends BlockDeviceModul
 
 class NetworkSerdes(w: Int) extends Module {
   val io = IO(new Bundle {
-    val net = Flipped(new StreamIO(64))
+    val net = Flipped(new StreamIO(NET_IF_WIDTH))
     val ser = new SerialIO(w)
   })
 
@@ -207,7 +208,7 @@ class NetworkSerdes(w: Int) extends Module {
 class NetworkDesser(w: Int) extends Module {
   val io = IO(new Bundle {
     val ser = Flipped(new SerialIO(w))
-    val net = new StreamIO(64)
+    val net = new StreamIO(NET_IF_WIDTH)
   })
 
   // Yes, the desser is just the reverse of the serdes

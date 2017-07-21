@@ -9,6 +9,8 @@ import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import freechips.rocketchip.rocket.PAddrBits
 import freechips.rocketchip.tilelink._
 import testchipip._
+import testchipip.SerialAdapter._
+import testchipip.SimpleNIC._
 
 class TestHarness(implicit val p: Parameters) extends Module {
   val io = IO(new Bundle {
@@ -48,16 +50,15 @@ class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
   zynq.node := converter.node
 
   lazy val module = new LazyModuleImp(this) {
-    val serialWidth = p(SerialInterfaceWidth)
     val io = IO(new Bundle {
-      val serial = Flipped(new SerialIO(serialWidth))
+      val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
       val bdev = Flipped(new BlockDeviceIO)
-      val net = Flipped(new StreamIO(64))
+      val net = Flipped(new StreamIO(NET_IF_WIDTH))
       val sys_reset = Output(Bool())
       val success = Output(Bool())
     })
 
-    val simSerial = Module(new SimSerial(serialWidth))
+    val simSerial = Module(new SimSerial(SERIAL_IF_WIDTH))
     val simBlockDev = Module(new SimBlockDevice)
     val simNetwork = Module(new SimNetwork)
     simSerial.io.clock := clock

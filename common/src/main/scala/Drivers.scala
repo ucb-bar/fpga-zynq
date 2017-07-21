@@ -7,6 +7,8 @@ import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util._
 import testchipip._
+import testchipip.SerialAdapter._
+import testchipip.SimpleNIC._
 
 class InFIFODriver(name: String, addr: BigInt, maxSpace: Int)
     (implicit p: Parameters) extends LazyModule {
@@ -216,14 +218,12 @@ class SerialDriver(implicit p: Parameters) extends LazyModule {
   node := xbar.node
 
   lazy val module = new LazyModuleImp(this) {
-    val w = p(SerialInterfaceWidth)
     val edge = node.edgesOut(0)
-
-    require(w == edge.bundle.dataBits)
+    require(edge.bundle.dataBits == SERIAL_IF_WIDTH)
 
     val io = IO(new Bundle {
       val mem = node.bundleOut
-      val serial = new SerialIO(w)
+      val serial = new SerialIO(SERIAL_IF_WIDTH)
     })
 
     indrv.module.io.in <> io.serial.in
@@ -307,7 +307,7 @@ class NetworkDriver(implicit p: Parameters) extends LazyModule {
 
     val io = IO(new Bundle {
       val mem = node.bundleOut
-      val net = new StreamIO(64)
+      val net = new StreamIO(NET_IF_WIDTH)
     })
 
     val desser = Module(new NetworkDesser(dataBits))

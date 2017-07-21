@@ -8,6 +8,8 @@ import freechips.rocketchip.amba.axi4._
 import freechips.rocketchip.regmapper.{RegField, HasRegMap}
 import freechips.rocketchip.chip.SlaveConfig
 import testchipip._
+import testchipip.SerialAdapter._
+import testchipip.SimpleNIC._
 
 case object SerialFIFODepth extends Field[Int]
 case object BlockDeviceFIFODepth extends Field[Int]
@@ -18,16 +20,16 @@ trait ZynqAdapterCoreBundle extends Bundle {
   implicit val p: Parameters
 
   val sys_reset = Output(Bool())
-  val serial = Flipped(new SerialIO(p(SerialInterfaceWidth)))
+  val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
   val bdev = Flipped(new BlockDeviceIO)
-  val net = Flipped(new StreamIO(64))
+  val net = Flipped(new StreamIO(NET_IF_WIDTH))
 }
 
 trait ZynqAdapterCoreModule extends Module with HasRegMap
     with HasBlockDeviceParameters {
   implicit val p: Parameters
   val io: ZynqAdapterCoreBundle
-  val w = p(SerialInterfaceWidth)
+  val w = SERIAL_IF_WIDTH
 
   val serDepth = p(SerialFIFODepth)
   val bdevDepth = p(BlockDeviceFIFODepth)
@@ -130,9 +132,9 @@ class ZynqAdapter(address: BigInt, config: SlaveConfig)(implicit p: Parameters)
     val io = new Bundle {
       val axi = node.bundleIn
       val sys_reset = Output(Bool())
-      val serial = Flipped(new SerialIO(p(SerialInterfaceWidth)))
+      val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
       val bdev = Flipped(new BlockDeviceIO)
-      val net = Flipped(new StreamIO(64))
+      val net = Flipped(new StreamIO(NET_IF_WIDTH))
     }
 
     val coreIO = core.module.io
