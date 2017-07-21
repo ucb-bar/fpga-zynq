@@ -60,13 +60,10 @@ class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
 
     val simSerial = Module(new SimSerial(SERIAL_IF_WIDTH))
     val simBlockDev = Module(new SimBlockDevice)
-    val simNetwork = Module(new SimNetwork)
     simSerial.io.clock := clock
     simSerial.io.reset := reset
     simBlockDev.io.clock := clock
     simBlockDev.io.reset := reset
-    simNetwork.io.clock := clock
-    simNetwork.io.reset := reset
     serDriver.module.reset := zynq.module.io.sys_reset
     blkdevDriver.module.reset := zynq.module.io.sys_reset
     netDriver.module.reset := zynq.module.io.sys_reset
@@ -76,7 +73,8 @@ class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
     zynq.module.io.bdev <> io.bdev
     zynq.module.io.net <> io.net
     simBlockDev.io.bdev <> blkdevDriver.module.io.bdev
-    simNetwork.io.net <> netDriver.module.io.net
+    // Loopback for network driver
+    netDriver.module.io.net.in <> Queue(netDriver.module.io.net.out, 64)
 
     io.sys_reset := zynq.module.io.sys_reset
     io.success := simSerial.io.exit
