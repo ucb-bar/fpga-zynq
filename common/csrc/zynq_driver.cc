@@ -24,6 +24,7 @@
 #define NET_OUT_FIFO_COUNT 0x44
 #define NET_IN_FIFO_DATA 0x48
 #define NET_IN_FIFO_COUNT 0x4C
+#define NET_MACADDR 0x50
 
 #define BLKDEV_REQ_NWORDS 4
 #define BLKDEV_DATA_NWORDS 3
@@ -128,6 +129,17 @@ void zynq_driver_t::write_net_in(struct network_flit &flt)
     write(NET_IN_FIFO_DATA, flt.last);
 }
 
+uint64_t zynq_driver_t::read_macaddr(void)
+{
+    uint64_t macaddr;
+
+    macaddr = read(NET_MACADDR + 4);
+    macaddr <<= 32;
+    macaddr |= read(NET_MACADDR);
+
+    return macaddr;
+}
+
 void zynq_driver_t::poll(void)
 {
     if (tsi != NULL) {
@@ -154,6 +166,8 @@ void zynq_driver_t::poll(void)
             struct network_flit flt = netdev->recv_in();
             write_net_in(flt);
         }
+
+        netdev->set_macaddr(read_macaddr());
 
         netdev->switch_to_host();
     }

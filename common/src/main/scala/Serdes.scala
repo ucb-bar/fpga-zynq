@@ -168,7 +168,7 @@ class BlockDeviceDesser(w: Int)(implicit p: Parameters) extends BlockDeviceModul
 
 class NetworkSerdes(w: Int) extends Module {
   val io = IO(new Bundle {
-    val net = Flipped(new StreamIO(NET_IF_WIDTH))
+    val net = Flipped(new NICIO)
     val ser = new SerialIO(w)
   })
 
@@ -208,7 +208,7 @@ class NetworkSerdes(w: Int) extends Module {
 class NetworkDesser(w: Int) extends Module {
   val io = IO(new Bundle {
     val ser = Flipped(new SerialIO(w))
-    val net = new StreamIO(NET_IF_WIDTH)
+    val net = new NICIO
   })
 
   // Yes, the desser is just the reverse of the serdes

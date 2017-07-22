@@ -307,7 +307,7 @@ class NetworkDriver(implicit p: Parameters) extends LazyModule {
 
     val io = IO(new Bundle {
       val mem = node.bundleOut
-      val net = new StreamIO(NET_IF_WIDTH)
+      val net = new NICIO
     })
 
     val desser = Module(new NetworkDesser(dataBits))

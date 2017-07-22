@@ -53,7 +53,7 @@ class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
     val io = IO(new Bundle {
       val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
       val bdev = Flipped(new BlockDeviceIO)
-      val net = Flipped(new StreamIO(NET_IF_WIDTH))
+      val net = Flipped(new NICIO)
       val sys_reset = Output(Bool())
       val success = Output(Bool())
     })

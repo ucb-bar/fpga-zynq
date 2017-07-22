@@ -22,7 +22,7 @@ trait ZynqAdapterCoreBundle extends Bundle {
   val sys_reset = Output(Bool())
   val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
   val bdev = Flipped(new BlockDeviceIO)
-  val net = Flipped(new StreamIO(NET_IF_WIDTH))
+  val net = Flipped(new NICIO)
 }
 
 trait ZynqAdapterCoreModule extends Module with HasRegMap
@@ -90,6 +90,8 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
    * 0x44 - network out FIFO data available (words)
    * 0x48 - network in FIFO data
    * 0x4C - network in FIFO space available (words)
+   * 0x50 - MAC 0-3
+   * 0x54 - MAC 4-5
    */
   regmap(
     0x00 -> Seq(RegField.r(w, ser_out_fifo.io.deq)),
@@ -108,7 +110,9 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
     0x40 -> Seq(RegField.r(w, net_out_fifo.io.deq)),
     0x44 -> Seq(RegField.r(netCountBits, net_out_fifo.io.count)),
     0x48 -> Seq(RegField.w(w, net_in_fifo.io.enq)),
-    0x4C -> Seq(RegField.r(netCountBits, net_in_space)))
+    0x4C -> Seq(RegField.r(netCountBits, net_in_space)),
+    0x50 -> Seq(RegField.r(32, io.net.macAddr.bits(31, 0))),
+    0x54 -> Seq(RegField.r(16, io.net.macAddr.bits(47, 32))))
 }
 
 class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)
@@ -134,7 +138,7 @@ class ZynqAdapter(address: BigInt, config: SlaveConfig)(implicit p: Parameters)
       val sys_reset = Output(Bool())
       val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
       val bdev = Flipped(new BlockDeviceIO)
-      val net = Flipped(new StreamIO(NET_IF_WIDTH))
+      val net = Flipped(new NICIO)
     }
 
     val coreIO = core.module.io
