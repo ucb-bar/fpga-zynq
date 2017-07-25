@@ -9,7 +9,8 @@ import freechips.rocketchip.regmapper.{RegField, HasRegMap}
 import freechips.rocketchip.chip.SlaveConfig
 import testchipip._
 import testchipip.SerialAdapter._
-import testchipip.SimpleNIC._
+import icenet._
+import icenet.SimpleNIC._
 
 case object SerialFIFODepth extends Field[Int]
 case object BlockDeviceFIFODepth extends Field[Int]

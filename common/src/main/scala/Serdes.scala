@@ -4,7 +4,8 @@ import chisel3._
 import chisel3.util._
 import freechips.rocketchip.config.Parameters
 import testchipip._
-import testchipip.SimpleNIC._
+import icenet._
+import icenet.SimpleNIC._
 
 class BlockDeviceSerialIO(w: Int) extends Bundle {
   val req = Decoupled(UInt(w.W))

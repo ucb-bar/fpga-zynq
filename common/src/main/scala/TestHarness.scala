@@ -10,7 +10,8 @@ import freechips.rocketchip.rocket.PAddrBits
 import freechips.rocketchip.tilelink._
 import testchipip._
 import testchipip.SerialAdapter._
-import testchipip.SimpleNIC._
+import icenet._
+import icenet.SimpleNIC._
 
 class TestHarness(implicit val p: Parameters) extends Module {
   val io = IO(new Bundle {

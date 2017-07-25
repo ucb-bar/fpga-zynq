@@ -6,12 +6,13 @@ TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
-EXTRA_PACKAGES=testchipip
+EXTRA_PACKAGES=testchipip icenet
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
 common_build = $(common)/build
 testchipip = $(base_dir)/testchipip
+icenet = $(base_dir)/icenet
 output_delivery = deliver_output
 SHELL := /bin/bash
 
@@ -207,18 +208,17 @@ fesvr-srcs = \
 	$(common)/csrc/fesvr_zynq.cc \
 	$(common)/csrc/zynq_driver.cc \
 	$(testchipip)/csrc/blkdev.cc \
-	$(testchipip)/csrc/network.cc \
 
 fesvr-hdrs = \
 	$(common)/csrc/zynq_driver.h \
 	$(testchipip)/csrc/blkdev.h \
 
-fesvr-lib  = $(common_build)/libfesvr.so
+fesvr-lib = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
-CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr \
+CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr -licenet \
                 -Wl,-rpath,/usr/local/lib \
-		-I $(common)/csrc -I $(base_dir)/testchipip/csrc \
+		-I $(common)/csrc -I $(testchipip)/csrc -I $(icenet)/csrc \
 		-I $(ROCKET_DIR)/riscv-tools/riscv-fesvr/ \
 		-Wl,-rpath,/usr/local/lib \
 
@@ -229,7 +229,13 @@ $(fesvr-lib):
 		--host=arm-xilinx-linux-gnueabi && \
 	make libfesvr.so
 
-$(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
+icenet-lib = $(common_build)/libicenet.so
+
+$(icenet-lib): $(icenet)/csrc/*
+	make -C $(icenet) CXX=arm-xilinx-linux-gnueabi-g++ BUILD=build-arm
+	cp $(icenet)/build-arm/libicenet.so $(common_build)
+
+$(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs) $(icenet-lib)
 	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) $(fesvr-srcs)
 
 fesvr-zynq: $(common_build)/$(fesvr-main)

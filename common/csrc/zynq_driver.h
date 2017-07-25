@@ -3,12 +3,14 @@
 
 #include "fesvr/tsi.h"
 #include "blkdev.h"
-#include "network.h"
+#include "device.h"
+#include "switch.h"
 #include <stdint.h>
 
 class zynq_driver_t {
   public:
-    zynq_driver_t(tsi_t *tsi, BlockDevice *bdev, NetworkDevice *netdev);
+    zynq_driver_t(tsi_t *tsi, BlockDevice *bdev,
+		    NetworkDevice *netdev, NetworkSwitch *netsw);
     ~zynq_driver_t();
 
     void poll(void);
@@ -19,6 +21,7 @@ class zynq_driver_t {
     tsi_t *tsi;
     BlockDevice *bdev;
     NetworkDevice *netdev;
+    NetworkSwitch *netsw;
 
   protected:
     uint32_t read(int off);

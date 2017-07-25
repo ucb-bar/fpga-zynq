@@ -8,7 +8,8 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util._
 import testchipip._
 import testchipip.SerialAdapter._
-import testchipip.SimpleNIC._
+import icenet._
+import icenet.SimpleNIC._
 
 class InFIFODriver(name: String, addr: BigInt, maxSpace: Int)
     (implicit p: Parameters) extends LazyModule {

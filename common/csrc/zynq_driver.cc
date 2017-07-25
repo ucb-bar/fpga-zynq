@@ -30,11 +30,13 @@
 #define BLKDEV_DATA_NWORDS 3
 #define NET_FLIT_NWORDS 3
 
-zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev, NetworkDevice *netdev)
+zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev,
+                            NetworkDevice *netdev, NetworkSwitch *netsw)
 {
     this->tsi = tsi;
     this->bdev = bdev;
     this->netdev = netdev;
+    this->netsw = netsw;
 
     fd = open("/dev/mem", O_RDWR|O_SYNC);
     assert(fd != -1);
@@ -168,8 +170,10 @@ void zynq_driver_t::poll(void)
         }
 
         netdev->set_macaddr(read_macaddr());
-
         netdev->switch_to_host();
+
+        netsw->distribute();
+        netsw->switch_to_worker();
     }
 
     if (bdev != NULL) {

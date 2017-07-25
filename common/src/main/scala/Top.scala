@@ -5,6 +5,7 @@ import freechips.rocketchip.config.{Parameters, Field}
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import freechips.rocketchip.chip._
 import testchipip._
+import icenet._
 
 case object ZynqAdapterBase extends Field[BigInt]
 
