@@ -1,7 +1,4 @@
-/DVEfiles
-/csrc
-/simv-*
-/output
-/src/verilog/*.v
-/ucli.key
-/vc_hdrs.h
+*
+!Makefile
+!.gitignore
+!src/verilog/.gitkeep
