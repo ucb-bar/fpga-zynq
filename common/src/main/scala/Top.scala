@@ -40,7 +40,7 @@ class FPGAZynqTop(implicit p: Parameters) extends BaseSystem
     with HasNoDebug
     with HasPeripherySerial
     with HasPeripheryBlockDevice
-    with HasPeripherySimpleNIC {
+    with HasPeripheryIceNIC {
   override lazy val module = new FPGAZynqTopModule(this)
 }
 
@@ -52,4 +52,4 @@ class FPGAZynqTopModule(outer: FPGAZynqTop) extends BaseSystemModule(outer)
     with HasNoDebugModuleImp
     with HasPeripherySerialModuleImp
     with HasPeripheryBlockDeviceModuleImp
-    with HasPeripherySimpleNICModuleImp
+    with HasPeripheryIceNICModuleImp
