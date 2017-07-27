@@ -24,7 +24,8 @@
 #define NET_OUT_FIFO_COUNT 0x44
 #define NET_IN_FIFO_DATA 0x48
 #define NET_IN_FIFO_COUNT 0x4C
-#define NET_MACADDR 0x50
+#define NET_MACADDR_LO 0x50
+#define NET_MACADDR_HI 0x54
 
 #define BLKDEV_REQ_NWORDS 4
 #define BLKDEV_DATA_NWORDS 3
@@ -56,6 +57,11 @@ zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev,
     } else {
         write(BLKDEV_NSECTORS, bdev->nsectors());
         write(BLKDEV_MAX_REQUEST_LENGTH, bdev->max_request_length());
+    }
+
+    // set MAC address
+    if (netdev != NULL) {
+        write_macaddr(netdev->macaddr());
     }
 }
 
@@ -131,15 +137,10 @@ void zynq_driver_t::write_net_in(struct network_flit &flt)
     write(NET_IN_FIFO_DATA, flt.last);
 }
 
-uint64_t zynq_driver_t::read_macaddr(void)
+void zynq_driver_t::write_macaddr(uint64_t macaddr)
 {
-    uint64_t macaddr;
-
-    macaddr = read(NET_MACADDR + 4);
-    macaddr <<= 32;
-    macaddr |= read(NET_MACADDR);
-
-    return macaddr;
+    write(NET_MACADDR_LO, macaddr & 0xffffffff);
+    write(NET_MACADDR_HI, macaddr >> 32);
 }
 
 void zynq_driver_t::poll(void)
@@ -169,9 +170,7 @@ void zynq_driver_t::poll(void)
             write_net_in(flt);
         }
 
-        netdev->set_macaddr(read_macaddr());
         netdev->switch_to_host();
-
         netsw->distribute();
         netsw->switch_to_worker();
     }

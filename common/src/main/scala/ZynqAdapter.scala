@@ -72,6 +72,10 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
   val bdev_resp_space = (bdevDepth.U - bdev_resp_fifo.io.count)
   val net_in_space = (netDepth.U - net_in_fifo.io.count)
 
+  val macAddr_lo = Reg(UInt(32.W))
+  val macAddr_hi = Reg(UInt(16.W))
+  io.net.macAddr := Cat(macAddr_hi, macAddr_lo)
+
   /**
    * Address Map
    * 0x00 - serial out FIFO data
@@ -112,8 +116,8 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
     0x44 -> Seq(RegField.r(netCountBits, net_out_fifo.io.count)),
     0x48 -> Seq(RegField.w(w, net_in_fifo.io.enq)),
     0x4C -> Seq(RegField.r(netCountBits, net_in_space)),
-    0x50 -> Seq(RegField.r(32, io.net.macAddr.bits(31, 0))),
-    0x54 -> Seq(RegField.r(16, io.net.macAddr.bits(47, 32))))
+    0x50 -> Seq(RegField(32, macAddr_lo)),
+    0x54 -> Seq(RegField(16, macAddr_hi)))
 }
 
 class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)

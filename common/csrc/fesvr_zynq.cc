@@ -22,7 +22,7 @@ int main(int argc, char** argv)
         } else if (strncmp(argv[i], "+netdev=", 8) == 0) {
             name = argv[i] + 8;
             netsw = new NetworkSwitch(name);
-            netdev = new NetworkDevice();
+            netdev = new NetworkDevice(random_macaddr());
             netsw->add_device(netdev);
         }
     }

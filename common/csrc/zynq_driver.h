@@ -31,7 +31,7 @@ class zynq_driver_t {
     void write_blkdev_response(struct blkdev_data &resp);
     struct network_flit read_net_out();
     void write_net_in(struct network_flit &flt);
-    uint64_t read_macaddr(void);
+    void write_macaddr(uint64_t macaddr);
 };
 
 #endif
