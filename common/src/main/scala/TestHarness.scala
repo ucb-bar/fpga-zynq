@@ -11,7 +11,7 @@ import freechips.rocketchip.tilelink._
 import testchipip._
 import testchipip.SerialAdapter._
 import icenet._
-import icenet.IceNIC._
+import icenet.IceNetConsts._
 
 class TestHarness(implicit val p: Parameters) extends Module {
   val io = IO(new Bundle {

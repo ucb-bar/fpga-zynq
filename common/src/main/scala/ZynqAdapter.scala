@@ -10,7 +10,7 @@ import freechips.rocketchip.chip.SlaveConfig
 import testchipip._
 import testchipip.SerialAdapter._
 import icenet._
-import icenet.IceNIC._
+import icenet.IceNetConsts._
 
 case object SerialFIFODepth extends Field[Int]
 case object BlockDeviceFIFODepth extends Field[Int]
