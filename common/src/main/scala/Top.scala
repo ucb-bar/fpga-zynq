@@ -2,8 +2,9 @@ package zynq
 
 import chisel3._
 import freechips.rocketchip.config.{Parameters, Field}
+import freechips.rocketchip.coreplex._
+import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
-import freechips.rocketchip.chip._
 import testchipip._
 import icenet._
 
@@ -30,13 +31,10 @@ class Top(implicit val p: Parameters) extends Module {
   target.reset := adapter.io.sys_reset
 }
 
-class FPGAZynqTop(implicit p: Parameters) extends BaseSystem
-    with HasPeripheryMasterAXI4MemPort
+class FPGAZynqTop(implicit p: Parameters) extends RocketCoreplex
+    with HasMasterAXI4MemPort
     with HasPeripheryErrorSlave
-    with HasPeripheryZeroSlave
     with HasPeripheryBootROM
-    with HasPeripheryRTCCounter
-    with HasRocketPlexMaster
     with HasNoDebug
     with HasPeripherySerial
     with HasPeripheryBlockDevice
@@ -44,11 +42,10 @@ class FPGAZynqTop(implicit p: Parameters) extends BaseSystem
   override lazy val module = new FPGAZynqTopModule(this)
 }
 
-class FPGAZynqTopModule(outer: FPGAZynqTop) extends BaseSystemModule(outer)
-    with HasPeripheryMasterAXI4MemPortModuleImp
+class FPGAZynqTopModule(outer: FPGAZynqTop) extends RocketCoreplexModule(outer)
+    with HasRTCModuleImp
+    with HasMasterAXI4MemPortModuleImp
     with HasPeripheryBootROMModuleImp
-    with HasPeripheryRTCCounterModuleImp
-    with HasRocketPlexMasterModuleImp
     with HasNoDebugModuleImp
     with HasPeripherySerialModuleImp
     with HasPeripheryBlockDeviceModuleImp

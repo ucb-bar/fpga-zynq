@@ -3,7 +3,7 @@ package zynq
 import chisel3._
 import chisel3.util.Queue
 import freechips.rocketchip.amba.axi4._
-import freechips.rocketchip.chip._
+import freechips.rocketchip.coreplex._
 import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import freechips.rocketchip.rocket.PAddrBits

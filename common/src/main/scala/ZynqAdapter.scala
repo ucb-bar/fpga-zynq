@@ -2,11 +2,11 @@ package zynq
 
 import chisel3._
 import chisel3.util._
-import freechips.rocketchip.config.{Parameters, Field}
-import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp, IdRange}
 import freechips.rocketchip.amba.axi4._
+import freechips.rocketchip.config.{Parameters, Field}
+import freechips.rocketchip.coreplex.SlavePortParams
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp, IdRange}
 import freechips.rocketchip.regmapper.{RegField, HasRegMap}
-import freechips.rocketchip.chip.SlaveConfig
 import testchipip._
 import testchipip.SerialAdapter._
 import icenet._
@@ -75,6 +75,7 @@ trait ZynqAdapterCoreModule extends Module with HasRegMap
   val macAddr_lo = Reg(UInt(32.W))
   val macAddr_hi = Reg(UInt(16.W))
   io.net.macAddr := Cat(macAddr_hi, macAddr_lo)
+  io.net.in.bits.keep := NET_FULL_KEEP
 
   /**
    * Address Map
@@ -126,7 +127,7 @@ class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)
       new AXI4RegBundle((), _)    with ZynqAdapterCoreBundle)(
       new AXI4RegModule((), _, _) with ZynqAdapterCoreModule)
 
-class ZynqAdapter(address: BigInt, config: SlaveConfig)(implicit p: Parameters)
+class ZynqAdapter(address: BigInt, config: SlavePortParams)(implicit p: Parameters)
     extends LazyModule {
 
   val node = AXI4BlindInputNode(Seq(AXI4MasterPortParameters(

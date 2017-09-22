@@ -1,11 +1,12 @@
 package zynq
 
 import chisel3._
-import freechips.rocketchip.chip.{ExtMem, ExtIn, DefaultConfig, DefaultSmallConfig, BaseConfig, WithoutTLMonitors}
 import freechips.rocketchip.config.{Parameters, Config}
-import freechips.rocketchip.coreplex.{RocketTilesKey, L1toL2Config, CacheBlockBytes}
-import freechips.rocketchip.rocket.{RocketTileParams, RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
-import freechips.rocketchip.tile.BuildCore
+import freechips.rocketchip.coreplex._
+import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
+import freechips.rocketchip.system.{BaseConfig, DefaultConfig, DefaultSmallConfig}
+import freechips.rocketchip.tile.{RocketTileParams, BuildCore}
+import icenet.{NICKey, NICConfig}
 import testchipip._
 
 class WithZynqAdapter extends Config((site, here, up) => {
@@ -17,6 +18,7 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case BlockDeviceKey => BlockDeviceConfig(nTrackers = 2)
   case BlockDeviceFIFODepth => 16
   case NetworkFIFODepth => 16
+  case NICKey => NICConfig()
 })
 
 class WithNMediumCores(n: Int) extends Config((site, here, up) => {
@@ -28,14 +30,14 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
         divEarlyOut = true)),
         fpu = None),
       dcache = Some(DCacheParams(
-        rowBits = site(L1toL2Config).beatBytes*8,
+        rowBits = site(SystemBusParams).beatBytes*8,
         nSets = 64,
         nWays = 1,
         nTLBEntries = 4,
         nMSHRs = 0,
         blockBytes = site(CacheBlockBytes))),
       icache = Some(ICacheParams(
-        rowBits = site(L1toL2Config).beatBytes*8,
+        rowBits = site(SystemBusParams).beatBytes*8,
         nSets = 64,
         nWays = 1,
         nTLBEntries = 4,
