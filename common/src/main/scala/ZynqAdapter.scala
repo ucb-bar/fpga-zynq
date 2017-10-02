@@ -26,7 +26,7 @@ trait ZynqAdapterCoreBundle extends Bundle {
   val net = Flipped(new NICIO)
 }
 
-trait ZynqAdapterCoreModule extends Module with HasRegMap
+trait ZynqAdapterCoreModule extends HasRegMap
     with HasBlockDeviceParameters {
   implicit val p: Parameters
   val io: ZynqAdapterCoreBundle
@@ -130,7 +130,7 @@ class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)
 class ZynqAdapter(address: BigInt, config: SlavePortParams)(implicit p: Parameters)
     extends LazyModule {
 
-  val node = AXI4BlindInputNode(Seq(AXI4MasterPortParameters(
+  val node = AXI4MasterNode(Seq(AXI4MasterPortParameters(
     masters = Seq(AXI4MasterParameters(
       name = "Zynq Adapter",
       id = IdRange(0, 1 << config.idBits))))))
@@ -139,13 +139,14 @@ class ZynqAdapter(address: BigInt, config: SlavePortParams)(implicit p: Paramete
   core.node := AXI4Fragmenter()(node)
 
   lazy val module = new LazyModuleImp(this) {
-    val io = new Bundle {
-      val axi = node.bundleIn
+    val io = IO(new Bundle {
       val sys_reset = Output(Bool())
       val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
       val bdev = Flipped(new BlockDeviceIO)
       val net = Flipped(new NICIO)
-    }
+    })
+    val axi = IO(Flipped(node.out(0)._1.cloneType))
+    node.out(0)._1 <> axi
 
     val coreIO = core.module.io
     io.sys_reset := coreIO.sys_reset

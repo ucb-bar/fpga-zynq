@@ -6,6 +6,7 @@ TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
+SCALA_VERSION=2.11.7
 EXTRA_PACKAGES=testchipip icenet
 
 base_dir = $(abspath ..)
@@ -31,6 +32,7 @@ verilog_srcs = \
 	src/verilog/rocketchip_wrapper.v \
 	src/verilog/$(TOP_MODULE).$(CONFIG).v \
 	src/verilog/AsyncResetReg.v \
+	src/verilog/plusarg_reader.v \
 
 bootimage = fpga-images-$(BOARD)/boot.bin
 bootimage: $(bootimage)

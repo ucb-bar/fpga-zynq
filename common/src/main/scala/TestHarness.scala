@@ -6,7 +6,6 @@ import freechips.rocketchip.amba.axi4._
 import freechips.rocketchip.coreplex._
 import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
-import freechips.rocketchip.rocket.PAddrBits
 import freechips.rocketchip.tilelink._
 import testchipip._
 import testchipip.SerialAdapter._

@@ -27,7 +27,7 @@ class BlockDeviceSerdes(w: Int)(implicit p: Parameters)
   require(w >= (tagBits + 1))
   require(dataBitsPerBeat % w == 0)
 
-  val reqWords = 4
+  val reqWords = 3
   val dataWords = 1 + dataBitsPerBeat / w
 
   val req = Reg(new BlockDeviceRequest)
@@ -72,7 +72,7 @@ class BlockDeviceSerdes(w: Int)(implicit p: Parameters)
   io.bdev.resp.valid := resp_send
   io.bdev.resp.bits := resp
 
-  val req_vec = Vec(Cat(req.tag, req.write), req.addr, req.offset, req.len)
+  val req_vec = Vec(Cat(req.tag, req.write), req.offset, req.len)
   val data_vec = Vec(data.tag +: Seq.tabulate(dataBitsPerBeat/w) {
     i => data.data((i + 1) * w - 1, i * w)
   })
@@ -95,7 +95,7 @@ class BlockDeviceDesser(w: Int)(implicit p: Parameters) extends BlockDeviceModul
   require(w >= (tagBits + 1))
   require(dataBitsPerBeat % w == 0)
 
-  val reqWords = 4
+  val reqWords = 3
   val dataWords = 1 + dataBitsPerBeat / w
 
   val req = Reg(new BlockDeviceRequest)
@@ -118,12 +118,9 @@ class BlockDeviceDesser(w: Int)(implicit p: Parameters) extends BlockDeviceModul
         req.tag := io.ser.req.bits(tagBits, 1)
       }
       is (1.U) {
-        req.addr := io.ser.req.bits
-      }
-      is (2.U) {
         req.offset := io.ser.req.bits
       }
-      is (3.U) {
+      is (2.U) {
         req.len := io.ser.req.bits
       }
     }

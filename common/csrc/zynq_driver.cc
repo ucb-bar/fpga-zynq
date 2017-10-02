@@ -27,7 +27,7 @@
 #define NET_MACADDR_LO 0x50
 #define NET_MACADDR_HI 0x54
 
-#define BLKDEV_REQ_NWORDS 4
+#define BLKDEV_REQ_NWORDS 3
 #define BLKDEV_DATA_NWORDS 3
 #define NET_FLIT_NWORDS 3
 
@@ -92,8 +92,6 @@ struct blkdev_request zynq_driver_t::read_blkdev_request()
     word = read(BLKDEV_REQ_FIFO_DATA);
     req.write = word & 0x1;
     req.tag = word >> 1;
-    // addr (this is ignored)
-    word = read(BLKDEV_REQ_FIFO_DATA);
     // offset, then len
     req.offset = read(BLKDEV_REQ_FIFO_DATA);
     req.len = read(BLKDEV_REQ_FIFO_DATA);

@@ -93,6 +93,7 @@ set files [list \
  "[file normalize "$origin_dir/src/verilog/Top.CHISEL_CONFIG_HERE.v"]"\
  "[file normalize "$origin_dir/src/verilog/rocketchip_wrapper.v"]"\
  "[file normalize "$origin_dir/src/verilog/AsyncResetReg.v"]" \
+ "[file normalize "$origin_dir/src/verilog/plusarg_reader.v"]" \
 ]
 add_files -norecurse -fileset $obj $files
 

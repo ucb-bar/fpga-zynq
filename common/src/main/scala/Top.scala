@@ -19,12 +19,12 @@ class Top(implicit val p: Parameters) extends Module {
   require(target.mem_axi4.size == 1)
 
   val io = IO(new Bundle {
-    val ps_axi_slave = Flipped(adapter.io.axi.head.cloneType)
+    val ps_axi_slave = Flipped(adapter.axi.cloneType)
     val mem_axi = target.mem_axi4.head.cloneType
   })
 
   io.mem_axi <> target.mem_axi4.head
-  adapter.io.axi.head <> io.ps_axi_slave
+  adapter.axi <> io.ps_axi_slave
   adapter.io.serial <> target.serial
   adapter.io.bdev <> target.bdev
   adapter.io.net <> target.net
@@ -33,7 +33,7 @@ class Top(implicit val p: Parameters) extends Module {
 
 class FPGAZynqTop(implicit p: Parameters) extends RocketCoreplex
     with HasMasterAXI4MemPort
-    with HasPeripheryErrorSlave
+    with HasSystemErrorSlave
     with HasPeripheryBootROM
     with HasNoDebug
     with HasPeripherySerial

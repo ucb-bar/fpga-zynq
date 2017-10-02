@@ -14,20 +14,17 @@ import icenet.IceNetConsts._
 class InFIFODriver(name: String, addr: BigInt, maxSpace: Int)
     (implicit p: Parameters) extends LazyModule {
 
-  val node = TLClientNode(TLClientParameters(
-    name = name, sourceId = IdRange(0, 1)))
+  val node = TLHelper.makeClientNode(
+    name = name, sourceId = IdRange(0, 1))
 
   lazy val module = new LazyModuleImp(this) {
-    val edge = node.edgesOut(0)
+    val (tl, edge) = node.out(0)
     val dataBits = edge.bundle.dataBits
     val beatBytes = dataBits / 8
 
     val io = IO(new Bundle {
-      val mem = node.bundleOut
       val in = Flipped(Decoupled(UInt(dataBits.W)))
     })
-
-    val tl = io.mem(0)
 
     val timeout = 64
     val timer = RegInit(0.U(log2Ceil(timeout).W))
@@ -85,17 +82,16 @@ class InFIFODriver(name: String, addr: BigInt, maxSpace: Int)
 class OutFIFODriver(name: String, addr: BigInt, maxCount: Int)
     (implicit p: Parameters) extends LazyModule {
 
-  val node = TLClientNode(TLClientParameters(
-    name = name, sourceId = IdRange(0, 1)))
+  val node = TLHelper.makeClientNode(
+    name = name, sourceId = IdRange(0, 1))
 
   lazy val module = new LazyModuleImp(this) {
-    val edge = node.edgesOut(0)
+    val (tl, edge) = node.out(0)
     val dataBits = edge.bundle.dataBits
     val beatBytes = dataBits / 8
     val lgSize = log2Ceil(beatBytes)
 
     val io = IO(new Bundle {
-      val mem = node.bundleOut
       val out = Decoupled(UInt(dataBits.W))
     })
 
@@ -105,8 +101,6 @@ class OutFIFODriver(name: String, addr: BigInt, maxCount: Int)
     val (s_start :: s_count_acq :: s_count_gnt ::
          s_fifo_acq :: s_fifo_gnt :: Nil) = Enum(5)
     val state = RegInit(s_start)
-
-    val tl = io.mem(0)
 
     tl.a.valid := state.isOneOf(s_count_acq, s_fifo_acq)
     tl.a.bits := edge.Get(
@@ -146,17 +140,16 @@ class OutFIFODriver(name: String, addr: BigInt, maxCount: Int)
 class SetRegisterDriver(name: String, addr: BigInt, n: Int)
     (implicit p: Parameters) extends LazyModule {
 
-  val node = TLClientNode(TLClientParameters(
-    name = name, sourceId = IdRange(0, 1)))
+  val node = TLHelper.makeClientNode(
+    name = name, sourceId = IdRange(0, 1))
 
   lazy val module = new LazyModuleImp(this) {
-    val edge = node.edgesOut(0)
+    val (tl, edge) = node.out(0)
     val dataBits = edge.bundle.dataBits
     val beatBytes = dataBits / 8
     val lgSize = log2Ceil(beatBytes)
 
     val io = IO(new Bundle {
-      val mem = node.bundleOut
       val values = Input(Vec(n, UInt(dataBits.W)))
     })
 
@@ -170,8 +163,6 @@ class SetRegisterDriver(name: String, addr: BigInt, n: Int)
     val value_set = RegInit(UInt(n.W), ~0.U(n.W))
     val value_set_oh = PriorityEncoderOH(value_set)
     val value_idx = OHToUInt(value_set_oh)
-
-    val tl = io.mem(0)
 
     tl.a.valid := state === s_write_acq
     tl.a.bits := edge.Put(
@@ -209,7 +200,7 @@ class SerialDriver(implicit p: Parameters) extends LazyModule {
   val base = p(ZynqAdapterBase)
   val depth = p(SerialFIFODepth)
 
-  val node = TLOutputNode()
+  val node = TLIdentityNode()
   val xbar = LazyModule(new TLXbar)
   val outdrv = LazyModule(new OutFIFODriver("serial-out", base, depth))
   val indrv = LazyModule(new InFIFODriver("serial-in", base + BigInt(8), depth))
@@ -219,11 +210,10 @@ class SerialDriver(implicit p: Parameters) extends LazyModule {
   node := xbar.node
 
   lazy val module = new LazyModuleImp(this) {
-    val edge = node.edgesOut(0)
+    val (tl, edge) = node.out(0)
     require(edge.bundle.dataBits == SERIAL_IF_WIDTH)
 
     val io = IO(new Bundle {
-      val mem = node.bundleOut
       val serial = new SerialIO(SERIAL_IF_WIDTH)
     })
 
@@ -235,16 +225,12 @@ class SerialDriver(implicit p: Parameters) extends LazyModule {
 class ResetDriver(implicit p: Parameters) extends LazyModule {
   val base = p(ZynqAdapterBase)
 
-  val node = TLOutputNode()
+  val node = TLIdentityNode()
   val driver = LazyModule(new SetRegisterDriver("reset", base + BigInt(0x10), 1))
 
   node := driver.node
 
   lazy val module = new LazyModuleImp(this) {
-    val io = IO(new Bundle {
-      val mem = node.bundleOut
-    })
-
     driver.module.io.values(0) := 0.U
   }
 }
@@ -253,7 +239,7 @@ class BlockDeviceDriver(implicit p: Parameters) extends LazyModule {
   val base = p(ZynqAdapterBase)
   val depth = p(BlockDeviceFIFODepth)
 
-  val node = TLOutputNode()
+  val node = TLIdentityNode()
   val xbar = LazyModule(new TLXbar)
   val reqdrv  = LazyModule(new OutFIFODriver(
     "bdev-req", base + BigInt(0x20), depth))
@@ -271,11 +257,10 @@ class BlockDeviceDriver(implicit p: Parameters) extends LazyModule {
   node := xbar.node
 
   lazy val module = new LazyModuleImp(this) {
-    val edge = node.edgesOut(0)
+    val (tl, edge) = node.out(0)
     val dataBits = edge.bundle.dataBits
 
     val io = IO(new Bundle {
-      val mem = node.bundleOut
       val bdev = new BlockDeviceIO
     })
 
@@ -293,7 +278,7 @@ class NetworkDriver(implicit p: Parameters) extends LazyModule {
   val base = p(ZynqAdapterBase)
   val depth = p(NetworkFIFODepth)
 
-  val node = TLOutputNode()
+  val node = TLIdentityNode()
   val xbar = LazyModule(new TLXbar)
   val outdrv = LazyModule(new OutFIFODriver("net-out", base + BigInt(0x40), depth))
   val indrv  = LazyModule(new InFIFODriver("net-in", base + BigInt(0x48), depth))
@@ -303,11 +288,10 @@ class NetworkDriver(implicit p: Parameters) extends LazyModule {
   node := xbar.node
 
   lazy val module = new LazyModuleImp(this) {
-    val edge = node.edgesOut(0)
+    val (tl, edge) = node.out(0)
     val dataBits = edge.bundle.dataBits
 
     val io = IO(new Bundle {
-      val mem = node.bundleOut
       val net = new NICIO
     })
 
