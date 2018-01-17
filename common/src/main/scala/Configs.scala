@@ -3,11 +3,17 @@ package zynq
 import chisel3._
 import freechips.rocketchip.config.{Parameters, Config}
 import freechips.rocketchip.coreplex._
+import freechips.rocketchip.devices.tilelink.BootROMParams
 import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
 import freechips.rocketchip.system.{BaseConfig, DefaultConfig, DefaultSmallConfig}
 import freechips.rocketchip.tile.{RocketTileParams, BuildCore}
 import icenet.{NICKey, NICConfig}
 import testchipip._
+
+class WithBootROM extends Config((site, here, up) => {
+  case BootROMParams => BootROMParams(
+    contentFileName = s"./bootrom/bootrom.rv${site(XLen)}.img")
+})
 
 class WithZynqAdapter extends Config((site, here, up) => {
   case SerialFIFODepth => 16

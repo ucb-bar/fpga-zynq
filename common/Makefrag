@@ -17,7 +17,7 @@ icenet = $(base_dir)/icenet
 output_delivery = deliver_output
 SHELL := /bin/bash
 
-bootrom_img = $(common)/bootrom/bootrom.img
+bootrom_img = $(common)/bootrom/bootrom.rv64.img $(common)/bootrom/bootrom.rv32.img
 rocketchip_stamp = $(common)/lib/rocketchip.stamp
 extra_stamps = $(addprefix $(common)/lib/,$(addsuffix .stamp,$(EXTRA_PACKAGES)))
 
