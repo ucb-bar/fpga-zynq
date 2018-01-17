@@ -20,13 +20,17 @@ class TestHarness(implicit val p: Parameters) extends Module {
   val config = p(ExtIn)
   val driver = Module(LazyModule(new TestHarnessDriver).module)
   val dut = Module(LazyModule(new FPGAZynqTop).module)
+
   dut.reset := driver.io.sys_reset
+  dut.debug := DontCare
+  dut.tieOffInterrupts()
+  dut.dontTouchPorts()
+  dut.connectSimAXIMem()
+
   driver.io.serial <> dut.serial
   driver.io.bdev <> dut.bdev
   driver.io.net <> dut.net
   io.success := driver.io.success
-
-  dut.connectSimAXIMem()
 }
 
 class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
@@ -35,7 +39,7 @@ class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
   val base = p(ZynqAdapterBase)
 
   val zynq = LazyModule(new ZynqAdapterCore(base, config.beatBytes))
-  val converter = LazyModule(new TLToAXI4(config.beatBytes))
+  val converter = LazyModule(new TLToAXI4)
 
   val serDriver = LazyModule(new SerialDriver)
   val resetDriver = LazyModule(new ResetDriver)

@@ -23,7 +23,6 @@ class BlockDeviceSerdes(w: Int)(implicit p: Parameters)
   })
 
   require(w >= sectorBits)
-  require(w >= pAddrBits)
   require(w >= (tagBits + 1))
   require(dataBitsPerBeat % w == 0)
 
@@ -71,6 +70,7 @@ class BlockDeviceSerdes(w: Int)(implicit p: Parameters)
   io.bdev.data.ready := !data_send
   io.bdev.resp.valid := resp_send
   io.bdev.resp.bits := resp
+  io.bdev.info := DontCare
 
   val req_vec = Vec(Cat(req.tag, req.write), req.offset, req.len)
   val data_vec = Vec(data.tag +: Seq.tabulate(dataBitsPerBeat/w) {
@@ -91,7 +91,6 @@ class BlockDeviceDesser(w: Int)(implicit p: Parameters) extends BlockDeviceModul
   })
 
   require(w >= sectorBits)
-  require(w >= pAddrBits)
   require(w >= (tagBits + 1))
   require(dataBitsPerBeat % w == 0)
 
@@ -200,7 +199,10 @@ class NetworkSerdes(w: Int) extends Module {
   io.ser.in.ready := !in_valid
   io.net.in.valid := in_valid
   io.net.in.bits.data := Cat(invec.take(dataBeats).reverse)
+  io.net.in.bits.keep := NET_FULL_KEEP
   io.net.in.bits.last := invec(dataBeats)(0)
+  io.net.rlimit := DontCare
+  io.net.macAddr := DontCare
 }
 
 class NetworkDesser(w: Int) extends Module {

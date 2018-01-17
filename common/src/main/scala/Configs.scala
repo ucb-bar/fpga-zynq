@@ -5,8 +5,7 @@ import freechips.rocketchip.config.{Parameters, Config}
 import freechips.rocketchip.coreplex._
 import freechips.rocketchip.devices.tilelink.BootROMParams
 import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
-import freechips.rocketchip.system.{BaseConfig, DefaultConfig, DefaultSmallConfig}
-import freechips.rocketchip.tile.{RocketTileParams, BuildCore}
+import freechips.rocketchip.tile.{RocketTileParams, BuildCore, XLen}
 import icenet.{NICKey, NICConfig}
 import testchipip._
 
@@ -52,7 +51,13 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
   }
 })
 
-class DefaultMediumConfig extends Config(new WithNMediumCores(1) ++ new BaseConfig)
+class DefaultConfig extends Config(
+  new WithBootROM ++ new freechips.rocketchip.system.DefaultConfig)
+class DefaultMediumConfig extends Config(
+  new WithBootROM ++ new WithNMediumCores(1) ++
+  new freechips.rocketchip.system.BaseConfig)
+class DefaultSmallConfig extends Config(
+  new WithBootROM ++ new freechips.rocketchip.system.DefaultSmallConfig)
 
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultConfig)
 class ZynqMediumConfig extends Config(new WithZynqAdapter ++ new DefaultMediumConfig)

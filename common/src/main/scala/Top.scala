@@ -5,6 +5,7 @@ import freechips.rocketchip.config.{Parameters, Field}
 import freechips.rocketchip.coreplex._
 import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
+import freechips.rocketchip.util.DontTouch
 import testchipip._
 import icenet._
 
@@ -28,6 +29,10 @@ class Top(implicit val p: Parameters) extends Module {
   adapter.io.serial <> target.serial
   adapter.io.bdev <> target.bdev
   adapter.io.net <> target.net
+
+  target.debug := DontCare
+  target.tieOffInterrupts()
+  target.dontTouchPorts()
   target.reset := adapter.io.sys_reset
 }
 
@@ -35,6 +40,7 @@ class FPGAZynqTop(implicit p: Parameters) extends RocketCoreplex
     with HasMasterAXI4MemPort
     with HasSystemErrorSlave
     with HasPeripheryBootROM
+    with HasSyncExtInterrupts
     with HasNoDebug
     with HasPeripherySerial
     with HasPeripheryBlockDevice
@@ -46,7 +52,9 @@ class FPGAZynqTopModule(outer: FPGAZynqTop) extends RocketCoreplexModule(outer)
     with HasRTCModuleImp
     with HasMasterAXI4MemPortModuleImp
     with HasPeripheryBootROMModuleImp
+    with HasExtInterruptsModuleImp
     with HasNoDebugModuleImp
     with HasPeripherySerialModuleImp
     with HasPeripheryBlockDeviceModuleImp
     with HasPeripheryIceNICModuleImp
+    with DontTouch

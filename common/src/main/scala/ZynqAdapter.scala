@@ -75,7 +75,9 @@ trait ZynqAdapterCoreModule extends HasRegMap
   val macAddr_lo = Reg(UInt(32.W))
   val macAddr_hi = Reg(UInt(16.W))
   io.net.macAddr := Cat(macAddr_hi, macAddr_lo)
-  io.net.in.bits.keep := NET_FULL_KEEP
+  io.net.rlimit.inc := 1.U
+  io.net.rlimit.period := 0.U
+  io.net.rlimit.size := 2.U
 
   /**
    * Address Map
@@ -136,7 +138,7 @@ class ZynqAdapter(address: BigInt, config: SlavePortParams)(implicit p: Paramete
       id = IdRange(0, 1 << config.idBits))))))
 
   val core = LazyModule(new ZynqAdapterCore(address, config.beatBytes))
-  core.node := AXI4Fragmenter()(node)
+  core.node := AXI4Fragmenter() := node
 
   lazy val module = new LazyModuleImp(this) {
     val io = IO(new Bundle {
