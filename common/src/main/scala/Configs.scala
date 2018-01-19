@@ -14,6 +14,14 @@ class WithBootROM extends Config((site, here, up) => {
     contentFileName = s"./bootrom/bootrom.rv${site(XLen)}.img")
 })
 
+class WithRocket extends Config((site, here, up) => {
+  case UseBoom => false
+})
+
+class WithBoom extends Config((site, here, up) => {
+  case UseBoom => true
+})
+
 class WithZynqAdapter extends Config((site, here, up) => {
   case SerialFIFODepth => 16
   case ResetCycles => 10
@@ -52,17 +60,32 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
 })
 
 class DefaultConfig extends Config(
-  new WithBootROM ++ new freechips.rocketchip.system.DefaultConfig)
+  new WithBootROM ++ new WithRocket ++
+  new freechips.rocketchip.system.DefaultConfig)
 class DefaultMediumConfig extends Config(
-  new WithBootROM ++ new WithNMediumCores(1) ++
+  new WithBootROM ++ new WithNMediumCores(1) ++ new WithRocket ++
   new freechips.rocketchip.system.BaseConfig)
 class DefaultSmallConfig extends Config(
-  new WithBootROM ++ new freechips.rocketchip.system.DefaultSmallConfig)
+  new WithBootROM ++ new WithRocket ++
+  new freechips.rocketchip.system.DefaultSmallConfig)
+
+class BoomConfig extends Config(
+  new WithBootROM ++ new WithBoom ++
+  new boom.system.BoomConfig)
+class SmallBoomConfig extends Config(
+  new WithBootROM ++ new WithBoom ++
+  new boom.system.SmallBoomConfig)
 
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultConfig)
 class ZynqMediumConfig extends Config(new WithZynqAdapter ++ new DefaultMediumConfig)
 class ZynqSmallConfig extends Config(new WithZynqAdapter ++ new DefaultSmallConfig)
 
+class ZynqBoomConfig extends Config(new WithZynqAdapter ++ new BoomConfig)
+class ZynqSmallBoomConfig extends Config(new WithZynqAdapter ++ new SmallBoomConfig)
+
 class ZynqFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqConfig)
 class ZynqMediumFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqMediumConfig)
 class ZynqSmallFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqSmallConfig)
+
+class ZynqBoomFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqBoomConfig)
+class ZynqSmallBoomFPGAConfig extends Config(new WithoutTLMonitors ++ new ZynqSmallBoomConfig)

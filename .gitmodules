@@ -24,3 +24,6 @@
 [submodule "icenet"]
 	path = icenet
 	url = git@github.com:firesim/icenet.git
+[submodule "boom"]
+	path = boom
+	url = https://github.com/ucb-bar/riscv-boom.git

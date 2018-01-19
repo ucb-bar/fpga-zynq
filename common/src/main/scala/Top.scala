@@ -1,5 +1,6 @@
 package zynq
 
+import boom.system.{BoomCoreplex, BoomCoreplexModule}
 import chisel3._
 import freechips.rocketchip.config.{Parameters, Field}
 import freechips.rocketchip.coreplex._
@@ -10,12 +11,17 @@ import testchipip._
 import icenet._
 
 case object ZynqAdapterBase extends Field[BigInt]
+case object UseBoom extends Field[Boolean]
 
 class Top(implicit val p: Parameters) extends Module {
   val address = p(ZynqAdapterBase)
   val config = p(ExtIn)
-  val target = Module(LazyModule(new FPGAZynqTop).module)
   val adapter = Module(LazyModule(new ZynqAdapter(address, config)).module)
+  val target = if (p(UseBoom)) {
+    Module(LazyModule(new FPGAZynqBoomTop).module)
+  } else {
+    Module(LazyModule(new FPGAZynqTop).module)
+  }
 
   require(target.mem_axi4.size == 1)
 
@@ -26,6 +32,7 @@ class Top(implicit val p: Parameters) extends Module {
 
   io.mem_axi <> target.mem_axi4.head
   adapter.axi <> io.ps_axi_slave
+
   adapter.io.serial <> target.serial
   adapter.io.bdev <> target.bdev
   adapter.io.net <> target.net
@@ -49,6 +56,29 @@ class FPGAZynqTop(implicit p: Parameters) extends RocketCoreplex
 }
 
 class FPGAZynqTopModule(outer: FPGAZynqTop) extends RocketCoreplexModule(outer)
+    with HasRTCModuleImp
+    with HasMasterAXI4MemPortModuleImp
+    with HasPeripheryBootROMModuleImp
+    with HasExtInterruptsModuleImp
+    with HasNoDebugModuleImp
+    with HasPeripherySerialModuleImp
+    with HasPeripheryBlockDeviceModuleImp
+    with HasPeripheryIceNICModuleImp
+    with DontTouch
+
+class FPGAZynqBoomTop(implicit p: Parameters) extends BoomCoreplex
+    with HasMasterAXI4MemPort
+    with HasSystemErrorSlave
+    with HasPeripheryBootROM
+    with HasSyncExtInterrupts
+    with HasNoDebug
+    with HasPeripherySerial
+    with HasPeripheryBlockDevice
+    with HasPeripheryIceNIC {
+  override lazy val module = new FPGAZynqBoomTopModule(this)
+}
+
+class FPGAZynqBoomTopModule(outer: FPGAZynqBoomTop) extends BoomCoreplexModule(outer)
     with HasRTCModuleImp
     with HasMasterAXI4MemPortModuleImp
     with HasPeripheryBootROMModuleImp
