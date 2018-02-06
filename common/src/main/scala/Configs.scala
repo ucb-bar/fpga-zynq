@@ -31,7 +31,7 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case BlockDeviceKey => BlockDeviceConfig(nTrackers = 2)
   case BlockDeviceFIFODepth => 16
   case NetworkFIFODepth => 16
-  case NICKey => NICConfig()
+  case NICKey => NICConfig(ctrlQueueDepth = 64)
 })
 
 class WithNMediumCores(n: Int) extends Config((site, here, up) => {
