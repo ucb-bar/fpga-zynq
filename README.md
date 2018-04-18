@@ -302,7 +302,13 @@ There are two options to obtain riscv-linux:
 
 #### Method 1) Build from Source
 
-To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman). Since we currently have no support for a real block device the projects of this repository, you'll need to include an initramfs with your complete filesystem. 
+To build [riscv-linux](http://github.com/riscv/riscv-linux) for Rocket, follow the instructions [here](https://github.com/riscv/riscv-tools#linuxman).
+These instructions will show you how to create a linux image that boots from an initramfs.
+We also now have support for block devices, so you can also boot from an ext2 image created by [buildroot](https://github.com/sifive/buildroot).
+To configure linux to boot from a block device, instead of selecting "Initial RAM filesystem and RAM disk",
+add the arguments "root=/dev/generic-blkdev rw" to the kernel command line
+under "Kernel Hacking" -> "Built-in Kernel Command String". To use the block
+device, you will need to use the ucbbar-all branch of riscv-linux.
 
 Next, you'll need to build an instance of the Berkeley Bootloader(BBL) that contains your linux image as a payload. BBL is provided alongside the proxy kernel at [this repository](https://github.com/riscv/riscv-pk).
 
@@ -350,6 +356,11 @@ To boot riscv-linux, run:
     [    0.000000] Linux version 4.6.2 <more messages follow>
 
 After linux boots you'll be presented with a busybox prompt from riscv-linux running on rocket!
+
+If you are using a root filesystem on a seperate filesystem image, you can
+boot linux by running
+
+    root@zynq:~# ./fesvr-zynq +blkdev=rootfs.ext2 bbl
 
 <a name="appendices"></a> Appendices 
 ------------
