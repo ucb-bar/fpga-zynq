@@ -27,11 +27,8 @@ class WithZynqAdapter extends Config((site, here, up) => {
 class WithNMediumCores(n: Int) extends Config((site, here, up) => {
   case RocketTilesKey => {
     val medium = RocketTileParams(
-      core = RocketCoreParams(mulDiv = Some(MulDivParams(
-        mulUnroll = 8,
-        mulEarlyOut = true,
-        divEarlyOut = true)),
-        fpu = None),
+      core = RocketCoreParams(fpu = None),
+      btb = None,
       dcache = Some(DCacheParams(
         rowBits = site(SystemBusKey).beatBytes*8,
         nSets = 64,
@@ -45,7 +42,7 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
         nWays = 1,
         nTLBEntries = 4,
         blockBytes = site(CacheBlockBytes))))
-    List.fill(n)(medium) ++ up(RocketTilesKey, site)
+    List.tabulate(n)(i => medium.copy(hartId = i))
   }
 })
 
