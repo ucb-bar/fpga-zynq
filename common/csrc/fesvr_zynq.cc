@@ -32,8 +32,6 @@ int main(int argc, char** argv)
     tsi_t tsi(new_argc, new_argv);
 
     BlockDevice *blkdev = NULL;
-    NetworkDevice *netdev = NULL;
-    NetworkSwitch *netsw = NULL;
     zynq_driver_t *driver;
 
     for (int i = 1; i < argc; i++) {
@@ -42,15 +40,10 @@ int main(int argc, char** argv)
         if (strncmp(argv[i], "+blkdev=", 8) == 0) {
             name = argv[i] + 8;
             blkdev = new BlockDevice(name, BLKDEV_NTAGS);
-        } else if (strncmp(argv[i], "+netdev=", 8) == 0) {
-            name = argv[i] + 8;
-            netsw = new NetworkSwitch(name);
-            netdev = new NetworkDevice(random_macaddr());
-            netsw->add_device(netdev);
         }
     }
 
-    driver = new zynq_driver_t(&tsi, blkdev, netdev, netsw);
+    driver = new zynq_driver_t(&tsi, blkdev);
 
     while(!tsi.done()){
         driver->poll();
@@ -59,8 +52,6 @@ int main(int argc, char** argv)
     delete driver;
     if (blkdev != NULL)
         delete blkdev;
-    if (netdev != NULL)
-        delete netdev;
 
     return tsi.exit_code();
 }

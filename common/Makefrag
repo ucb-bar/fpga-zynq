@@ -219,7 +219,7 @@ fesvr-lib = $(common_build)/libfesvr.so
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
 CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr \
                 -Wl,-rpath,/usr/local/lib \
-		-I $(common)/csrc -I $(testchipip)/csrc -I \
+		-I $(common)/csrc -I $(testchipip)/csrc \
 		-I $(ROCKET_DIR)/riscv-tools/riscv-fesvr/ \
 		-Wl,-rpath,/usr/local/lib \
 

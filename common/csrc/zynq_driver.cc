@@ -31,13 +31,10 @@
 #define BLKDEV_DATA_NWORDS 3
 #define NET_FLIT_NWORDS 3
 
-zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev,
-                            NetworkDevice *netdev, NetworkSwitch *netsw)
+zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev)
 {
     this->tsi = tsi;
     this->bdev = bdev;
-    this->netdev = netdev;
-    this->netsw = netsw;
 
     fd = open("/dev/mem", O_RDWR|O_SYNC);
     assert(fd != -1);
@@ -57,11 +54,6 @@ zynq_driver_t::zynq_driver_t(tsi_t *tsi, BlockDevice *bdev,
     } else {
         write(BLKDEV_NSECTORS, bdev->nsectors());
         write(BLKDEV_MAX_REQUEST_LENGTH, bdev->max_request_length());
-    }
-
-    // set MAC address
-    if (netdev != NULL) {
-        write_macaddr(netdev->macaddr());
     }
 }
 
@@ -117,30 +109,6 @@ void zynq_driver_t::write_blkdev_response(struct blkdev_data &resp)
     write(BLKDEV_RESP_FIFO_DATA, resp.data >> 32);
 }
 
-struct network_flit zynq_driver_t::read_net_out()
-{
-    struct network_flit flt;
-
-    flt.data = read(NET_OUT_FIFO_DATA) & 0xffffffff;
-    flt.data |= ((uint64_t) read(NET_OUT_FIFO_DATA)) << 32;
-    flt.last = read(NET_OUT_FIFO_DATA) & 0x1;
-
-    return flt;
-}
-
-void zynq_driver_t::write_net_in(struct network_flit &flt)
-{
-    write(NET_IN_FIFO_DATA, flt.data & 0xffffffff);
-    write(NET_IN_FIFO_DATA, flt.data >> 32);
-    write(NET_IN_FIFO_DATA, flt.last);
-}
-
-void zynq_driver_t::write_macaddr(uint64_t macaddr)
-{
-    write(NET_MACADDR_LO, macaddr & 0xffffffff);
-    write(NET_MACADDR_HI, macaddr >> 32);
-}
-
 void zynq_driver_t::poll(void)
 {
     if (tsi != NULL) {
@@ -155,22 +123,6 @@ void zynq_driver_t::poll(void)
         }
 
         tsi->switch_to_host();
-    }
-
-    if (netdev != NULL) {
-        while (read(NET_OUT_FIFO_COUNT) >= NET_FLIT_NWORDS) {
-            struct network_flit flt = read_net_out();
-            netdev->send_out(flt);
-        }
-
-        while (netdev->in_valid() && read(NET_IN_FIFO_COUNT) >= NET_FLIT_NWORDS) {
-            struct network_flit flt = netdev->recv_in();
-            write_net_in(flt);
-        }
-
-        netdev->switch_to_host();
-        netsw->distribute();
-        netsw->switch_to_worker();
     }
 
     if (bdev != NULL) {
