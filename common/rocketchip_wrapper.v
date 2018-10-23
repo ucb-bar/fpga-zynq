@@ -61,7 +61,7 @@ module rocketchip_wrapper
 `endif
 
   wire FCLK_RESET0_N;
-  
+
   wire [31:0]M_AXI_araddr;
   wire [1:0]M_AXI_arburst;
   wire [7:0]M_AXI_arlen;
@@ -204,7 +204,7 @@ module rocketchip_wrapper
         .M_AXI_wstrb(M_AXI_wstrb),
         .M_AXI_wvalid(M_AXI_wvalid),
 
-        // slave AXI interface (fpga = master, zynq = slave) 
+        // slave AXI interface (fpga = master, zynq = slave)
         // connected directly to DDR controller to handle test chip mem
         .S_AXI_araddr(S_AXI_araddr),
         .S_AXI_arburst(S_AXI_arburst),
@@ -307,43 +307,43 @@ module rocketchip_wrapper
    .io_ps_axi_slave_b_bits_id (M_AXI_bid),
    .io_ps_axi_slave_b_bits_resp (M_AXI_bresp),
 
-   .io_mem_axi_ar_valid (S_AXI_arvalid),
-   .io_mem_axi_ar_ready (S_AXI_arready),
-   .io_mem_axi_ar_bits_addr (mem_araddr),
-   .io_mem_axi_ar_bits_id (S_AXI_arid),
-   .io_mem_axi_ar_bits_size (S_AXI_arsize),
-   .io_mem_axi_ar_bits_len (S_AXI_arlen),
-   .io_mem_axi_ar_bits_burst (S_AXI_arburst),
-   .io_mem_axi_ar_bits_cache (S_AXI_arcache),
-   .io_mem_axi_ar_bits_lock (S_AXI_arlock),
-   .io_mem_axi_ar_bits_prot (S_AXI_arprot),
-   .io_mem_axi_ar_bits_qos (S_AXI_arqos),
-   .io_mem_axi_aw_valid (S_AXI_awvalid),
-   .io_mem_axi_aw_ready (S_AXI_awready),
-   .io_mem_axi_aw_bits_addr (mem_awaddr),
-   .io_mem_axi_aw_bits_id (S_AXI_awid),
-   .io_mem_axi_aw_bits_size (S_AXI_awsize),
-   .io_mem_axi_aw_bits_len (S_AXI_awlen),
-   .io_mem_axi_aw_bits_burst (S_AXI_awburst),
-   .io_mem_axi_aw_bits_cache (S_AXI_awcache),
-   .io_mem_axi_aw_bits_lock (S_AXI_awlock),
-   .io_mem_axi_aw_bits_prot (S_AXI_awprot),
-   .io_mem_axi_aw_bits_qos (S_AXI_awqos),
-   .io_mem_axi_w_valid (S_AXI_wvalid),
-   .io_mem_axi_w_ready (S_AXI_wready),
-   .io_mem_axi_w_bits_strb (S_AXI_wstrb),
-   .io_mem_axi_w_bits_data (S_AXI_wdata),
-   .io_mem_axi_w_bits_last (S_AXI_wlast),
-   .io_mem_axi_b_valid (S_AXI_bvalid),
-   .io_mem_axi_b_ready (S_AXI_bready),
-   .io_mem_axi_b_bits_resp (S_AXI_bresp),
-   .io_mem_axi_b_bits_id (S_AXI_bid),
-   .io_mem_axi_r_valid (S_AXI_rvalid),
-   .io_mem_axi_r_ready (S_AXI_rready),
-   .io_mem_axi_r_bits_resp (S_AXI_rresp),
-   .io_mem_axi_r_bits_id (S_AXI_rid),
-   .io_mem_axi_r_bits_data (S_AXI_rdata),
-   .io_mem_axi_r_bits_last (S_AXI_rlast)
+   .io_mem_axi_0_ar_valid (S_AXI_arvalid),
+   .io_mem_axi_0_ar_ready (S_AXI_arready),
+   .io_mem_axi_0_ar_bits_addr (mem_araddr),
+   .io_mem_axi_0_ar_bits_id (S_AXI_arid),
+   .io_mem_axi_0_ar_bits_size (S_AXI_arsize),
+   .io_mem_axi_0_ar_bits_len (S_AXI_arlen),
+   .io_mem_axi_0_ar_bits_burst (S_AXI_arburst),
+   .io_mem_axi_0_ar_bits_cache (S_AXI_arcache),
+   .io_mem_axi_0_ar_bits_lock (S_AXI_arlock),
+   .io_mem_axi_0_ar_bits_prot (S_AXI_arprot),
+   .io_mem_axi_0_ar_bits_qos (S_AXI_arqos),
+   .io_mem_axi_0_aw_valid (S_AXI_awvalid),
+   .io_mem_axi_0_aw_ready (S_AXI_awready),
+   .io_mem_axi_0_aw_bits_addr (mem_awaddr),
+   .io_mem_axi_0_aw_bits_id (S_AXI_awid),
+   .io_mem_axi_0_aw_bits_size (S_AXI_awsize),
+   .io_mem_axi_0_aw_bits_len (S_AXI_awlen),
+   .io_mem_axi_0_aw_bits_burst (S_AXI_awburst),
+   .io_mem_axi_0_aw_bits_cache (S_AXI_awcache),
+   .io_mem_axi_0_aw_bits_lock (S_AXI_awlock),
+   .io_mem_axi_0_aw_bits_prot (S_AXI_awprot),
+   .io_mem_axi_0_aw_bits_qos (S_AXI_awqos),
+   .io_mem_axi_0_w_valid (S_AXI_wvalid),
+   .io_mem_axi_0_w_ready (S_AXI_wready),
+   .io_mem_axi_0_w_bits_strb (S_AXI_wstrb),
+   .io_mem_axi_0_w_bits_data (S_AXI_wdata),
+   .io_mem_axi_0_w_bits_last (S_AXI_wlast),
+   .io_mem_axi_0_b_valid (S_AXI_bvalid),
+   .io_mem_axi_0_b_ready (S_AXI_bready),
+   .io_mem_axi_0_b_bits_resp (S_AXI_bresp),
+   .io_mem_axi_0_b_bits_id (S_AXI_bid),
+   .io_mem_axi_0_r_valid (S_AXI_rvalid),
+   .io_mem_axi_0_r_ready (S_AXI_rready),
+   .io_mem_axi_0_r_bits_resp (S_AXI_rresp),
+   .io_mem_axi_0_r_bits_id (S_AXI_rid),
+   .io_mem_axi_0_r_bits_data (S_AXI_rdata),
+   .io_mem_axi_0_r_bits_last (S_AXI_rlast)
   );
 `ifndef differential_clock
   IBUFG ibufg_gclk (.I(clk), .O(gclk_i));

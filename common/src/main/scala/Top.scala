@@ -12,7 +12,7 @@ case object ZynqAdapterBase extends Field[BigInt]
 
 class Top(implicit val p: Parameters) extends Module {
   val address = p(ZynqAdapterBase)
-  val config = p(ExtIn)
+  val config = p(ExtIn).get
   val target = Module(LazyModule(new FPGAZynqTop).module)
   val adapter = Module(LazyModule(new ZynqAdapter(address, config)).module)
 
@@ -35,8 +35,7 @@ class Top(implicit val p: Parameters) extends Module {
 }
 
 class FPGAZynqTop(implicit p: Parameters) extends RocketSubsystem
-    with HasMasterAXI4MemPort
-    with HasSystemErrorSlave
+    with CanHaveMasterAXI4MemPort
     with HasPeripheryBootROM
     with HasSyncExtInterrupts
     with HasNoDebug
@@ -47,7 +46,7 @@ class FPGAZynqTop(implicit p: Parameters) extends RocketSubsystem
 
 class FPGAZynqTopModule(outer: FPGAZynqTop) extends RocketSubsystemModuleImp(outer)
     with HasRTCModuleImp
-    with HasMasterAXI4MemPortModuleImp
+    with CanHaveMasterAXI4MemPortModuleImp
     with HasPeripheryBootROMModuleImp
     with HasExtInterruptsModuleImp
     with HasNoDebugModuleImp

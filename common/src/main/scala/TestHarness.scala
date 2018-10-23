@@ -35,7 +35,7 @@ class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
   val config = p(ExtIn)
   val base = p(ZynqAdapterBase)
 
-  val zynq = LazyModule(new ZynqAdapterCore(base, config.beatBytes))
+  val zynq = LazyModule(new ZynqAdapterCore(base, config.get.beatBytes))
   val converter = LazyModule(new TLToAXI4)
 
   val serDriver = LazyModule(new SerialDriver)

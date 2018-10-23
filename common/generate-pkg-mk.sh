@@ -11,7 +11,7 @@ ${common_dir}/lib/${pkg}.stamp: \$(call lookup_scala_srcs, ${pkg_dir}) \$(rocket
 	rm -f ${pkg_dir}/lib
 	ln -s ${common_dir}/lib ${pkg_dir}/lib
 	cd ${pkg_dir} && \$(SBT) ++\$(SCALA_VERSION) package
-	cp ${pkg_dir}/target/scala-2.11/*.jar ${common_dir}/lib
+	cp ${pkg_dir}/target/scala-2.12/*.jar ${common_dir}/lib
 	touch \$@
 MAKE
 done

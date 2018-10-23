@@ -6,7 +6,7 @@ TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
-SCALA_VERSION=2.11.12
+SCALA_VERSION=2.12.4
 EXTRA_PACKAGES=testchipip
 
 base_dir = $(abspath ..)
@@ -37,10 +37,10 @@ bootimage = fpga-images-$(BOARD)/boot.bin
 bootimage: $(bootimage)
 
 # Taken from rocket chip 2a5aeea. TODO: Maybe source this directly from makefrag?
-SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar
+SBT ?= java -Xmx12G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar ++${SCALA_VERSION}
 
 FIRRTL_JAR ?= $(ROCKET_DIR)/firrtl/utils/bin/firrtl.jar
-FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
+FIRRTL ?= java -Xmx12G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
 
 $(FIRRTL_JAR): $(shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala" 2> /dev/null)
 	$(MAKE) -C $(ROCKET_DIR)/firrtl SBT="$(SBT)" root_dir=$(ROCKET_DIR)/firrtl build-scala
@@ -69,7 +69,7 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-src/verilog/%.v: $(ROCKET_DIR)/vsrc/%.v
+src/verilog/%.v: $(ROCKET_DIR)/src/main/resources/vsrc/%.v
 	cp $< $@
 
 $(ROCKET_DIR)/lib/firrtl.jar: $(FIRRTL_JAR)
@@ -103,7 +103,7 @@ rocket: src/verilog/$(TOP_MODULE).$(CONFIG).v
 # Project generation
 # ------------------------------------------------------------------------------
 project = $(proj_name)/$(proj_name).xpr
-$(project): src/tcl/$(proj_name).tcl | $(verilog_srcs) 
+$(project): src/tcl/$(proj_name).tcl | $(verilog_srcs)
 	rm -rf $(proj_name)
 	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
 
@@ -129,7 +129,7 @@ arm-linux: arm-uboot # must first build uboot because we need tools
 	# compile kernel
 	git submodule update --init $(arm_linux_dir)
 	# no make clean included here since one copy of linux should work on all boards
-	cd $(arm_linux_dir) && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- xilinx_zynq_defconfig 
+	cd $(arm_linux_dir) && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- xilinx_zynq_defconfig
 	cd $(arm_linux_dir) && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- -j$(JOBS)
 	# convert zImage to uImage
 	cd $(arm_linux_dir) && export PATH=$(uboot_dir)/tools:$$PATH && make ARCH=arm CROSS_COMPILE=arm-xilinx-linux-gnueabi- UIMAGE_LOADADDR=0x8000 uImage
