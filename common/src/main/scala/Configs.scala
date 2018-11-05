@@ -2,7 +2,7 @@ package zynq
 
 import chisel3._
 import freechips.rocketchip.config.{Parameters, Config}
-import freechips.rocketchip.coreplex._
+import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink.BootROMParams
 import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
 import freechips.rocketchip.tile.{RocketTileParams, BuildCore, XLen}
@@ -26,8 +26,8 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case SerialFIFODepth => 16
   case ResetCycles => 10
   case ZynqAdapterBase => BigInt(0x43C00000L)
-  case ExtMem => up(ExtMem, site).copy(idBits = 6)
-  case ExtIn => up(ExtIn, site).copy(beatBytes = 4, idBits = 12)
+  case ExtMem => up(ExtMem, site).map(_.copy(idBits = 6))
+  case ExtIn => up(ExtIn, site).map(_.copy(beatBytes = 4, idBits = 12))
   case BlockDeviceKey => BlockDeviceConfig(nTrackers = 2)
   case BlockDeviceFIFODepth => 16
   case NetworkFIFODepth => 16

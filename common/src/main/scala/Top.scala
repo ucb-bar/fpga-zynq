@@ -3,7 +3,7 @@ package zynq
 import boom.system.{BoomCoreplex, BoomCoreplexModule}
 import chisel3._
 import freechips.rocketchip.config.{Parameters, Field}
-import freechips.rocketchip.coreplex._
+import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import freechips.rocketchip.util.DontTouch
@@ -43,8 +43,8 @@ class Top(implicit val p: Parameters) extends Module {
   target.reset := adapter.io.sys_reset
 }
 
-class FPGAZynqTop(implicit p: Parameters) extends RocketCoreplex
-    with HasMasterAXI4MemPort
+class FPGAZynqTop(implicit p: Parameters) extends RocketSubsystem
+    with CanHaveMasterAXI4MemPort
     with HasSystemErrorSlave
     with HasPeripheryBootROM
     with HasSyncExtInterrupts
