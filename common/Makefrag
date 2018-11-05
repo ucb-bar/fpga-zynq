@@ -1,25 +1,22 @@
 # This makefrag is sourced by each board's subdirectory
 
 JOBS = 16
-ROCKET_DIR ?= $(base_dir)/rocket-chip
 TOP_MODULE_PROJECT ?= zynq
 TOP_MODULE ?= Top
 CFG_PROJECT ?= $(TOP_MODULE_PROJECT)
 CONFIG ?= ZynqConfig
 SCALA_VERSION=2.12.4
-EXTRA_PACKAGES=testchipip icenet boom
 
 base_dir = $(abspath ..)
 common = $(base_dir)/common
 common_build = $(common)/build
-testchipip = $(base_dir)/testchipip
-icenet = $(base_dir)/icenet
+ROCKET_DIR ?= $(common)/rocket-chip
+testchipip = $(common)/testchipip
+icenet = $(common)/icenet
 output_delivery = deliver_output
 SHELL := /bin/bash
 
 bootrom_img = $(common)/bootrom/bootrom.rv64.img $(common)/bootrom/bootrom.rv32.img
-rocketchip_stamp = $(common)/lib/rocketchip.stamp
-extra_stamps = $(addprefix $(common)/lib/,$(addsuffix .stamp,$(EXTRA_PACKAGES)))
 
 ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
@@ -38,7 +35,7 @@ bootimage = fpga-images-$(BOARD)/boot.bin
 bootimage: $(bootimage)
 
 # Taken from rocket chip 2a5aeea. TODO: Maybe source this directly from makefrag?
-SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar ++$(SCALA_VERSION)
+SBT ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar $(ROCKET_DIR)/sbt-launch.jar
 
 FIRRTL_JAR ?= $(ROCKET_DIR)/firrtl/utils/bin/firrtl.jar
 FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
@@ -48,13 +45,13 @@ $(FIRRTL_JAR): $(shell find $(ROCKET_DIR)/firrtl/src/main/scala -iname "*.scala"
 
 CHISEL_ARGS := $(common_build)
 
-lookup_scala_srcs = $(shell find $(1)/. -iname "*.scala" 2> /dev/null)
+SCALA_SOURCES = $(shell find $(common) -iname "*.scala" 2> /dev/null)
 
 # Initialize rocket-chip submodule
 # ------------------------------------------------------------------------------
 
 init-submodules:
-	cd $(base_dir) && git submodule update --init rocket-chip $(EXTRA_PACKAGES)
+	cd $(base_dir) && git submodule update --init common/rocket-chip $(addprefix common/,$(EXTRA_PACKAGES))
 	cd $(ROCKET_DIR) && git submodule update --init
 
 # Specialize sources for board
@@ -70,27 +67,12 @@ src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-src/verilog/%.v: $(ROCKET_DIR)/vsrc/%.v
+src/verilog/%.v: $(ROCKET_DIR)/src/main/resources/vsrc/%.v
 	cp $< $@
 
-$(ROCKET_DIR)/lib/firrtl.jar: $(FIRRTL_JAR)
+$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(bootrom_img) $(SCALA_SOURCES)
 	mkdir -p $(@D)
-	cp $< $@
-
-$(rocketchip_stamp): $(call lookup_scala_srcs, $(ROCKET_DIR)) $(ROCKET_DIR)/lib/firrtl.jar
-	cd $(ROCKET_DIR) && $(SBT) pack
-	mkdir -p $(common)/lib
-	cp $(ROCKET_DIR)/target/pack/lib/* $(common)/lib
-	touch $(rocketchip_stamp)
-
-$(common)/Makefrag.pkgs: $(common)/generate-pkg-mk.sh
-	bash $(common)/generate-pkg-mk.sh $(EXTRA_PACKAGES) > $@
-
--include $(common)/Makefrag.pkgs
-
-$(common_build)/$(TOP_MODULE).$(CONFIG).fir: $(rocketchip_stamp) $(extra_stamps) $(bootrom_img) $(call lookup_scala_srcs,$(common))
-	mkdir -p $(@D)
-	cd $(common) && $(SBT) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
+	cd $(common) && $(SBT) ++$(SCALA_VERSION) "run $(CHISEL_ARGS) $(TOP_MODULE_PROJECT) $(TOP_MODULE) $(CFG_PROJECT) $(CONFIG)"
 
 $(common_build)/$(TOP_MODULE).$(CONFIG).v: $(common_build)/$(TOP_MODULE).$(CONFIG).fir $(FIRRTL_JAR)
 	$(FIRRTL) -i $< -o $@ -X verilog
@@ -231,13 +213,7 @@ $(fesvr-lib):
 		--host=arm-xilinx-linux-gnueabi && \
 	make libfesvr.so
 
-icenet-lib = $(common_build)/libicenet.so
-
-$(icenet-lib): $(icenet)/csrc/*
-	make -C $(icenet) CXX=arm-xilinx-linux-gnueabi-g++ BUILD=build-arm
-	cp $(icenet)/build-arm/libicenet.so $(common_build)
-
-$(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs) $(icenet-lib)
+$(common_build)/$(fesvr-main): $(fesvr-lib) $(fesvr-srcs) $(fesvr-hdrs)
 	$(CXX_FPGA) $(CXXFLAGS_FPGA) -o $(common_build)/$(fesvr-main) $(fesvr-srcs)
 
 fesvr-zynq: $(common_build)/$(fesvr-main)

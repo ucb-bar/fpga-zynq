@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import freechips.rocketchip.amba.axi4._
 import freechips.rocketchip.config.{Parameters, Field}
-import freechips.rocketchip.coreplex.SlavePortParams
+import freechips.rocketchip.subsystem.SlavePortParams
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp, IdRange}
 import freechips.rocketchip.regmapper.{RegField, HasRegMap}
 import testchipip._

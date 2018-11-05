@@ -12,16 +12,16 @@ include ../common/Makefrag
 
 sim_vsrcs = \
 	src/verilog/$(TOP_MODULE).$(CONFIG).v \
-	$(base_dir)/rocket-chip/vsrc/TestDriver.v \
-	$(base_dir)/rocket-chip/vsrc/AsyncResetReg.v \
-	$(base_dir)/rocket-chip/vsrc/plusarg_reader.v \
-	$(base_dir)/testchipip/vsrc/SimSerial.v \
-	$(base_dir)/testchipip/vsrc/SimBlockDevice.v \
+	$(common)/rocket-chip/src/main/resources/vsrc/TestDriver.v \
+	$(common)/rocket-chip/src/main/resources/vsrc/AsyncResetReg.v \
+	$(common)/rocket-chip/src/main/resources/vsrc/plusarg_reader.v \
+	$(common)/testchipip/vsrc/SimSerial.v \
+	$(common)/testchipip/vsrc/SimBlockDevice.v \
 
 sim_csrcs = \
-	$(base_dir)/testchipip/csrc/SimSerial.cc \
-	$(base_dir)/testchipip/csrc/SimBlockDevice.cc \
-	$(base_dir)/testchipip/csrc/blkdev.cc \
+	$(common)/testchipip/csrc/SimSerial.cc \
+	$(common)/testchipip/csrc/SimBlockDevice.cc \
+	$(common)/testchipip/csrc/blkdev.cc \
 
 VCS = vcs -full64
 

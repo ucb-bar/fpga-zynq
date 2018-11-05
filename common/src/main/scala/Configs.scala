@@ -5,7 +5,7 @@ import freechips.rocketchip.config.{Parameters, Config}
 import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink.BootROMParams
 import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
-import freechips.rocketchip.tile.{RocketTileParams, BuildCore, XLen}
+import freechips.rocketchip.tile.{RocketTileParams, XLen}
 import icenet.{NICKey, NICConfig}
 import testchipip._
 

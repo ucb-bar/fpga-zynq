@@ -15,15 +15,15 @@
 [submodule "zc706/fpga-images-zc706"]
 	path = zc706/fpga-images-zc706
 	url = https://github.com/ucb-bar/fpga-images-zc706.git
-[submodule "rocket-chip"]
-	path = rocket-chip
-	url = https://github.com/ucb-bar/rocket-chip.git
-[submodule "testchipip"]
-	path = testchipip
-	url = https://github.com/ucb-bar/testchipip.git
-[submodule "icenet"]
-	path = icenet
-	url = git@github.com:firesim/icenet.git
-[submodule "boom"]
-	path = boom
+[submodule "common/boom"]
+	path = common/boom
 	url = https://github.com/ucb-bar/riscv-boom.git
+[submodule "common/testchipip"]
+	path = common/testchipip
+	url = https://github.com/ucb-bar/testchipip.git
+[submodule "common/icenet"]
+	path = common/icenet
+	url = https://github.com/firesim/icenet.git
+[submodule "common/rocket-chip"]
+	path = common/rocket-chip
+	url = https://github.com/freechipsproject/rocket-chip.git

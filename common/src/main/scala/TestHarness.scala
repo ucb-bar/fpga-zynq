@@ -3,7 +3,7 @@ package zynq
 import chisel3._
 import chisel3.util.Queue
 import freechips.rocketchip.amba.axi4._
-import freechips.rocketchip.coreplex._
+import freechips.rocketchip.subsystem._
 import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import freechips.rocketchip.tilelink._
@@ -17,7 +17,7 @@ class TestHarness(implicit val p: Parameters) extends Module {
     val success = Output(Bool())
   })
 
-  val config = p(ExtIn)
+  val config = p(ExtIn).get
   val driver = Module(LazyModule(new TestHarnessDriver).module)
   val dut = if (p(UseBoom)) {
     Module(LazyModule(new FPGAZynqBoomTop).module)
@@ -39,7 +39,7 @@ class TestHarness(implicit val p: Parameters) extends Module {
 
 class TestHarnessDriver(implicit p: Parameters) extends LazyModule {
   val xbar = LazyModule(new TLXbar)
-  val config = p(ExtIn)
+  val config = p(ExtIn).get
   val base = p(ZynqAdapterBase)
 
   val zynq = LazyModule(new ZynqAdapterCore(base, config.beatBytes))
