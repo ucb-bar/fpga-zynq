@@ -55,7 +55,7 @@ SUBMODULES=rocket-chip testchipip icenet boom
 init-submodules:
 	cd $(base_dir) && git submodule update --init $(addprefix common/,$(SUBMODULES))
 	cd $(ROCKET_DIR) && git submodule update --init
-	cd $(ROCKET_DIR)/riscv-tools && git submodule update riscv-fesvr
+	cd $(ROCKET_DIR)/riscv-tools && git submodule update --init riscv-fesvr
 
 # Specialize sources for board
 # ------------------------------------------------------------------------------
