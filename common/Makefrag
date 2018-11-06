@@ -50,8 +50,10 @@ SCALA_SOURCES = $(shell find $(common) -iname "*.scala" 2> /dev/null)
 # Initialize rocket-chip submodule
 # ------------------------------------------------------------------------------
 
+SUBMODULES=rocket-chip testchipip icenet boom
+
 init-submodules:
-	cd $(base_dir) && git submodule update --init common/rocket-chip $(addprefix common/,$(EXTRA_PACKAGES))
+	cd $(base_dir) && git submodule update --init $(addprefix common/,$(SUBMODULES))
 	cd $(ROCKET_DIR) && git submodule update --init
 
 # Specialize sources for board
