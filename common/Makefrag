@@ -195,15 +195,19 @@ fesvr-srcs = \
 	$(common)/csrc/fesvr_zynq.cc \
 	$(common)/csrc/zynq_driver.cc \
 	$(testchipip)/csrc/blkdev.cc \
+	$(icenet)/csrc/device.cc \
+	$(icenet)/csrc/switch.cc \
 
 fesvr-hdrs = \
 	$(common)/csrc/zynq_driver.h \
 	$(testchipip)/csrc/blkdev.h \
+	$(icenet)/csrc/device.h \
+	$(icenet)/csrc/switch.h \
 
 fesvr-lib = $(common_build)/libfesvr.so
 
 CXX_FPGA      = arm-xilinx-linux-gnueabi-g++
-CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr -licenet \
+CXXFLAGS_FPGA = -O2 -std=c++11 -Wall -L$(common_build) -lfesvr \
                 -Wl,-rpath,/usr/local/lib \
 		-I $(common)/csrc -I $(testchipip)/csrc -I $(icenet)/csrc \
 		-I $(ROCKET_DIR)/riscv-tools/riscv-fesvr/ \
